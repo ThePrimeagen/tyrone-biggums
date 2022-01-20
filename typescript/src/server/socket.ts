@@ -9,7 +9,7 @@ export interface Socket extends EventEmitter {
     // Events
     on(event: "error", cb: (this: Socket, error: Error) => void): this;
     on(event: "message", cb: (this: Socket, msg: Message) => void): this;
-    on(event: "close", cb: (this: Socket) => void): this;
+    on(event: "close", cb: (this: Socket, id: number) => void): this;
 }
 
 export default class SocketImpl extends EventEmitter implements Socket {
@@ -18,6 +18,10 @@ export default class SocketImpl extends EventEmitter implements Socket {
 
         this.socket.on("message", (msg) => {
             this.emit("message", createMessage(this.id, msg.toString()));
+        });
+
+        this.socket.on("close", () => {
+            this.emit("close", this.id);
         });
     }
 

@@ -3,6 +3,13 @@ export type Message = {
     msg: string,
 };
 
-export function createMessage(id: number, msg: string): Message {
-    return { id, msg };
+export function createMessage(idOrMessage: number | Message, msg: string): Message {
+    if (typeof idOrMessage === "number") {
+        return { id: idOrMessage, msg };
+    }
+    return {
+        id: idOrMessage.id,
+        msg
+    };
 }
+

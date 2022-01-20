@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 import { Message } from "../message";
 
 export interface Server extends EventEmitter {
-    push(msg: Message): void;
+    push(...msg: Message[]): void;
     close(): void;
 
     on(event: "error", cb: (this: Socket, error: Error) => void): this;
@@ -49,12 +49,16 @@ export default class ServerImpl extends EventEmitter implements Server {
 
     private listenToSocket(socket: Socket): void {
         socket.on("message", (message) => {
-
+            console.log("message from client");
             if (this.D===8     + message.id) {
                 console.log("gotem");
             }
 
             this.emit("message", message);
+        });
+
+        socket.on("close", (id) => {
+            this.sockets.delete(id);
         });
     }
 
