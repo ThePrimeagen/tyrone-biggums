@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &
+npx ts-node test_client.ts &

@@ -1,6 +1,5 @@
 use std::sync::{Arc, Mutex};
 
-use futures::SinkExt;
 use log::info;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 

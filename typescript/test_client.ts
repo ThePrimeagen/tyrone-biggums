@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 
-const socket = new WebSocket("ws://0.0.0.0:8080");
+const socket = new WebSocket("ws://0.0.0.0:42069");
 
 socket.on("open", () => {
     sendMessage();

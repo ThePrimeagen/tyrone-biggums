@@ -18,7 +18,7 @@ pub struct Chat {
 }
 
 fn join(channels: &Channels, channel: &str, id: usize) {
-    println!("join({}): {}", id, channel);
+    info!("join({}): {}", id, channel);
     channels
         .lock()
         .expect("channels lock should never fail")
@@ -28,7 +28,7 @@ fn join(channels: &Channels, channel: &str, id: usize) {
 }
 
 fn leave_channels(channels: &Channels, id: usize) {
-    println!("leaving channels");
+    info!("leaving channels");
     // If there was a id associated with each socket, I could just use this...
     for channel in channels
         .lock()
@@ -40,7 +40,7 @@ fn leave_channels(channels: &Channels, id: usize) {
 }
 
 fn process_message(channels: &Channels, listeners: &Listeners, message: &Message) {
-    println!("process_message");
+    info!("process_message");
 
     let mut sent = false;
     for channel in channels
@@ -59,9 +59,9 @@ fn process_message(channels: &Channels, listeners: &Listeners, message: &Message
         }
     }
 
-    println!("sent? {}", sent);
+    info!("sent? {}", sent);
     if !sent {
-        println!("unable to find a channel to send too, you must not be a part of a channel.");
+        info!("unable to find a channel to send too, you must not be a part of a channel.");
         send_messages(vec![Message::from_message(message.clone(), "You cannot send a message until you join a channel, you can join a channel with !join <channel name>".to_string())], listeners);
     }
 }
@@ -71,7 +71,7 @@ fn send_messages(messages: Vec<Message>, listeners: &Listeners) {
     listeners
         .iter()
         .for_each(|tx| {
-            println!("sending message: {:?}", messages);
+            info!("sending message: {:?}", messages);
             match tx.send(messages.clone()) {
                 Err(e) => panic!("tx should never fail.. {:?}", e),
                 _ => {}

@@ -1,4 +1,5 @@
-/typescript/node_modules
+typescript/dist
+typescript/node_modules
 /rust/target
 /rust/cache
 
