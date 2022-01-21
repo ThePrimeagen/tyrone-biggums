@@ -4,20 +4,19 @@ use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Debug, Clone)]
 pub struct Message {
-    id: usize,
-    msg: String,
+    pub id: usize,
+    pub msg: String,
 }
 
 impl Message {
     pub fn new(id: usize, msg: String) -> Message {
-        return Message {
-            id, msg
-        };
+        return Message { id, msg };
     }
 
     pub fn from_message(message: Message, msg: String) -> Message {
         return Message {
-            id: message.id, msg
+            id: message.id,
+            msg,
         };
     }
 }
@@ -28,12 +27,12 @@ impl Display for Message {
     }
 }
 
-pub trait Sender {
+pub trait Receiver<T> {
     // Todo: async?
-    fn push(msg: Message);
+    fn receive<E: Emitter<T>>(&mut self, tx: &mut E);
 }
 
-pub trait Emitter {
+pub trait Emitter<T> {
     // Todo: async?
-    fn listen(&mut self, tx: UnboundedSender<Message>);
+    fn listen(&mut self, tx: UnboundedSender<T>);
 }

@@ -16,7 +16,7 @@ function wait(ms: number): Promise<void> {
 }
 
 async function sendMessage() {
-    socket.send("!join foo2");
+    socket.send("!join foo3");
     do {
         await wait(2000);
         socket.send("hello, server 3");
