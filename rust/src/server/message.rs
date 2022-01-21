@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Debug, Clone)]
@@ -17,6 +19,12 @@ impl Message {
         return Message {
             id: message.id, msg
         };
+    }
+}
+
+impl Display for Message {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Message {}: {}", self.id, self.msg)
     }
 }
 
