@@ -1,17 +1,35 @@
 package server
 
+import "github.com/gorilla/websocket"
+
 type Message struct {
-    id uint
-    message string
+    Type uint
+    Id uint
+    Message string
 }
 
 
-/*
-func (m *Message) fromMessage(message string) *Message {
-    return Message {
-        id: m.id,
+func (m *Message) FromMessage(message string) *Message {
+    return &Message {
+        websocket.TextMessage,
+        m.Id,
         message,
     }
 }
-*/
+
+func NewMessage(id uint, message string) *Message {
+    return &Message {
+        Type: websocket.TextMessage,
+        Id: id,
+        Message: message,
+    }
+}
+
+func CloseMessage(id uint) *Message {
+    return &Message {
+        websocket.CloseMessage,
+        id,
+        "",
+    }
+}
 

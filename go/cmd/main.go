@@ -4,8 +4,8 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"sync"
 
+	"github.com/ThePrimeagen/tyrone-biggums/pkg/chat"
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
@@ -15,8 +15,8 @@ func main() {
     flag.Parse()
 	log.SetFlags(0)
 
-    var wg sync.WaitGroup
-    server, err := server.NewServer(&wg)
+    server, err := server.NewServer()
+    chat.StartChat(server.In, server.Out)
 
     if err != nil {
         log.Fatalf("%+v\n", err)
