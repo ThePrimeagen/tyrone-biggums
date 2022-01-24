@@ -4,10 +4,10 @@ pid="$(pidof $1)"
 
 echo "PID: $pid"
 echo "Type,Value" > $2
-
 while [ : ]; do
+        mem=$(cat /proc/$pid/status | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} VmRSS | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -o '[0-9]\+' | awk '{print $1/1024 " MB"}')
     echo "CPU,$(top -n 1 -b -d 2 -p $pid | grep $pid | awk '{ print $9 }')" >> $2
-    echo "CPUA,$(ps -C $1 -o %cpu)" >> $2
-    echo "MEM,$(cat /proc/$p/status | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} VmRSS | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -o '[0-9]\+' | awk '{print $1/1024 " MB"}')" >> out
+    echo "MEM,$mem" >> $2
     sleep 0.5
 done
+
