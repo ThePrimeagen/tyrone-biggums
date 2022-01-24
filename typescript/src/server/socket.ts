@@ -3,6 +3,8 @@ import WebSocket from "ws";
 import { createMessage, Message } from "../message";
 
 export interface Socket extends EventEmitter {
+    id: number,
+
     push(msg: Message): void;
     close(code?: number): void;
 
@@ -26,6 +28,11 @@ export default class SocketImpl extends EventEmitter implements Socket {
     }
 
     push(msg: Message): void {
+        if (this.socket.readyState > WebSocket.OPEN) {
+            this.emit("close");
+            return;
+        }
+
         this.socket.send(msg.msg, (e: Error | undefined) => {
             if (e) {
                 this.emit("error", e);

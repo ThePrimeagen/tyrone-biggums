@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"encoding/json"
+	"log"
 	"strings"
 	"sync"
 
@@ -18,9 +20,10 @@ type Chat struct {
 func (c *Chat) leaveChannel(id uint) {
 	c.mu.Lock()
 
-    channel := c.lookup_channels[id]
-    delete(c.channels[channel], id)
-    delete(c.lookup_channels, id)
+    if val, ok := c.lookup_channels[id]; ok {
+        delete(c.channels[val], id)
+        delete(c.lookup_channels, id)
+    }
 
     c.mu.Unlock()
 }
@@ -43,9 +46,24 @@ func (c *Chat) processMessage(message *server.Message) {
 	c.mu.Lock()
 
     if val, ok := c.lookup_channels[message.Id]; ok {
-        for socketId := range c.channels[val] {
-            c.out <- server.NewMessage(socketId, message.Message)
+        channel := c.channels[val]
+        channel_message, err := json.Marshal(server.ChatMessage {
+            Channel_name: val,
+            Channel_user_count: len(channel),
+            From: message.Id,
+            Msg: message.Message,
+        })
+
+        if err != nil {
+            log.Fatalf("%+v\n", err)
         }
+
+        channel_message_string := string(channel_message)
+
+        for socketId := range channel {
+            c.out <- server.NewMessage(socketId, channel_message_string)
+        }
+
     } else {
         c.out <- message.FromMessage("You haven't joined a channel yet.  Please execute !join <channel name> before sending messages")
     }
@@ -66,6 +84,7 @@ func StartChat(in <-chan *server.Message, out chan<- *server.Message) *Chat {
 
             if msg.Type == websocket.CloseMessage {
 				chat.leaveChannel(msg.Id)
+                continue
             } else if msg.Type != websocket.TextMessage {
                 continue
             }

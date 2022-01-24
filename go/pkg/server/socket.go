@@ -23,8 +23,9 @@ func NewSocket(id uint, in chan *Message, w http.ResponseWriter, r *http.Request
 
     go func() {
         defer func() {
+            in <- CloseMessage(id)
+
             c.Close()
-            out <- CloseMessage(id)
         }()
 
         for {

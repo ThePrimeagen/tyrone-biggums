@@ -1,5 +1,6 @@
 import { createMessage, Message } from "../message";
 import { Server } from "../server";
+import { Socket } from "../server/socket";
 
 export class Chat {
     private channels: Map<string, number[]>
@@ -28,6 +29,10 @@ export class Chat {
 
         server.on("close", () => {
             this.channels = new Map<string, number[]>();
+        });
+
+        server.on("socket-close", (socket: Socket) => {
+            this.leaveChannels({id: socket.id, msg: ""});
         });
     }
 
@@ -66,14 +71,23 @@ export class Chat {
     private processMessage(message: Message): void {
         const channel_name = this.lookup_channel.get(message.id)
         const channel = this.channels.get(channel_name || "");
+
         if (!channel) {
             this.server.push(
-                createMessage(message, `you have to join a channel first.  message with !join <channel-name> to join`));
+                createMessage(message, {
+                    error: true,
+                    msg: `you have to join a channel first.  message with !join <channel-name> to join`
+                }));
             return;
         }
 
         this.server.push(...channel.map(id => {
-            return createMessage(id, message.msg);
+            return createMessage(id, {
+                channel_name,
+                channel_user_count: channel.length,
+                from: id,
+                msg: message.msg
+            });
         }));
     }
 }

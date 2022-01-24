@@ -8,6 +8,12 @@ type Message struct {
     Message string
 }
 
+type ChatMessage struct {
+    Channel_name string `json:"channel_name"`
+    Channel_user_count int `json:"channel_user_count"`
+    From uint `json:"from"`
+    Msg string `json:"msg"`
+}
 
 func (m *Message) FromMessage(message string) *Message {
     return &Message {
@@ -32,4 +38,3 @@ func CloseMessage(id uint) *Message {
         "",
     }
 }
-

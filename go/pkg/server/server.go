@@ -33,7 +33,8 @@ func (s *Server) HandleNewConnection(w http.ResponseWriter, r *http.Request) {
 	id := s.currentId
 	s.currentId += 1
 
-	socket, err := NewSocket(id, s.In, w, r)
+    socket_channel := make(chan *Message)
+	socket, err := NewSocket(id, socket_channel, w, r)
 
     s.lock.Lock()
 	s.sockets[id] = socket
@@ -44,6 +45,17 @@ func (s *Server) HandleNewConnection(w http.ResponseWriter, r *http.Request) {
             s.lock.Lock()
 			s.sockets[msg.Id].Out <- msg
             s.lock.Unlock()
+		}
+	}()
+
+	go func() {
+		for msg := range socket_channel {
+            if msg.Type == websocket.CloseMessage {
+                s.lock.Lock()
+                delete(s.sockets, msg.Id)
+                s.lock.Unlock()
+            }
+            s.In <- msg
 		}
 	}()
 

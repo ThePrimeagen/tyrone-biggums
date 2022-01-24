@@ -1,5 +1,4 @@
 import { Chat } from "./chat";
-import { Message } from "./message";
 import Server from "./server";
 import { run } from "./test/test_client";
 
@@ -11,10 +10,6 @@ if (args[0] == "test") {
 
     server.on("listening", () => {
         console.log("listening on 42069");
-    });
-
-    server.on("message", (message: Message) => {
-        console.log("recv", message);
     });
 
     new Chat(server);

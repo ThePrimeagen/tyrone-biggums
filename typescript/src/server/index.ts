@@ -8,15 +8,15 @@ export interface Server extends EventEmitter {
     push(...msg: Message[]): void;
     close(): void;
 
-    on(event: "error", cb: (this: Socket, error: Error) => void): this;
-    on(event: "message", cb: (this: Socket, msg: Message) => void): this;
-    on(event: "close", cb: (this: Socket) => void): this;
+    on(event: "error", cb: (error: Error) => void): this;
+    on(event: "message", cb: (msg: Message) => void): this;
+    on(event: "close", cb: () => void): this;
+    on(event: "socket-close", cb: (socket: Socket) => void): this;
 }
 
 export default class ServerImpl extends EventEmitter implements Server {
     private sockets: Map<number, Socket>;
     private id: number;
-    private D = 69;
 
     constructor(addr: string, port: number = 42069) {
         super();
@@ -53,7 +53,13 @@ export default class ServerImpl extends EventEmitter implements Server {
         });
 
         socket.on("close", (id) => {
+            const socket = this.sockets.get(id);
+            if (!socket) {
+                return;
+            }
+
             this.sockets.delete(id);
+            this.emit("socket-close", socket);
         });
     }
 

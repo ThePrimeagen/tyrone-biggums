@@ -36,7 +36,7 @@ pub async fn handle_connection(sockets: Sockets, id: usize, raw_stream: TcpStrea
     let (outgoing_tx, mut outgoing_rx) = unbounded_channel::<Message>();
 
     // let (outgoing_tx, outgoing_rx) = unbounded_channel();
-    let socket = Socket::new(incoming_rx, outgoing_tx);
+    let socket = Socket::new(incoming_rx, outgoing_tx, id);
 
     sockets.lock().unwrap().insert(id, socket);
 
@@ -66,6 +66,7 @@ pub async fn handle_connection(sockets: Sockets, id: usize, raw_stream: TcpStrea
     });
 
     tokio::spawn(async move {
+        println!("waiting for broadcast_incoming to finish");
         match broadcast_incoming.await {
             Err(e) => info!("Socket receiver ended {} with {:?}", id, e),
             _ => info!("Socket receiver ended in great success! {}", id),
@@ -75,10 +76,24 @@ pub async fn handle_connection(sockets: Sockets, id: usize, raw_stream: TcpStrea
 
     tokio::spawn(async move {
         while let Some(msg) = outgoing_rx.recv().await {
-            match outgoing.send(tokio_tungstenite::tungstenite::Message::Text(msg.msg)).await {
-                Err(e) => eprintln!("Socket receiver ended {} with {:?}", id, e),
-                _ => {}
+            match msg {
+                Message::Message(c) => {
+                    match outgoing.send(tokio_tungstenite::tungstenite::Message::Text(c.msg)).await {
+                        Err(e) => {
+                            eprintln!("Socket receiver ended {} with {:?}", id, e);
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
+                Message::Close(_) => break,
             }
+        }
+        match outgoing.close().await {
+            Err(e) => {
+                eprintln!("unable to close outgoing({}): {:?}", id, e);
+            }
+            _ => {}
         }
     });
 }
@@ -91,7 +106,7 @@ pub struct Server {
 
 impl Server {
     pub async fn new() -> Result<Server, std::io::Error> {
-        let addr = "127.0.0.1:8080".to_string();
+        let addr = "127.0.0.1:42069".to_string();
         let sockets: Sockets = Arc::new(Mutex::new(HashMap::new()));
 
         // Create the event loop and TCP listener we'll accept connections on.
@@ -152,14 +167,19 @@ impl Receiver<Vec<Message>> for Server {
         tokio::spawn(async move {
             info!("receiver is waiting for messages.");
             while let Some(messages) = rx.recv().await {
-                info!("receiver got message {:?}", messages);
                 let sockets = sockets.lock().expect("lock to never fail");
+                info!("receiver got message({}) {:?}", sockets.len(), messages);
                 for msg in &messages {
 
-                    info!("receiver sending message to {}", msg.id);
-                    match sockets.get(&msg.id) {
+                    let chat_msg = match msg {
+                        Message::Message(msg) => msg,
+                        Message::Close(_) => unreachable!("Close messages should never be sent back to the server.")
+                    };
+
+                    info!("receiver sending message to {}", chat_msg.id);
+                    match sockets.get(&chat_msg.id) {
                         Some(socket) => {
-                            info!("receiver found socket {}", msg.id);
+                            info!("receiver found socket {}", chat_msg.id);
                             socket.push(&msg)
                         }
                         _ => {}
