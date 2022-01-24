@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+docker build -t go-ws-test -f go.Dockerfile .
+docker build -t rs-ws-test -f rust.Dockerfile .
+docker build -t ts-ws-test -f typescript.Dockerfile .
+
