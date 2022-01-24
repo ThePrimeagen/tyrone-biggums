@@ -21,8 +21,8 @@ type Server struct {
 var upgrader = websocket.Upgrader{} // use default options
 
 func NewServer() (*Server, error) {
-	out := make(chan *Message)
-	from_socket := make(chan *Message)
+	out := make(chan *Message, 10000)
+	from_socket := make(chan *Message, 10000)
 	server := Server{
 		currentId:   0,
 		sockets:     make(map[uint]*Socket),
@@ -56,12 +56,12 @@ func NewServer() (*Server, error) {
 
 func (s *Server) HandleNewConnection(w http.ResponseWriter, r *http.Request) {
 
+	s.lock.Lock()
 	id := s.currentId
 	s.currentId += 1
 
 	socket, err := NewSocket(id, s.from_socket, w, r)
 
-	s.lock.Lock()
 	s.sockets[id] = socket
 	s.lock.Unlock()
 

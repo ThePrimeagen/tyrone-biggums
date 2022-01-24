@@ -82,8 +82,8 @@ func StartChat(in <-chan *server.Message, out chan<- *server.Message) *Chat {
 	}
 
 	go func() {
-        for msg := range in {
-
+        for {
+            msg := <-in
             if msg.Type == websocket.CloseMessage {
 				chat.leaveChannel(msg.Id)
                 continue
