@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.10.out data/$1.10.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.50.out data/$1.50.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.100.out data/$1.100.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.200.out data/$1.200.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.500.out data/$1.500.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.750.out data/$1.750.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.850.out data/$1.850.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.900.out data/$1.900.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.950.out data/$1.950.cpu.mem.csv
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.1000.out data/$1.1000.cpu.mem.csv
+
+

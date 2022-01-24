@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+node ./dist/index.js test $2 events.theprimeagen.tv 42069 | tee $1.$2.csv
+

@@ -89,7 +89,6 @@ async function connect(addr: string, port: number) {
 
     socket.on("message", (message) => {
         const msg = message.toString();
-        console.log("MESSAGE", msg);
         if (msg.startsWith("!join successful")) {
             const my_id = +msg.split(": ")[1];
             if (isNaN(my_id)) {
