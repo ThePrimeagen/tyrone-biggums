@@ -2,6 +2,7 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -39,6 +40,7 @@ func (c *Chat) joinChannel(id uint, channel string) {
 
     found_channel[id] = struct{}{}
     c.lookup_channels[id] = channel
+    c.out <- server.NewMessage(id, fmt.Sprintf("!join successful: %d", id));
 	c.mu.Unlock()
 }
 

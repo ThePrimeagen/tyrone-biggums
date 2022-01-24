@@ -138,6 +138,7 @@ async fn handle_messages(
 
             leave_channels(&channels, &lookups, msg.id);
             join(&channels, &lookups, channel, msg.id);
+            send_messages(vec![Message::from_chat_message(msg.clone(), format!("!join successful: {}", msg.id))], &listeners);
         } else if text == ":q" {
             leave_channels(&channels, &lookups, msg.id);
         } else {

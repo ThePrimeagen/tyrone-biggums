@@ -7,8 +7,10 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
+    "@types/microseconds": "^0.2.0",
     "@types/node": "^17.0.10",
     "@types/ws": "^8.2.2",
+    "microseconds": "^0.2.0",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4",
     "uglify-js": "^3.14.5",

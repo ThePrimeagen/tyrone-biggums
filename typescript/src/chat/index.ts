@@ -48,7 +48,7 @@ export class Chat {
 
         channel.push(message.id);
         this.server.push(
-            createMessage(message, `you have joined channel ${channelName}`));
+            createMessage(message, `!join successful: ${message.id}`));
 
     }
 
