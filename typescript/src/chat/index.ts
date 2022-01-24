@@ -3,9 +3,12 @@ import { Server } from "../server";
 
 export class Chat {
     private channels: Map<string, number[]>
+    private lookup_channel: Map<number, string>
 
     constructor(private server: Server) {
         this.channels = new Map<string, number[]>();
+        this.lookup_channel = new Map<number, string>();
+
         this.listenToServer(server);
     }
 
@@ -14,6 +17,7 @@ export class Chat {
         server.on("message", (message: Message) => {
             const text = message.msg;
             if (text.startsWith("!join")) {
+                this.leaveChannels(message);
                 this.join(message);
             } else if (text == ":q") {
                 this.leaveChannels(message);
@@ -35,46 +39,38 @@ export class Chat {
             channel = [];
             this.channels.set(channelName, channel);
         }
+        this.lookup_channel.set(message.id, channelName);
 
-        if (!~channel.indexOf(message.id)) {
-            this.leaveChannels(message);
-            channel.push(message.id);
-            this.server.push(
-                createMessage(message, `you have joined channel ${channelName}`));
-        } else {
-            this.server.push(
-                createMessage(message, `you are already apart of ${channelName}`));
-        }
+        channel.push(message.id);
+        this.server.push(
+            createMessage(message, `you have joined channel ${channelName}`));
 
-    }
-
-    private getChannel(id: number): [number[], number] | undefined {
-        for (const [_, channel] of this.channels) {
-            const idx = channel.indexOf(id);
-            if (~idx) {
-                return [channel, idx];
-            }
-        }
-        return undefined;
     }
 
     private leaveChannels(message: Message): void {
-        const channelAndIdx = this.getChannel(message.id);
-        if (channelAndIdx) {
-            const [channel, idx] = channelAndIdx;
-            channel.splice(idx, 1);
+        const channel_name = this.lookup_channel.get(message.id);
+        if (!channel_name) {
+            return;
         }
+        this.lookup_channel.delete(message.id);
+
+        const channel = this.channels.get(channel_name);
+        if (!channel) {
+            return
+        }
+
+        const index = channel.indexOf(message.id);
+        channel.splice(index, 1);
     }
 
     private processMessage(message: Message): void {
-        const channelAndIdx = this.getChannel(message.id);
-        if (!channelAndIdx) {
+        const channel_name = this.lookup_channel.get(message.id)
+        const channel = this.channels.get(channel_name || "");
+        if (!channel) {
             this.server.push(
                 createMessage(message, `you have to join a channel first.  message with !join <channel-name> to join`));
             return;
         }
-
-        let [channel] = channelAndIdx;
 
         this.server.push(...channel.map(id => {
             return createMessage(id, message.msg);

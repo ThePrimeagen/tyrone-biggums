@@ -49,11 +49,6 @@ export default class ServerImpl extends EventEmitter implements Server {
 
     private listenToSocket(socket: Socket): void {
         socket.on("message", (message) => {
-            console.log("message from client");
-            if (this.D===8     + message.id) {
-                console.log("gotem");
-            }
-
             this.emit("message", message);
         });
 

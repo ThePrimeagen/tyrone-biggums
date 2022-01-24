@@ -15,20 +15,18 @@ type Chat struct {
 	mu       sync.Mutex
 }
 
-func (c *Chat) leaveChannel(id uint) *Chat {
+func (c *Chat) leaveChannel(id uint) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
     channel := c.lookup_channels[id]
     delete(c.channels[channel], id)
     delete(c.lookup_channels, id)
 
-	return c
+    c.mu.Unlock()
 }
 
 func (c *Chat) joinChannel(id uint, channel string) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	found_channel := c.channels[channel]
 	if found_channel == nil {
@@ -38,11 +36,11 @@ func (c *Chat) joinChannel(id uint, channel string) {
 
     found_channel[id] = struct{}{}
     c.lookup_channels[id] = channel
+	c.mu.Unlock()
 }
 
 func (c *Chat) processMessage(message *server.Message) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
     if val, ok := c.lookup_channels[message.Id]; ok {
         for socketId := range c.channels[val] {
@@ -51,6 +49,7 @@ func (c *Chat) processMessage(message *server.Message) {
     } else {
         c.out <- message.FromMessage("You haven't joined a channel yet.  Please execute !join <channel name> before sending messages")
     }
+    c.mu.Unlock()
 }
 
 func StartChat(in <-chan *server.Message, out chan<- *server.Message) *Chat {
@@ -73,9 +72,8 @@ func StartChat(in <-chan *server.Message, out chan<- *server.Message) *Chat {
 
 			if strings.HasPrefix(msg.Message, "!join ") {
 				parts := strings.Split(msg.Message, " ")
-				chat.
-					leaveChannel(msg.Id).
-					joinChannel(msg.Id, parts[1])
+				chat.leaveChannel(msg.Id)
+				chat.joinChannel(msg.Id, parts[1])
 
 			} else if msg.Message == ":q" {
 				chat.leaveChannel(msg.Id)
