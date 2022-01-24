@@ -66,7 +66,6 @@ pub async fn handle_connection(sockets: Sockets, id: usize, raw_stream: TcpStrea
     });
 
     tokio::spawn(async move {
-        println!("waiting for broadcast_incoming to finish");
         match broadcast_incoming.await {
             Err(e) => info!("Socket receiver ended {} with {:?}", id, e),
             _ => info!("Socket receiver ended in great success! {}", id),
@@ -106,7 +105,7 @@ pub struct Server {
 
 impl Server {
     pub async fn new() -> Result<Server, std::io::Error> {
-        let addr = "127.0.0.1:42069".to_string();
+        let addr = "0.0.0.0:42069".to_string();
         let sockets: Sockets = Arc::new(Mutex::new(HashMap::new()));
 
         // Create the event loop and TCP listener we'll accept connections on.
