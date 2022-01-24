@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-pid=$(pidof $1)
+pid="$(pidof $1)"
 
+echo "PID: $pid"
 echo "Type,Value" > $2
 while [ : ]; do
     echo "CPU,$(top -n 1 -b -d 2 -p $pid | grep $pid | awk '{ print $9 }')" >> $2
