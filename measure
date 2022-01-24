@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+pid=$(pidof $1)
+
+echo "Type,Value" > $2
+while [ : ]; do
+    echo "CPU,$(top -n 1 -b -d 2 -p $pid | grep $pid | awk '{ print $9 }')" >> $2
+    echo "CPUA,$(ps -C $1 -o %cpu)" >> $2
+    echo "MEM,$(/proc/$p/status | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} VmRSS | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -o '[0-9]\+' | awk '{print $1/1024 " MB"}')" >> out
+    sleep 0.5
+done
