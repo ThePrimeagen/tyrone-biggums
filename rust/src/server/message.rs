@@ -29,8 +29,11 @@ impl Message {
         }
     }
 
-    pub fn from_chat_message(message: ChatMessage, _msg: String) -> Message {
-        return Message::Message(message);
+    pub fn from_chat_message(message: ChatMessage, msg: String) -> Message {
+        return Message::Message(ChatMessage {
+                id: message.id,
+                msg,
+            });
     }
 }
 
