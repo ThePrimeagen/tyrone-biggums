@@ -62,11 +62,17 @@ function wait(ms: number): Promise<void> {
     return new Promise(res => setTimeout(res, ms));
 }
 
+type MessageContent = {
+    inc: number;
+    msg: string;
+    ts: number;
+}
+
 type ChatMessage = {
     channel_name: string,
     channel_user_count: number,
     from: number,
-    msg: string,
+    msg: MessageContent,
 }
 
 async function sendMessage(socket: WebSocket) {
@@ -75,7 +81,11 @@ async function sendMessage(socket: WebSocket) {
     await wait(initial_waits[idx % initial_waits.length]);
     do {
         await wait(2000);
-        socket.send(String(us.now()));
+        socket.send(JSON.stringify({
+            ts: us.now(),
+            msg: "Hello, World",
+            inc: 68
+        }));
     } while (true);
 }
 
@@ -111,7 +121,7 @@ async function connect(addr: string, port: number) {
         }
 
         const now = us.now();
-        const then = +data.msg;
+        const then = +data.msg.ts;
         const diff = now - then;
         console.log(`TIME,${diff}`);
     });
