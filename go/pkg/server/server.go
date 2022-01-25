@@ -36,15 +36,11 @@ func NewServer() (*Server, error) {
 		for {
 			select {
 			case msg := <-out:
-				server.lock.Lock()
 				server.sockets[msg.Id].Out <- msg
-				server.lock.Unlock()
 
 			case msg := <-from_socket:
 				if msg.Type == websocket.CloseMessage {
-					server.lock.Lock()
 					delete(server.sockets, msg.Id)
-					server.lock.Unlock()
 				}
 				server.In <- msg
 			}

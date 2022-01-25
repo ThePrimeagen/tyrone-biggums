@@ -1,5 +1,11 @@
 package chat
 
+
+// import _ "net/http/pprof" then
+// log.Println(http.ListenAndServe("localhost:6969", nil)), it will start a
+// fully functioning debug web server for cpu/mem etc
+
+// http://localhost:6969/debug/pprof/mutex for mutex debugging
 import (
 	"encoding/json"
 	"fmt"
