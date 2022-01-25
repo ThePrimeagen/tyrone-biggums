@@ -20,17 +20,18 @@ type Chat struct {
 
 func (c *Chat) leaveChannel(id uint) {
 	c.mu.Lock()
+    defer c.mu.Unlock()
 
     if val, ok := c.lookup_channels[id]; ok {
         delete(c.channels[val], id)
         delete(c.lookup_channels, id)
     }
 
-    c.mu.Unlock()
 }
 
 func (c *Chat) joinChannel(id uint, channel string) {
 	c.mu.Lock()
+    defer c.mu.Unlock()
 
 	found_channel := c.channels[channel]
 	if found_channel == nil {
@@ -41,11 +42,11 @@ func (c *Chat) joinChannel(id uint, channel string) {
     found_channel[id] = struct{}{}
     c.lookup_channels[id] = channel
     c.out <- server.NewMessage(id, fmt.Sprintf("!join successful: %d", id));
-	c.mu.Unlock()
 }
 
 func (c *Chat) processMessage(message *server.Message) {
 	c.mu.Lock()
+    defer c.mu.Unlock()
 
     if val, ok := c.lookup_channels[message.Id]; ok {
         channel := c.channels[val]
@@ -69,7 +70,6 @@ func (c *Chat) processMessage(message *server.Message) {
     } else {
         c.out <- message.FromMessage("You haven't joined a channel yet.  Please execute !join <channel name> before sending messages")
     }
-    c.mu.Unlock()
 }
 
 func StartChat(in <-chan *server.Message, out chan<- *server.Message) *Chat {
@@ -82,8 +82,7 @@ func StartChat(in <-chan *server.Message, out chan<- *server.Message) *Chat {
 	}
 
 	go func() {
-        for {
-            msg := <-in
+        for msg := range in {
             if msg.Type == websocket.CloseMessage {
 				chat.leaveChannel(msg.Id)
                 continue
