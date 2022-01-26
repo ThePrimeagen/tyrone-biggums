@@ -110,7 +110,7 @@ export class Chat {
             return createMessage(id, {
                 channel_name,
                 channel_user_count: channel.length,
-                from: id,
+                from: message.id,
                 msg: messageContent, // TODO: I hate this name
             });
         }));

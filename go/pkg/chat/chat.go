@@ -2,6 +2,7 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -56,6 +57,7 @@ func (c *Chat) joinChannel(id uint, channel string) {
     msgs := []*server.Message{
         server.NewMessage(id, fmt.Sprintf("!join successful: %d", id)),
     }
+
     c.out <- msgs
 }
 
@@ -64,7 +66,6 @@ func (c *Chat) processMessage(message *server.Message) {
 	defer c.mu.Unlock()
 
     msgs := []*server.Message{}
-    c.out <- msgs
 	if val, ok := c.lookup_channels[message.Id]; ok {
         if user, ok := c.users[message.Id]; ok {
             user.recv += 1
@@ -101,7 +102,6 @@ func (c *Chat) processMessage(message *server.Message) {
 	} else {
         msgs = append(msgs, message.FromMessage("You haven't joined a channel yet.  Please execute !join <channel name> before sending messages"))
 	}
-    log.Printf("sending %+v messages", len(msgs))
     c.out <- msgs
 }
 
