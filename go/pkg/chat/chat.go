@@ -2,7 +2,6 @@ package chat
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -102,6 +101,7 @@ func (c *Chat) processMessage(message *server.Message) {
 	} else {
         msgs = append(msgs, message.FromMessage("You haven't joined a channel yet.  Please execute !join <channel name> before sending messages"))
 	}
+    log.Printf("sending %+v messages", len(msgs))
     c.out <- msgs
 }
 

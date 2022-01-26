@@ -1,6 +1,7 @@
 use std::{sync::{Arc, Mutex}, time::{SystemTime, UNIX_EPOCH, Duration}};
 
 use futures::{StreamExt, SinkExt, pin_mut, future, stream::{SplitSink, ForEach}};
+use log::info;
 use serde::{Serialize, Deserialize};
 use structopt::StructOpt;
 use tokio::io::AsyncWriteExt;
@@ -42,7 +43,10 @@ pub struct ServerOpts {
 type SplitStreamWrite = SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>, Message>;
 type SplitStreamRead = futures::stream::SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>>;
 
-async fn connect(url: Url, chat_room: String) -> (usize, SplitStreamRead, SplitStreamWrite) {
+async fn connect(url: Url, offset: usize, chat_room: String) -> (usize, SplitStreamRead, SplitStreamWrite) {
+    tokio::time::sleep(Duration::from_millis(offset as u64)).await;
+
+    info!("connecting {}", url);
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
     let (mut write, mut read) = ws_stream.split();
 
@@ -65,7 +69,15 @@ async fn connect(url: Url, chat_room: String) -> (usize, SplitStreamRead, SplitS
 }
 
 async fn process_reader(id: usize, read: SplitStreamRead) {
-    read.for_each(|message| async {
+    let mut count = 0;
+    let emit = 10;
+    read.for_each(|message| async move {
+        count += 1;
+
+        if count % emit == 0 {
+            println!("COUNT,{}", emit);
+        }
+
         let str = message.unwrap().into_text().expect("str");
         let data: ChatMessage = serde_json::from_str(&str).expect("to always win");
         if data.from == id {
@@ -79,6 +91,7 @@ async fn process_reader(id: usize, read: SplitStreamRead) {
 async fn process_writers(mut writer_set: [Vec<SplitStreamWrite>; 41]) {
     let mut then = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
     let mut idx = 0;
+    let mut count = 0;
     loop {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
         let diff = now - then;
@@ -97,6 +110,7 @@ async fn process_writers(mut writer_set: [Vec<SplitStreamWrite>; 41]) {
 
         let mut awaits = vec![];
         for writer in writer_set[idx % 41].iter_mut() {
+            count += 1;
             let msg = Message::Text(msg.clone());
             awaits.push(writer.send(msg));
         }
@@ -107,6 +121,7 @@ async fn process_writers(mut writer_set: [Vec<SplitStreamWrite>; 41]) {
                 _ => {}
             }
         });
+        println!("count: {:?}", count);
 
         then = now;
         idx += 1;
@@ -115,6 +130,7 @@ async fn process_writers(mut writer_set: [Vec<SplitStreamWrite>; 41]) {
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let opts = ServerOpts::from_args();
     let url = url::Url::parse(format!("ws://{}:{}{}", opts.host, opts.port, opts.path).as_str()).unwrap();
 
@@ -189,7 +205,7 @@ async fn main() {
     let mut connects = vec![];
     for i in 0..(opts.count as usize) {
         let chat_room = chat[i % 10];
-        connects.push(connect(url.clone(), chat_room.to_string()));
+        connects.push(connect(url.clone(), i * 5, chat_room.to_string()));
     }
 
     let mut awaits = vec![];

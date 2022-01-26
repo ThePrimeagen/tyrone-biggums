@@ -36,9 +36,12 @@ func NewServer() (*Server, error) {
 		for {
 			select {
 			case msgs := <-out:
+                count := 0
                 for _, msg := range msgs {
+                    count += 1
                     server.sockets[msg.Id].Out <- msg
                 }
+                log.Printf("server sent %v messages", count)
 
 			case msg := <-from_socket:
 				if msg.Type == websocket.CloseMessage {
