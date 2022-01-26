@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 import { Message } from "../message";
 
 export interface Server extends EventEmitter {
-    push(...msg: Message[]): void;
+    push(msg: Message[]): void;
     close(): void;
 
     on(event: "error", cb: (error: Error) => void): this;
@@ -30,7 +30,7 @@ export default class ServerImpl extends EventEmitter implements Server {
         }));
     }
 
-    push(...msg: Message[]): void {
+    push(msg: Message[]): void {
         msg.forEach(msg => {
             const le_socket = this.sockets.get(msg.id);
             if (le_socket) {

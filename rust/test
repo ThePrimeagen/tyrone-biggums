@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+RUST_LOG=info cargo run --release --bin test_client $2 events.theprimeagen.tv > out
+mv out ../data/$1.$2.csv;
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/$1.$2.csv ../data/$1.$2.mem.cpu.csv
+

@@ -1,7 +1,7 @@
 use std::{sync::{Arc, Mutex}, time::{SystemTime, UNIX_EPOCH, Duration}};
 
 use futures::{StreamExt, SinkExt, pin_mut, future, stream::{SplitSink, ForEach}};
-use log::info;
+use log::{info, error};
 use serde::{Serialize, Deserialize};
 use structopt::StructOpt;
 use tokio::io::AsyncWriteExt;
@@ -83,14 +83,13 @@ async fn process_reader(id: usize, read: SplitStreamRead) {
 async fn process_writers(mut writer_set: [Vec<SplitStreamWrite>; 41]) {
     let mut then = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
     let mut idx = 0;
-    let mut count = 0;
     loop {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
         let diff = now - then;
         if diff < 100000 {
             tokio::time::sleep(Duration::from_millis(diff as u64)).await;
         } else {
-            println!("EXCEEDING TIME!! FAILING")
+            error!("EXCEEDING TIME!! FAILING")
         }
 
         let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
@@ -102,7 +101,6 @@ async fn process_writers(mut writer_set: [Vec<SplitStreamWrite>; 41]) {
 
         let mut awaits = vec![];
         for writer in writer_set[idx % 41].iter_mut() {
-            count += 1;
             let msg = Message::Text(msg.clone());
             awaits.push(writer.send(msg));
         }
@@ -113,7 +111,6 @@ async fn process_writers(mut writer_set: [Vec<SplitStreamWrite>; 41]) {
                 _ => {}
             }
         });
-        println!("count: {:?}", count);
 
         then = now;
         idx += 1;
