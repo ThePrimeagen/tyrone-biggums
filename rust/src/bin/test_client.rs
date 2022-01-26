@@ -69,15 +69,7 @@ async fn connect(url: Url, offset: usize, chat_room: String) -> (usize, SplitStr
 }
 
 async fn process_reader(id: usize, read: SplitStreamRead) {
-    let mut count = 0;
-    let emit = 10;
     read.for_each(|message| async move {
-        count += 1;
-
-        if count % emit == 0 {
-            println!("COUNT,{}", emit);
-        }
-
         let str = message.unwrap().into_text().expect("str");
         let data: ChatMessage = serde_json::from_str(&str).expect("to always win");
         if data.from == id {
@@ -204,7 +196,7 @@ async fn main() {
 
     let mut connects = vec![];
     for i in 0..(opts.count as usize) {
-        let chat_room = chat[i % 10];
+        let chat_room = chat[i % chat.len()];
         connects.push(connect(url.clone(), i * 5, chat_room.to_string()));
     }
 
