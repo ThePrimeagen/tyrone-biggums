@@ -65,8 +65,8 @@ export class Chat {
         this.lookup_channel.set(message.id, channelName);
 
         channel.push(message.id);
-        this.server.push(
-            createMessage(message, `!join successful: ${message.id}`));
+        this.server.push([
+            createMessage(message, `!join successful: ${message.id}`)]);
 
     }
 
