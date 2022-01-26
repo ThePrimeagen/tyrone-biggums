@@ -14,14 +14,14 @@ type Server struct {
 	lock      sync.Mutex
 
 	In          chan *Message
-	Out         chan *Message
+	Out         chan []*Message
 	from_socket chan *Message
 }
 
 var upgrader = websocket.Upgrader{} // use default options
 
 func NewServer() (*Server, error) {
-	out := make(chan *Message, 10000)
+	out := make(chan []*Message, 10000)
 	from_socket := make(chan *Message, 10000)
 	server := Server{
 		currentId:   0,
@@ -35,8 +35,10 @@ func NewServer() (*Server, error) {
 	go func() {
 		for {
 			select {
-			case msg := <-out:
-				server.sockets[msg.Id].Out <- msg
+			case msgs := <-out:
+                for _, msg := range msgs {
+                    server.sockets[msg.Id].Out <- msg
+                }
 
 			case msg := <-from_socket:
 				if msg.Type == websocket.CloseMessage {

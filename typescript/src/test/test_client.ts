@@ -89,8 +89,10 @@ async function sendMessage(socket: WebSocket) {
     } while (true);
 }
 
-async function connect(addr: string, port: number) {
-    const socket = new WebSocket(`ws://${addr}:${port}`);
+async function connect(addr: string, port: number, path: string) {
+    const url = `ws://${addr}:${port}${path}`;
+    console.log("url", url);
+    const socket = new WebSocket(url);
     let id = -1;
 
     socket.on("open", () => {
@@ -131,12 +133,14 @@ export function run(args: string[]) {
     let count = +args[0];
     let addr = args[1] || "0.0.0.0";
     let port = +args[2] || 42069;
+    let path = args[3] || "/";
+
     if (isNaN(count)) {
         console.error("You need to provide how many sockets to spawn");
         process.exit(1);
     }
 
     for (let i = 0; i < count; ++i) {
-        connect(addr, port);
+        connect(addr, port, path);
     }
 }

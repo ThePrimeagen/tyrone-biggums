@@ -1,10 +1,5 @@
 package chat
 
-// import _ "net/http/pprof" then
-// log.Println(http.ListenAndServe("localhost:6969", nil)), it will start a
-// fully functioning debug web server for cpu/mem etc
-
-// http://localhost:6969/debug/pprof/mutex for mutex debugging
 import (
 	"encoding/json"
 	"fmt"
@@ -16,13 +11,19 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// import _ "net/http/pprof" then
+// log.Println(http.ListenAndServe("localhost:6969", nil)), it will start a
+// fully functioning debug web server for cpu/mem etc
+
+// http://localhost:6969/debug/pprof/mutex for mutex debugging
+
 type User struct {
 	sent uint
 	recv uint
 }
 
 type Chat struct {
-	out             chan<- *server.Message
+	out             chan<- []*server.Message
     users           map[uint]User
 	channels        map[string]map[uint]struct{}
 	lookup_channels map[uint]string
@@ -52,13 +53,19 @@ func (c *Chat) joinChannel(id uint, channel string) {
 
 	found_channel[id] = struct{}{}
 	c.lookup_channels[id] = channel
-	c.out <- server.NewMessage(id, fmt.Sprintf("!join successful: %d", id))
+
+    msgs := []*server.Message{
+        server.NewMessage(id, fmt.Sprintf("!join successful: %d", id)),
+    }
+    c.out <- msgs
 }
 
 func (c *Chat) processMessage(message *server.Message) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+    msgs := []*server.Message{}
+    c.out <- msgs
 	if val, ok := c.lookup_channels[message.Id]; ok {
         if user, ok := c.users[message.Id]; ok {
             user.recv += 1
@@ -89,15 +96,16 @@ func (c *Chat) processMessage(message *server.Message) {
             if user, ok := c.users[socketId]; ok {
                 user.recv += 1
             }
-			c.out <- server.NewMessage(socketId, channel_message_string)
+			msgs = append(msgs, server.NewMessage(socketId, channel_message_string))
 		}
 
 	} else {
-		c.out <- message.FromMessage("You haven't joined a channel yet.  Please execute !join <channel name> before sending messages")
+        msgs = append(msgs, message.FromMessage("You haven't joined a channel yet.  Please execute !join <channel name> before sending messages"))
 	}
+    c.out <- msgs
 }
 
-func StartChat(in <-chan *server.Message, out chan<- *server.Message) *Chat {
+func StartChat(in <-chan *server.Message, out chan<- []*server.Message) *Chat {
 
 	chat := Chat{
 		out,
