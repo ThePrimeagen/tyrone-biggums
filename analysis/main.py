@@ -40,4 +40,14 @@ pf.columns = [
 
 pf = reduce_data_set(pf)
 grouped = pf.groupby(['type'])
-print(grouped.describe())
+perc = [
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    0.90,
+    0.95,
+    0.99,
+]
+print(grouped.describe(percentiles = perc))
+

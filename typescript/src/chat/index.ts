@@ -94,25 +94,27 @@ export class Chat {
         const channel = this.channels.get(channel_name || "");
 
         if (!channel) {
-            this.server.push(
+            this.server.push([
                 createMessage(message, {
                     error: true,
                     msg: `you have to join a channel first.  message with !join <channel-name> to join`
-                }));
+                })]);
             return;
         }
 
-        this.server.push(...channel.map(id => {
+        const new_msg = JSON.stringify({
+            channel_name,
+            channel_user_count: channel.length,
+            from: message.id,
+            msg: messageContent, // TODO: I hate this name
+        });
+
+        this.server.push(channel.map(id => {
             const user = this.users.get(message.id);
             if (user) {
                 user.inc_recv();
             }
-            return createMessage(id, {
-                channel_name,
-                channel_user_count: channel.length,
-                from: message.id,
-                msg: messageContent, // TODO: I hate this name
-            });
+            return createMessage(id, new_msg);
         }));
     }
 }
