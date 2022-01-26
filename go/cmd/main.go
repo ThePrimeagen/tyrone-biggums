@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	_ "net/http/pprof"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/chat"
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
