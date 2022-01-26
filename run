@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+docker kill $(docker ps -q)
+docker run -d --rm -it -p 42069:42069 $1-ws-test
+
+if [ $1 -eq "go" ]; then
+    ./measure main go.$2.csv &
+    tail -f go.$2.csv &
+fi
+
+sleep 45
+docker kill $(docker ps -q)
+
+
