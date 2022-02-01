@@ -6,7 +6,11 @@ Video 2 is going to be likely Go vs Rust vs Typescript, but I want it to be
 more complex.  I want a server that has to perform a ton of operations and have
 real deadlines.
 
-#### Test Client (not started)
+#### Progress
+No progress has been made other than creating the idea.  Everything will be
+done live on Twitch.
+
+#### Test Client
 A test client should do the following.
 1. request an Id
 1. connect to the ws server
