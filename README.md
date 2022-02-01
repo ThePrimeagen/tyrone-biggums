@@ -8,7 +8,7 @@ real deadlines.
 
 #### Progress
 No progress has been made other than creating the idea.  Everything will be
-done live on Twitch.
+done live on [Twitch](https://twitch.tv/ThePrimeagen).
 
 #### Test Client
 A test client should do the following.
