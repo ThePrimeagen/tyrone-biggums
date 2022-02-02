@@ -8,11 +8,16 @@ import (
 )
 
 type Socket struct {
-    id uint
-    Out chan<- *Message
+    OutBound chan<- *Message
+    InBound <-chan *Message
+    conn *websocket.Conn
 }
 
-func NewSocket(id uint, in chan *Message, w http.ResponseWriter, r *http.Request) (*Socket, error) {
+func (s *Socket) Close() error {
+    return s.conn.Close()
+}
+
+func NewSocket(w http.ResponseWriter, r *http.Request) (*Socket, error) {
 	c, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
         return nil, err;
@@ -21,10 +26,12 @@ func NewSocket(id uint, in chan *Message, w http.ResponseWriter, r *http.Request
     // from me to network
     out := make(chan *Message)
 
+    // from network to me
+    in := make(chan *Message) // other type
+
     go func() {
         defer func() {
-            in <- CloseMessage(id)
-
+            in <- CloseMessage()
             c.Close()
         }()
 
@@ -39,7 +46,7 @@ func NewSocket(id uint, in chan *Message, w http.ResponseWriter, r *http.Request
                 continue
             }
 
-            in <- NewMessage(id, string(message))
+            in <- NewMessage(string(message))
         }
     }()
 
@@ -50,8 +57,9 @@ func NewSocket(id uint, in chan *Message, w http.ResponseWriter, r *http.Request
     }()
 
     return &Socket{
-        id,
         out,
+        in,
+        c,
     }, nil
 }
 
