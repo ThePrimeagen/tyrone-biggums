@@ -23,7 +23,6 @@ type ChatMessage struct {
 func (m *Message) FromMessage(message string) *Message {
 	return &Message{
 		websocket.TextMessage,
-		m.Id,
 		message,
 	}
 }

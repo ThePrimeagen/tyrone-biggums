@@ -1,12 +1,14 @@
-use std::sync::{Arc, Mutex};
+
+
+use std::fmt::Display;
 
 use futures::{stream::{SplitStream, SplitSink}, StreamExt, SinkExt};
-use log::info;
+
 use tokio::{sync::mpsc::{Sender, channel, Receiver}, net::TcpStream};
 use tokio_tungstenite::{WebSocketStream, tungstenite};
-use crate::lock;
 
-use super::message::{Emitter, Message};
+
+use super::message::{Message};
 
 type Tx = Sender<Message>;
 type WSStream = WebSocketStream<TcpStream>;
@@ -55,3 +57,10 @@ impl Socket {
         };
     }
 }
+
+impl Display for Socket {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Socket here!")
+    }
+}
+

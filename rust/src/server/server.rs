@@ -3,18 +3,18 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use futures::{SinkExt, stream::{SplitStream, Next}};
-use futures_util::{future, stream::TryStreamExt, StreamExt};
+use futures::{SinkExt, stream::{SplitStream}};
+use futures_util::{StreamExt};
 
 use log::info;
 use tokio::{
     net::{TcpListener, TcpStream},
-    sync::mpsc::{unbounded_channel, UnboundedSender, channel, Sender, Receiver},
+    sync::mpsc::{channel, Sender, Receiver},
     task::JoinHandle,
 };
-use tokio_tungstenite::{tungstenite::Message as SocketMessage, WebSocketStream};
+use tokio_tungstenite::{WebSocketStream};
 
-use crate::server::message::Emitter;
+
 
 use super::{
     message::{Message},
@@ -72,7 +72,7 @@ impl Server {
             rx: Some(rx),
         });
     }
-    fn get_receiver(&mut self) -> Option<Rx> {
+    pub fn get_receiver(&mut self) -> Option<Rx> {
         return std::mem::take(&mut self.rx);
     }
 }

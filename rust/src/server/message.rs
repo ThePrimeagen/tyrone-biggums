@@ -20,12 +20,12 @@ impl Message {
 
     pub fn from_message(message: Message, msg: String) -> Message {
         return match message {
-            Message::Message(c) => Message::Message(ChatMessage { msg }),
+            Message::Message(_c) => Message::Message(ChatMessage { msg }),
             Message::Close() => message,
         };
     }
 
-    pub fn from_chat_message(message: ChatMessage, msg: String) -> Message {
+    pub fn from_chat_message(_message: ChatMessage, msg: String) -> Message {
         return Message::Message(ChatMessage { msg });
     }
 }
