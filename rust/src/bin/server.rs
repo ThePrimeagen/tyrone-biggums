@@ -10,9 +10,14 @@ async fn main() -> Result<(), std::io::Error> {
     env_logger::init();
 
     let mut server = Server::new().await?;
-    let mut chat = Chat::new(&mut server);
+    let receiver = server.get_receiver();
 
-    server.receive(&mut chat);
+    tokio::spawn(async move {
+        while let Some(msg) = receiver.recv().await {
+            println!("{:?}", msg);
+        }
+    });
+
     server.join_handle.await?;
 
     return Ok(());

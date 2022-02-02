@@ -1,48 +1,41 @@
 use std::fmt::Display;
 
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::Sender;
 
 #[derive(Debug, Clone)]
 pub struct ChatMessage {
-    pub id: usize,
     pub msg: String,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
     Message(ChatMessage),
-    Close(usize)
+    Close(),
 }
 
 impl Message {
-    pub fn new(id: usize, msg: String) -> Message {
-        return Message::Message(ChatMessage { id, msg });
+    pub fn new(msg: String) -> Message {
+        return Message::Message(ChatMessage { msg });
     }
 
     pub fn from_message(message: Message, msg: String) -> Message {
         return match message {
-            Message::Message(c) => Message::Message(ChatMessage {
-                id: c.id,
-                msg,
-            }),
-            Message::Close(_id) => message
-        }
+            Message::Message(c) => Message::Message(ChatMessage { msg }),
+            Message::Close() => message,
+        };
     }
 
     pub fn from_chat_message(message: ChatMessage, msg: String) -> Message {
-        return Message::Message(ChatMessage {
-                id: message.id,
-                msg,
-            });
+        return Message::Message(ChatMessage { msg });
     }
 }
 
 impl Display for Message {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
-            Message::Message(c) => write!(f, "Message {}: {}", c.id, c.msg),
-            Message::Close(id) => write!(f, "Close Message for {}", id)
-        }
+            Message::Message(c) => write!(f, "Message: {}", c.msg),
+            Message::Close() => write!(f, "Socket Closed"),
+        };
     }
 }
 
@@ -53,5 +46,5 @@ pub trait Receiver<T> {
 
 pub trait Emitter<T> {
     // Todo: async?
-    fn listen(&mut self, tx: UnboundedSender<T>);
+    fn listen(&mut self, tx: Sender<T>);
 }

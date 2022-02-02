@@ -1,52 +1,57 @@
 use std::sync::{Arc, Mutex};
 
+use futures::{stream::{SplitStream, SplitSink}, StreamExt, SinkExt};
 use log::info;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::{sync::mpsc::{Sender, channel, Receiver}, net::TcpStream};
+use tokio_tungstenite::{WebSocketStream, tungstenite};
+use crate::lock;
 
 use super::message::{Emitter, Message};
-type Tx = UnboundedSender<Message>;
-type Listeners = Arc<Mutex<Vec<UnboundedSender<Message>>>>;
+
+type Tx = Sender<Message>;
+type WSStream = WebSocketStream<TcpStream>;
+type MessageStream = SplitStream<WSStream>;
 
 pub struct Socket {
-    tx: Tx,
-    listeners: Listeners,
+    listener: Option<Tx>,
+    pub rx: Receiver<Message>,
+    outgoing: SplitSink<WebSocketStream<TcpStream>, tungstenite::Message>
 }
 
-fn push_out(listeners: Listeners, msg: Message) {
-    listeners.lock().unwrap().iter().for_each(
-        |listener: &UnboundedSender<Message>| match listener.send(msg.clone()) {
-            Err(_e) => {}
-            Ok(_) => {}
-        },
-    );
-}
-
-impl Socket {
-    pub fn new(mut rx: UnboundedReceiver<Message>, tx: Tx, id: usize) -> Socket {
-        let listeners = Arc::new(Mutex::new(vec![]));
-        let inner_listeners = listeners.clone();
-
-        tokio::spawn(async move {
-            while let Some(msg) = rx.recv().await {
-                push_out(inner_listeners.clone(), msg);
-            }
-            push_out(inner_listeners.clone(), Message::Close(id));
-        });
-
-        return Socket { listeners, tx };
-    }
-
-    pub fn push(&self, msg: &Message) {
-        info!("socket.push: {:?}", msg);
-        match self.tx.send(msg.clone()) {
-            Err(_e) => panic!("self.tx failed to push on socket"),
-            _ => {}
+pub async fn handle_messages(mut incoming: MessageStream, tx: Tx) {
+    while let Some(Ok(msg)) = incoming.next().await {
+        if msg.is_text() {
+            let text = match msg.into_text() {
+                Err(_) => return,
+                Ok(txt) => txt,
+            };
+            tx.send(Message::new(text)).await;
         }
     }
 }
 
-impl Emitter<Message> for Socket {
-    fn listen(&mut self, tx: UnboundedSender<Message>) {
-        self.listeners.lock().unwrap().push(tx);
+impl Socket {
+    pub async fn new(ws_stream: WSStream) -> Socket {
+        let (outgoing, incoming) = ws_stream.split();
+
+        // from network to me
+        let (incoming_tx, incoming_rx) = channel::<Message>(10);
+
+        tokio::spawn(handle_messages(incoming, incoming_tx));
+
+        return Socket {
+            listener: None,
+            rx: incoming_rx,
+            outgoing,
+        };
+    }
+
+    pub async fn push(&mut self, msg: &Message) {
+        match msg {
+            Message::Message(msg) => {
+                self.outgoing.send(tokio_tungstenite::tungstenite::Message::Text(msg.msg.clone())).await;
+            },
+            _ => {}
+        };
     }
 }
