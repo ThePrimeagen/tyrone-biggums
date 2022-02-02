@@ -1,74 +1,39 @@
 import WebSocket from "ws";
 import Socket from "./socket";
 
-import { EventEmitter } from "events";
 import { Message } from "../message";
+import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 
-export interface Server extends EventEmitter {
+export interface Server extends EventEmitterBecausePeopleToldMeItWasDogShit {
     push(msg: Message[]): void;
     close(): void;
 
-    on(event: "error", cb: (error: Error) => void): this;
-    on(event: "message", cb: (msg: Message) => void): this;
-    on(event: "close", cb: () => void): this;
-    on(event: "socket-close", cb: (socket: Socket) => void): this;
+    on(event: "error", cb: (error: Error) => void): void;
+    on(event: "message", cb: (msg: Message) => void): void;
+    on(event: "close", cb: () => void): void;
+    on(event: "socket-close", cb: (socket: Socket) => void): void;
 }
 
-export default class ServerImpl extends EventEmitter implements Server {
-    private sockets: Map<number, Socket>;
-    private id: number;
+export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Server {
+    private other_socket?: Socket;
 
     constructor(addr: string, port: number = 42069) {
         super();
-
-        this.id = 0;
-        this.sockets = new Map();
-
         this.startServer(new WebSocket.Server({
             host: addr,
             port,
         }));
     }
 
-    push(msg: Message[]): void {
-        msg.forEach(msg => {
-            const le_socket = this.sockets.get(msg.id);
-            if (le_socket) {
-                le_socket.push(msg);
-            }
-        });
-    }
-
-    close(): void {
-        for (let [_, socket] of this.sockets) {
-            socket.close();
-        }
-
-        this.sockets = new Map();
-    }
-
-    private listenToSocket(socket: Socket): void {
-        socket.on("message", (message) => {
-            this.emit("message", message);
-        });
-
-        socket.on("close", (id) => {
-            const socket = this.sockets.get(id);
-            if (!socket) {
-                return;
-            }
-
-            this.sockets.delete(id);
-            this.emit("socket-close", socket);
-        });
-    }
-
     private startServer(server: WebSocket.Server) {
         server.on("connection", ws => {
-            const id = this.id++;
-            const socket = new Socket(ws, id);
-            this.sockets.set(id, socket);
-            this.listenToSocket(socket);
+            const socket = new Socket(ws);
+            if (this.other_socket) {
+                this.emit("game", [this.other_socket, socket]);
+                this.other_socket = undefined;
+            } else {
+                this.other_socket = socket;
+            }
         });
 
         server.on("error", e => {
