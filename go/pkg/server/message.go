@@ -1,42 +1,36 @@
 package server
 
-import "github.com/gorilla/websocket"
+import (
+	"encoding/json"
 
-type MessageContent struct {
-	Msg string  `json:"msg"`
-	Ts  float64 `json:"ts"`
-	Inc uint    `json:"inc"`
-}
+	"github.com/gorilla/websocket"
+)
 
 type Message struct {
-	Type    uint
-	Message string
+	Type    int
+	Message GameMessage
 }
 
-type ChatMessage struct {
-	Channel_name       string         `json:"channel_name"`
-	Channel_user_count int            `json:"channel_user_count"`
-	From               uint           `json:"from"`
-	Msg                MessageContent `json:"msg"`
+const (
+    ReadyUp int = iota
+)
+
+type GameMessage struct {
+    Type int `json:"type"`
 }
 
-func (m *Message) FromMessage(message string) *Message {
-	return &Message{
-		websocket.TextMessage,
-		message,
-	}
+func FromSocket(msg []byte) *Message {
+    var gameMessage GameMessage
+    json.Unmarshal(msg, &gameMessage)
+    return &Message {
+        Type: websocket.TextMessage,
+        Message: gameMessage,
+    }
 }
 
-func NewMessage(message string) *Message {
-	return &Message{
-		Type:    websocket.TextMessage,
-		Message: message,
-	}
-}
-
-func CloseMessage() *Message {
-	return &Message{
-		websocket.CloseMessage,
-		"",
-	}
+func ReadyUpMessage() *Message {
+    return &Message{
+        Type: websocket.TextMessage,
+        Message: GameMessage{ReadyUp},
+    }
 }

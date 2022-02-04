@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ThePrimeagen/tyrone-biggums/pkg/chat"
+	gameloop "github.com/ThePrimeagen/tyrone-biggums/pkg/game_loop"
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
@@ -16,11 +16,17 @@ func main() {
 	log.SetFlags(0)
 
     server, err := server.NewServer()
-    chat.StartChat(server.In, server.Out)
 
     if err != nil {
         log.Fatalf("%+v\n", err)
     }
+
+    go func() {
+        for socketPair := range server.Out {
+            // todo: how to listen to this?? more go funcs?
+            gameloop.NewGameLoop(socketPair).Run()
+        }
+    }()
 
 	http.HandleFunc("/", server.HandleNewConnection)
 	log.Fatal(http.ListenAndServe(*addr, nil))

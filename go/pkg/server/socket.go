@@ -1,23 +1,38 @@
 package server
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
 
-type Socket struct {
-    OutBound chan<- *Message
-    InBound <-chan *Message
+type Socket interface {
+    GetOutBound() chan<- *Message
+    GetInBound() <-chan *Message
+    Close() error
+}
+
+type SocketImpl struct {
+    outBound chan<- *Message
+    inBound <-chan *Message
     conn *websocket.Conn
 }
 
-func (s *Socket) Close() error {
+func (s *SocketImpl) GetOutBound() chan<- *Message {
+    return s.outBound
+}
+
+func (s *SocketImpl) GetInBound() <-chan *Message {
+    return s.inBound
+}
+
+func (s *SocketImpl) Close() error {
     return s.conn.Close()
 }
 
-func NewSocket(w http.ResponseWriter, r *http.Request) (*Socket, error) {
+func NewSocket(w http.ResponseWriter, r *http.Request) (Socket, error) {
 	c, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
         return nil, err;
@@ -31,7 +46,8 @@ func NewSocket(w http.ResponseWriter, r *http.Request) (*Socket, error) {
 
     go func() {
         defer func() {
-            in <- CloseMessage()
+            // TODO: Do we need to create a close message?
+            // in <- CloseMessage()
             c.Close()
         }()
 
@@ -46,17 +62,22 @@ func NewSocket(w http.ResponseWriter, r *http.Request) (*Socket, error) {
                 continue
             }
 
-            in <- NewMessage(string(message))
+            in <- FromSocket(message)
         }
     }()
 
     go func() {
         for msg := range out {
-            c.WriteMessage(websocket.TextMessage, []byte(msg.Message))
+            msg, err := json.Marshal(msg.Message)
+            if err != nil {
+                log.Fatalf("%+v\n", err)
+            }
+
+            c.WriteMessage(websocket.TextMessage, msg)
         }
     }()
 
-    return &Socket{
+    return &SocketImpl{
         out,
         in,
         c,
