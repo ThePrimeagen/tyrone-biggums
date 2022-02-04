@@ -7,8 +7,12 @@ more complex.  I want a server that has to perform a ton of operations and have
 real deadlines.
 
 #### Progress
-No progress has been made other than creating the idea.  Everything will be
-done live on [Twitch](https://twitch.tv/ThePrimeagen).
+* We have successfully created the socket pair emitting server in Go, Rust,
+  Typescript, and RxJS + Typescript.
+
+* Currently working on the beginning of the GameLoop
+
+* Everything will be done live on [Twitch](https://twitch.tv/ThePrimeagen).
 
 #### Test Client
 A test client should do the following.
