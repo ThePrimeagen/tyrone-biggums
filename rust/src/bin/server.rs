@@ -1,8 +1,7 @@
 #![feature(vec_retain_mut)]
 
 use rust::{
-    chat::Chat,
-    server::{message::{Receiver}, server::Server},
+    server::{server::Server},
 };
 
 #[tokio::main]
@@ -13,8 +12,10 @@ async fn main() -> Result<(), std::io::Error> {
     let receiver = server.get_receiver();
 
     tokio::spawn(async move {
-        while let Some(msg) = receiver.recv().await {
-            println!("{:?}", msg);
+        let mut receiver = receiver.unwrap();
+        while let Some(two_sockets) = receiver.recv().await {
+            println!("{}", two_sockets.0);
+            println!("{}", two_sockets.1);
         }
     });
 

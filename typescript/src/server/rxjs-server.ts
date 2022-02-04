@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import Socket from "./socket";
+import Socket from "./rxjs-socket";
 import { filter, map, Observable, Observer, scan, Subject } from "rxjs";
 
 export interface Server {
@@ -38,7 +38,7 @@ export default class ServerImpl {
                 return group;
             }, []),
             filter((group: WebSocket[]) => {
-                return group.length !== 2;
+                return group.length === 2;
             }),
             map<WebSocket[], [Socket, Socket]>((group: WebSocket[]) => {
                 return [

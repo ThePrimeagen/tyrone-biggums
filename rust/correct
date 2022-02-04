@@ -1,0 +1,265 @@
+new reader: 0
+new reader: 1
+new reader: 2
+new reader: 3
+new reader: 4
+new reader: 5
+new reader: 6
+new reader: 7
+new reader: 8
+new reader: 9
+new reader: 10
+new reader: 11
+new reader: 12
+new reader: 13
+new reader: 14
+new reader: 15
+new reader: 16
+new reader: 17
+new reader: 18
+new reader: 19
+new reader: 20
+new reader: 21
+new reader: 22
+new reader: 23
+new reader: 24
+new reader: 25
+new reader: 26
+new reader: 27
+new reader: 28
+new reader: 29
+new reader: 30
+new reader: 31
+new reader: 32
+new reader: 33
+new reader: 34
+new reader: 35
+new reader: 36
+new reader: 37
+new reader: 38
+new reader: 39
+count: 1
+process_reader(20) {"channel_name":"foo0","channel_user_count":2,"from":0,"msg":{"msg":"Hello, World","ts":1643215236065973,"inc":69}}
+process_reader(0) {"channel_name":"foo0","channel_user_count":2,"from":0,"msg":{"msg":"Hello, World","ts":1643215236065973,"inc":69}}
+TIME,279
+count: 2
+process_reader(21) {"channel_name":"foo1","channel_user_count":2,"from":1,"msg":{"msg":"Hello, World","ts":1643215236098307,"inc":69}}
+process_reader(1) {"channel_name":"foo1","channel_user_count":2,"from":1,"msg":{"msg":"Hello, World","ts":1643215236098307,"inc":69}}
+TIME,206
+count: 3
+process_reader(22) {"channel_name":"foo2","channel_user_count":2,"from":2,"msg":{"msg":"Hello, World","ts":1643215236130594,"inc":69}}
+process_reader(2) {"channel_name":"foo2","channel_user_count":2,"from":2,"msg":{"msg":"Hello, World","ts":1643215236130594,"inc":69}}
+TIME,233
+count: 4
+process_reader(23) {"channel_name":"foo3","channel_user_count":2,"from":3,"msg":{"msg":"Hello, World","ts":1643215236166898,"inc":69}}
+process_reader(3) {"channel_name":"foo3","channel_user_count":2,"from":3,"msg":{"msg":"Hello, World","ts":1643215236166898,"inc":69}}
+TIME,156
+count: 5
+process_reader(24) {"channel_name":"foo4","channel_user_count":2,"from":4,"msg":{"msg":"Hello, World","ts":1643215236196216,"inc":69}}
+process_reader(4) {"channel_name":"foo4","channel_user_count":2,"from":4,"msg":{"msg":"Hello, World","ts":1643215236196216,"inc":69}}
+TIME,139
+count: 6
+process_reader(25) {"channel_name":"foo5","channel_user_count":2,"from":5,"msg":{"msg":"Hello, World","ts":1643215236224431,"inc":69}}
+process_reader(5) {"channel_name":"foo5","channel_user_count":2,"from":5,"msg":{"msg":"Hello, World","ts":1643215236224431,"inc":69}}
+TIME,189
+count: 7
+process_reader(26) {"channel_name":"foo6","channel_user_count":2,"from":6,"msg":{"msg":"Hello, World","ts":1643215236256741,"inc":69}}
+process_reader(6) {"channel_name":"foo6","channel_user_count":2,"from":6,"msg":{"msg":"Hello, World","ts":1643215236256741,"inc":69}}
+TIME,125
+count: 8
+process_reader(27) {"channel_name":"foo7","channel_user_count":2,"from":7,"msg":{"msg":"Hello, World","ts":1643215236289966,"inc":69}}
+process_reader(7) {"channel_name":"foo7","channel_user_count":2,"from":7,"msg":{"msg":"Hello, World","ts":1643215236289966,"inc":69}}
+TIME,154
+count: 9
+process_reader(8) {"channel_name":"foo8","channel_user_count":2,"from":8,"msg":{"msg":"Hello, World","ts":1643215236333256,"inc":69}}
+TIME,142
+process_reader(28) {"channel_name":"foo8","channel_user_count":2,"from":8,"msg":{"msg":"Hello, World","ts":1643215236333256,"inc":69}}
+count: 10
+process_reader(29) {"channel_name":"foo9","channel_user_count":2,"from":9,"msg":{"msg":"Hello, World","ts":1643215236368482,"inc":69}}
+process_reader(9) {"channel_name":"foo9","channel_user_count":2,"from":9,"msg":{"msg":"Hello, World","ts":1643215236368482,"inc":69}}
+TIME,210
+count: 11
+process_reader(30) {"channel_name":"foo10","channel_user_count":2,"from":10,"msg":{"msg":"Hello, World","ts":1643215236449871,"inc":69}}
+process_reader(10) {"channel_name":"foo10","channel_user_count":2,"from":10,"msg":{"msg":"Hello, World","ts":1643215236449871,"inc":69}}
+TIME,399
+count: 12
+process_reader(31) {"channel_name":"foo11","channel_user_count":2,"from":11,"msg":{"msg":"Hello, World","ts":1643215236545464,"inc":69}}
+process_reader(11) {"channel_name":"foo11","channel_user_count":2,"from":11,"msg":{"msg":"Hello, World","ts":1643215236545464,"inc":69}}
+TIME,222
+count: 13
+process_reader(32) {"channel_name":"foo12","channel_user_count":2,"from":12,"msg":{"msg":"Hello, World","ts":1643215236587951,"inc":69}}
+process_reader(12) {"channel_name":"foo12","channel_user_count":2,"from":12,"msg":{"msg":"Hello, World","ts":1643215236587951,"inc":69}}
+TIME,242
+count: 14
+process_reader(33) {"channel_name":"foo13","channel_user_count":2,"from":13,"msg":{"msg":"Hello, World","ts":1643215236618354,"inc":69}}
+process_reader(13) {"channel_name":"foo13","channel_user_count":2,"from":13,"msg":{"msg":"Hello, World","ts":1643215236618354,"inc":69}}
+TIME,128
+count: 15
+process_reader(34) {"channel_name":"foo14","channel_user_count":2,"from":14,"msg":{"msg":"Hello, World","ts":1643215236642622,"inc":69}}
+process_reader(14) {"channel_name":"foo14","channel_user_count":2,"from":14,"msg":{"msg":"Hello, World","ts":1643215236642622,"inc":69}}
+TIME,171
+count: 16
+process_reader(35) {"channel_name":"foo15","channel_user_count":2,"from":15,"msg":{"msg":"Hello, World","ts":1643215236667892,"inc":69}}
+process_reader(15) {"channel_name":"foo15","channel_user_count":2,"from":15,"msg":{"msg":"Hello, World","ts":1643215236667892,"inc":69}}
+TIME,142
+count: 17
+process_reader(36) {"channel_name":"foo16","channel_user_count":2,"from":16,"msg":{"msg":"Hello, World","ts":1643215236693130,"inc":69}}
+process_reader(16) {"channel_name":"foo16","channel_user_count":2,"from":16,"msg":{"msg":"Hello, World","ts":1643215236693130,"inc":69}}
+TIME,118
+count: 18
+process_reader(37) {"channel_name":"foo17","channel_user_count":2,"from":17,"msg":{"msg":"Hello, World","ts":1643215236717405,"inc":69}}
+process_reader(17) {"channel_name":"foo17","channel_user_count":2,"from":17,"msg":{"msg":"Hello, World","ts":1643215236717405,"inc":69}}
+TIME,219
+count: 19
+process_reader(38) {"channel_name":"foo18","channel_user_count":2,"from":18,"msg":{"msg":"Hello, World","ts":1643215236745653,"inc":69}}
+process_reader(18) {"channel_name":"foo18","channel_user_count":2,"from":18,"msg":{"msg":"Hello, World","ts":1643215236745653,"inc":69}}
+TIME,153
+count: 20
+process_reader(39) {"channel_name":"foo19","channel_user_count":2,"from":19,"msg":{"msg":"Hello, World","ts":1643215236771987,"inc":69}}
+process_reader(19) {"channel_name":"foo19","channel_user_count":2,"from":19,"msg":{"msg":"Hello, World","ts":1643215236771987,"inc":69}}
+TIME,148
+count: 21
+process_reader(0) {"channel_name":"foo0","channel_user_count":2,"from":20,"msg":{"msg":"Hello, World","ts":1643215236797146,"inc":69}}
+process_reader(20) {"channel_name":"foo0","channel_user_count":2,"from":20,"msg":{"msg":"Hello, World","ts":1643215236797146,"inc":69}}
+TIME,151
+count: 22
+process_reader(21) {"channel_name":"foo1","channel_user_count":2,"from":21,"msg":{"msg":"Hello, World","ts":1643215236824437,"inc":69}}
+TIME,92
+process_reader(1) {"channel_name":"foo1","channel_user_count":2,"from":21,"msg":{"msg":"Hello, World","ts":1643215236824437,"inc":69}}
+count: 23
+process_reader(2) {"channel_name":"foo2","channel_user_count":2,"from":22,"msg":{"msg":"Hello, World","ts":1643215236851650,"inc":69}}
+process_reader(22) {"channel_name":"foo2","channel_user_count":2,"from":22,"msg":{"msg":"Hello, World","ts":1643215236851650,"inc":69}}
+TIME,212
+count: 24
+process_reader(23) {"channel_name":"foo3","channel_user_count":2,"from":23,"msg":{"msg":"Hello, World","ts":1643215236879954,"inc":69}}
+TIME,179
+process_reader(3) {"channel_name":"foo3","channel_user_count":2,"from":23,"msg":{"msg":"Hello, World","ts":1643215236879954,"inc":69}}
+count: 25
+process_reader(24) {"channel_name":"foo4","channel_user_count":2,"from":24,"msg":{"msg":"Hello, World","ts":1643215236913404,"inc":69}}
+TIME,159
+process_reader(4) {"channel_name":"foo4","channel_user_count":2,"from":24,"msg":{"msg":"Hello, World","ts":1643215236913404,"inc":69}}
+count: 26
+process_reader(25) {"channel_name":"foo5","channel_user_count":2,"from":25,"msg":{"msg":"Hello, World","ts":1643215236949676,"inc":69}}
+TIME,127
+process_reader(5) {"channel_name":"foo5","channel_user_count":2,"from":25,"msg":{"msg":"Hello, World","ts":1643215236949676,"inc":69}}
+count: 27
+process_reader(26) {"channel_name":"foo6","channel_user_count":2,"from":26,"msg":{"msg":"Hello, World","ts":1643215236973936,"inc":69}}
+TIME,246
+process_reader(6) {"channel_name":"foo6","channel_user_count":2,"from":26,"msg":{"msg":"Hello, World","ts":1643215236973936,"inc":69}}
+count: 28
+process_reader(27) {"channel_name":"foo7","channel_user_count":2,"from":27,"msg":{"msg":"Hello, World","ts":1643215237007214,"inc":69}}
+TIME,141
+process_reader(7) {"channel_name":"foo7","channel_user_count":2,"from":27,"msg":{"msg":"Hello, World","ts":1643215237007214,"inc":69}}
+count: 29
+process_reader(28) {"channel_name":"foo8","channel_user_count":2,"from":28,"msg":{"msg":"Hello, World","ts":1643215237035539,"inc":69}}
+TIME,212
+process_reader(8) {"channel_name":"foo8","channel_user_count":2,"from":28,"msg":{"msg":"Hello, World","ts":1643215237035539,"inc":69}}
+count: 30
+process_reader(29) {"channel_name":"foo9","channel_user_count":2,"from":29,"msg":{"msg":"Hello, World","ts":1643215237066748,"inc":69}}
+TIME,220
+process_reader(9) {"channel_name":"foo9","channel_user_count":2,"from":29,"msg":{"msg":"Hello, World","ts":1643215237066748,"inc":69}}
+count: 31
+process_reader(10) {"channel_name":"foo10","channel_user_count":2,"from":30,"msg":{"msg":"Hello, World","ts":1643215237094040,"inc":69}}
+process_reader(30) {"channel_name":"foo10","channel_user_count":2,"from":30,"msg":{"msg":"Hello, World","ts":1643215237094040,"inc":69}}
+TIME,113
+count: 32
+process_reader(31) {"channel_name":"foo11","channel_user_count":2,"from":31,"msg":{"msg":"Hello, World","ts":1643215237119278,"inc":69}}
+TIME,93
+process_reader(11) {"channel_name":"foo11","channel_user_count":2,"from":31,"msg":{"msg":"Hello, World","ts":1643215237119278,"inc":69}}
+count: 33
+process_reader(32) {"channel_name":"foo12","channel_user_count":2,"from":32,"msg":{"msg":"Hello, World","ts":1643215237143426,"inc":69}}
+TIME,137
+process_reader(12) {"channel_name":"foo12","channel_user_count":2,"from":32,"msg":{"msg":"Hello, World","ts":1643215237143426,"inc":69}}
+count: 34
+process_reader(33) {"channel_name":"foo13","channel_user_count":2,"from":33,"msg":{"msg":"Hello, World","ts":1643215237170613,"inc":69}}
+TIME,170
+process_reader(13) {"channel_name":"foo13","channel_user_count":2,"from":33,"msg":{"msg":"Hello, World","ts":1643215237170613,"inc":69}}
+count: 35
+process_reader(14) {"channel_name":"foo14","channel_user_count":2,"from":34,"msg":{"msg":"Hello, World","ts":1643215237196822,"inc":69}}
+process_reader(34) {"channel_name":"foo14","channel_user_count":2,"from":34,"msg":{"msg":"Hello, World","ts":1643215237196822,"inc":69}}
+TIME,137
+count: 36
+process_reader(15) {"channel_name":"foo15","channel_user_count":2,"from":35,"msg":{"msg":"Hello, World","ts":1643215237229054,"inc":69}}
+process_reader(35) {"channel_name":"foo15","channel_user_count":2,"from":35,"msg":{"msg":"Hello, World","ts":1643215237229054,"inc":69}}
+TIME,156
+count: 37
+process_reader(36) {"channel_name":"foo16","channel_user_count":2,"from":36,"msg":{"msg":"Hello, World","ts":1643215237260240,"inc":69}}
+TIME,136
+process_reader(16) {"channel_name":"foo16","channel_user_count":2,"from":36,"msg":{"msg":"Hello, World","ts":1643215237260240,"inc":69}}
+count: 38
+process_reader(37) {"channel_name":"foo17","channel_user_count":2,"from":37,"msg":{"msg":"Hello, World","ts":1643215237288462,"inc":69}}
+TIME,226
+process_reader(17) {"channel_name":"foo17","channel_user_count":2,"from":37,"msg":{"msg":"Hello, World","ts":1643215237288462,"inc":69}}
+count: 39
+process_reader(18) {"channel_name":"foo18","channel_user_count":2,"from":38,"msg":{"msg":"Hello, World","ts":1643215237319811,"inc":69}}
+process_reader(38) {"channel_name":"foo18","channel_user_count":2,"from":38,"msg":{"msg":"Hello, World","ts":1643215237319811,"inc":69}}
+TIME,184
+count: 40
+process_reader(39) {"channel_name":"foo19","channel_user_count":2,"from":39,"msg":{"msg":"Hello, World","ts":1643215237353131,"inc":69}}
+TIME,79
+process_reader(19) {"channel_name":"foo19","channel_user_count":2,"from":39,"msg":{"msg":"Hello, World","ts":1643215237353131,"inc":69}}
+count: 40
+count: 41
+process_reader(20) {"channel_name":"foo0","channel_user_count":2,"from":0,"msg":{"msg":"Hello, World","ts":1643215237394471,"inc":69}}
+process_reader(0) {"channel_name":"foo0","channel_user_count":2,"from":0,"msg":{"msg":"Hello, World","ts":1643215237394471,"inc":69}}
+TIME,156
+count: 42
+process_reader(21) {"channel_name":"foo1","channel_user_count":2,"from":1,"msg":{"msg":"Hello, World","ts":1643215237420748,"inc":69}}
+process_reader(1) {"channel_name":"foo1","channel_user_count":2,"from":1,"msg":{"msg":"Hello, World","ts":1643215237420748,"inc":69}}
+TIME,198
+count: 43
+process_reader(2) {"channel_name":"foo2","channel_user_count":2,"from":2,"msg":{"msg":"Hello, World","ts":1643215237450029,"inc":69}}
+TIME,159
+process_reader(22) {"channel_name":"foo2","channel_user_count":2,"from":2,"msg":{"msg":"Hello, World","ts":1643215237450029,"inc":69}}
+count: 44
+process_reader(23) {"channel_name":"foo3","channel_user_count":2,"from":3,"msg":{"msg":"Hello, World","ts":1643215237487415,"inc":69}}
+process_reader(3) {"channel_name":"foo3","channel_user_count":2,"from":3,"msg":{"msg":"Hello, World","ts":1643215237487415,"inc":69}}
+TIME,204
+count: 45
+process_reader(4) {"channel_name":"foo4","channel_user_count":2,"from":4,"msg":{"msg":"Hello, World","ts":1643215237516715,"inc":69}}
+TIME,194
+process_reader(24) {"channel_name":"foo4","channel_user_count":2,"from":4,"msg":{"msg":"Hello, World","ts":1643215237516715,"inc":69}}
+count: 46
+process_reader(25) {"channel_name":"foo5","channel_user_count":2,"from":5,"msg":{"msg":"Hello, World","ts":1643215237544027,"inc":69}}
+process_reader(5) {"channel_name":"foo5","channel_user_count":2,"from":5,"msg":{"msg":"Hello, World","ts":1643215237544027,"inc":69}}
+TIME,168
+count: 47
+process_reader(26) {"channel_name":"foo6","channel_user_count":2,"from":6,"msg":{"msg":"Hello, World","ts":1643215237577295,"inc":69}}
+process_reader(6) {"channel_name":"foo6","channel_user_count":2,"from":6,"msg":{"msg":"Hello, World","ts":1643215237577295,"inc":69}}
+TIME,191
+count: 48
+process_reader(27) {"channel_name":"foo7","channel_user_count":2,"from":7,"msg":{"msg":"Hello, World","ts":1643215237605725,"inc":69}}
+process_reader(7) {"channel_name":"foo7","channel_user_count":2,"from":7,"msg":{"msg":"Hello, World","ts":1643215237605725,"inc":69}}
+TIME,187
+count: 49
+process_reader(28) {"channel_name":"foo8","channel_user_count":2,"from":8,"msg":{"msg":"Hello, World","ts":1643215237637035,"inc":69}}
+process_reader(8) {"channel_name":"foo8","channel_user_count":2,"from":8,"msg":{"msg":"Hello, World","ts":1643215237637035,"inc":69}}
+TIME,132
+count: 50
+process_reader(29) {"channel_name":"foo9","channel_user_count":2,"from":9,"msg":{"msg":"Hello, World","ts":1643215237666336,"inc":69}}
+process_reader(9) {"channel_name":"foo9","channel_user_count":2,"from":9,"msg":{"msg":"Hello, World","ts":1643215237666336,"inc":69}}
+TIME,217
+count: 51
+process_reader(30) {"channel_name":"foo10","channel_user_count":2,"from":10,"msg":{"msg":"Hello, World","ts":1643215237697643,"inc":69}}
+process_reader(10) {"channel_name":"foo10","channel_user_count":2,"from":10,"msg":{"msg":"Hello, World","ts":1643215237697643,"inc":69}}
+TIME,162
+count: 52
+process_reader(11) {"channel_name":"foo11","channel_user_count":2,"from":11,"msg":{"msg":"Hello, World","ts":1643215237722037,"inc":69}}
+TIME,189
+process_reader(31) {"channel_name":"foo11","channel_user_count":2,"from":11,"msg":{"msg":"Hello, World","ts":1643215237722037,"inc":69}}
+count: 53
+process_reader(32) {"channel_name":"foo12","channel_user_count":2,"from":12,"msg":{"msg":"Hello, World","ts":1643215237753417,"inc":69}}
+process_reader(12) {"channel_name":"foo12","channel_user_count":2,"from":12,"msg":{"msg":"Hello, World","ts":1643215237753417,"inc":69}}
+TIME,117
+count: 54
+process_reader(33) {"channel_name":"foo13","channel_user_count":2,"from":13,"msg":{"msg":"Hello, World","ts":1643215237786707,"inc":69}}
+process_reader(13) {"channel_name":"foo13","channel_user_count":2,"from":13,"msg":{"msg":"Hello, World","ts":1643215237786707,"inc":69}}
+TIME,233
+count: 55
+process_reader(34) {"channel_name":"foo14","channel_user_count":2,"from":14,"msg":{"msg":"Hello, World","ts":1643215237817030,"inc":69}}
+process_reader(14) {"channel_name":"foo14","channel_user_count":2,"from":14,"msg":{"msg":"Hello, World","ts":1643215237817030,"inc":69}}
+TIME,233
+count: 56
+process_reader(35) {"channel_name":"foo15","channel_user_count":2,"from":15,"msg":{"msg":"Hello, World","ts":1643215237845279,"inc":69}}
+process_reader(15) {"channel_name":"foo15","channel_user_count":2,"from":15,"msg":{"msg":"Hello, World","ts":1643215237845279,"inc":69}}
+TIME,128

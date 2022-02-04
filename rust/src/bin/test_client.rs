@@ -1,10 +1,10 @@
-use std::{sync::{Arc, Mutex}, time::{SystemTime, UNIX_EPOCH, Duration}};
+use std::{time::{SystemTime, UNIX_EPOCH, Duration}};
 
-use futures::{StreamExt, SinkExt, pin_mut, future, stream::{SplitSink, ForEach}};
+use futures::{StreamExt, SinkExt, pin_mut, stream::{SplitSink}};
 use log::{info, error};
 use serde::{Serialize, Deserialize};
 use structopt::StructOpt;
-use tokio::io::AsyncWriteExt;
+
 use tokio_tungstenite::{connect_async, tungstenite::Message, WebSocketStream};
 use url::Url;
 

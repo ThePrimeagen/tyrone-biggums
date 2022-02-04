@@ -5,9 +5,7 @@ import { Message } from "../message";
 import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 
 export interface Server extends EventEmitterBecausePeopleToldMeItWasDogShit {
-    push(msg: Message[]): void;
     close(): void;
-
     on(event: "error", cb: (error: Error) => void): void;
     on(event: "message", cb: (msg: Message) => void): void;
     on(event: "close", cb: () => void): void;
@@ -16,13 +14,15 @@ export interface Server extends EventEmitterBecausePeopleToldMeItWasDogShit {
 
 export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Server {
     private other_socket?: Socket;
+    private server: WebSocket.WebSocketServer;
 
     constructor(addr: string, port: number = 42069) {
         super();
-        this.startServer(new WebSocket.Server({
+        this.server = new WebSocket.Server({
             host: addr,
             port,
-        }));
+        });
+        this.startServer(this.server);
     }
 
     private startServer(server: WebSocket.Server) {
@@ -47,5 +47,9 @@ export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogS
         server.on("listening", () => {
             this.emit("listening");
         });
+    }
+
+    public close() {
+        this.server.close();
     }
 }

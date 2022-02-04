@@ -6,10 +6,13 @@ export interface Socket {
     events: Subject<Message>;
 }
 
+let _id = 0;
 export default class SocketImpl implements Socket {
     events: Subject<Message>;
+    public id: number;
 
     constructor(private socket: WebSocket) {
+        this.id = ++_id;
         this.events = new Subject<Message>();
 
         this.socket.on("message", (msg) => {
