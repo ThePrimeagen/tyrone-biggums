@@ -2,9 +2,9 @@ import WebSocket from "ws";
 import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { createMessage, Message } from "../message";
 
-export interface Socket extends EventEmitterBecausePeopleToldMeItWasDogShit {
+export interface Socket {
     // Events
-    push(data: object, cb?: () => void): void;
+    push(data: object): Promise<void>;
 
     on(event: "error", cb: (error: Error) => void): void;
     on(event: "message", cb: (msg: Message) => void): void;
@@ -32,8 +32,16 @@ export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogS
         this.socket.close(code);
     }
 
-    push(data: object, cb?: () => void): void {
-        this.socket.send(JSON.stringify(data), cb);
+    push(data: object): Promise<void> {
+        return new Promise((res, rej) => {
+            this.socket.send(JSON.stringify(data), (err?: Error) => {
+                if (err) {
+                    rej(err);
+                } else {
+                    res();
+                }
+            });
+        })
     }
 }
 
