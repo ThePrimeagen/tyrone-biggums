@@ -1,8 +1,8 @@
 import WebSocket from "ws";
-import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
+import { NonDogShitEventEmitter } from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { createMessage, Message } from "../message";
 
-export interface Socket extends EventEmitterBecausePeopleToldMeItWasDogShit {
+export interface Socket {
     // Events
     push(data: object, cb?: () => void): void;
 
@@ -11,10 +11,8 @@ export interface Socket extends EventEmitterBecausePeopleToldMeItWasDogShit {
     on(event: "close", cb: () => void): void;
 }
 
-export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Socket {
+export default class SocketImpl implements NonDogShitEventEmitter, Socket {
     constructor(private socket: WebSocket) {
-        super();
-
         this.socket.on("message", (msg) => {
             this.emit("message", createMessage(msg.toString()));
         });
