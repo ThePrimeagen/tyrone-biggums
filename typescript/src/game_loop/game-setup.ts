@@ -45,6 +45,9 @@ export function setupWithCallbacks(p1: Socket, p2: Socket, callback: Callback, t
 
 
 export function setupWithRxJS(p1: SocketRxJS, p2: SocketRxJS, timeout: number = 30000): Observable<undefined | Error>  {
+    p1.push(createReadyUpMessage());
+    p2.push(createReadyUpMessage());
+
     return merge(
         zip(
             p1.events.pipe(
@@ -61,7 +64,7 @@ export function setupWithRxJS(p1: SocketRxJS, p2: SocketRxJS, timeout: number = 
        take(1),
        map((x) => {
            if (x instanceof Error) {
-               return x;
+               throw x;
            }
 
            return undefined;
