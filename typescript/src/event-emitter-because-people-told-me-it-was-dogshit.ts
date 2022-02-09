@@ -4,6 +4,7 @@ export type Callback = (args?: any) => void;
 export interface NonDogShitEventEmitter {
     emit(eventName: string, args?: any): void;
     on(eventName: string, cb: Callback): void;
+    off(eventName: string, cb: Callback): void;
 }
 
 export default class EventEmitterBecausePeopleToldMeItWasDogShit implements NonDogShitEventEmitter {
@@ -34,8 +35,17 @@ export default class EventEmitterBecausePeopleToldMeItWasDogShit implements NonD
 
         callbacks.push(cb);
     }
-}
 
-export class ReplayEmitter implements NonDogShitEventEmitter {
+    public off(eventName: string, cb: Callback): void {
+        let callbacks = this.callbacks.get(eventName);
+        if (!callbacks) {
+            return;
+        }
+
+        const idx = callbacks.indexOf(cb);
+        if (idx != -1) {
+            callbacks.splice(idx, 1);
+        }
+    }
 }
 

@@ -1,3 +1,4 @@
+import { MessageType } from "../../message";
 import { createSocket, createSocketRxJS } from "../../mocks/socket";
 import GameQueue, { GameQueueRxJSImpl } from "../game-queue";
 
@@ -48,27 +49,27 @@ test("GameQueueRxJS", function() {
 
     expect(queue.flush()).toEqual([])
 
-    p1.events.next({msg: "foo"});
+    p1.events.next({type: MessageType.ReadyUp});
     expect(queue.flush()).toEqual([{
-        message: {msg: "foo"},
+        message: {type: MessageType.ReadyUp},
         from: p1,
     }])
     expect(queue.flush()).toEqual([])
 
-    p2.events.next({msg: "foo"});
+    p2.events.next({type: MessageType.ReadyUp});
     expect(queue.flush()).toEqual([{
-        message: {msg: "foo"},
+        message: {type: MessageType.ReadyUp},
         from: p2,
     }])
     expect(queue.flush()).toEqual([])
 
-    p2.events.next({msg: "foo"});
-    p1.events.next({msg: "foo2"});
+    p2.events.next({type: MessageType.ReadyUp});
+    p1.events.next({type: MessageType.Play});
     expect(queue.flush()).toEqual([{
-        message: {msg: "foo"},
+        message: {type: MessageType.ReadyUp},
         from: p2,
     }, {
-        message: {msg: "foo2"},
+        message: {type: MessageType.Play},
         from: p1,
     }])
     expect(queue.flush()).toEqual([])

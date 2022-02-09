@@ -7,6 +7,7 @@ export function createSocket(): Socket {
     return {
         push: jest.fn(),
         on: jest.fn(),
+        off: jest.fn(),
     };
 }
 

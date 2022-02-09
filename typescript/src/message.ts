@@ -1,10 +1,21 @@
+export enum MessageType {
+    ReadyUp,
+    Play,
+}
+
 export type Message = {
-    msg: string,
+    type: MessageType,
 };
 
-export function createMessage(msg: string): Message {
+export function createMessage(type: MessageType): Message {
     return {
-        msg
+        type
+    };
+}
+
+export function createReadyUpMessage(): Message {
+    return {
+        type: MessageType.ReadyUp
     };
 }
 

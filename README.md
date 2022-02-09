@@ -2,17 +2,21 @@
 [Go vs Typescript](https://www.youtube.com/watch?v=h7UEwBaGoVo): Video 1 of the series is tag go-vs-ts-video-1
 
 ### Current Project
-Video 2 is going to be likely Go vs Rust vs Typescript, but I want it to be
+Video 2 and 3 are going to be likely Go vs Rust vs Typescript, but I want it to be
 more complex.  I want a server that has to perform a ton of operations and have
 real deadlines.
 
-#### Progress
+* Everything will be done live on [Twitch](https://twitch.tv/ThePrimeagen).
+
+#### Completed
 * We have successfully created the socket pair emitting server in Go, Rust,
   Typescript, and RxJS + Typescript.
 
-* Currently working on the beginning of the GameLoop
+#### In Flight
+* Working through the TypeScript implementation.
 
-* Everything will be done live on [Twitch](https://twitch.tv/ThePrimeagen).
+#### To Be Completed
+* Fill this in me from the future
 
 #### Test Client
 A test client should do the following.

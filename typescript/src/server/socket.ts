@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import EventEmitterBecausePeopleToldMeItWasDogShit, { Callback, NonDogShitEventEmitter } from "../event-emitter-because-people-told-me-it-was-dogshit";
-import { createMessage, Message } from "../message";
+import { Message } from "../message";
 import { BaseSocket } from "./universal-types";
 
 export interface Socket {
@@ -8,6 +8,7 @@ export interface Socket {
     on(event: "error", cb: (error: Error) => void): void;
     on(event: "message", cb: (msg: Message) => void): void;
     on(event: "close", cb: () => void): void;
+    off(event: string, cb: (arg?: any) => void): void;
 }
 
 export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Socket, BaseSocket {
@@ -15,7 +16,8 @@ export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogS
     constructor(private socket: WebSocket) {
         super();
         this.socket.on("message", (msg) => {
-            this.emit("message", createMessage(msg.toString()));
+            const message = JSON.parse(msg.toString()) as Message;
+            this.emit("message", message);
         });
 
         this.socket.on("close", () => {
