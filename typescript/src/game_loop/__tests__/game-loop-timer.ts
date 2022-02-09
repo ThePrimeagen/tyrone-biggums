@@ -71,7 +71,14 @@ test("sad case, tick rate is exceeded.", async function() {
     timer.start(spy);
     expect(spy).toHaveBeenCalledTimes(1);
     await wait(0)
+
+    // @ts-ignore
+    const timeElapsed = spy.mock.calls[1][0];
+
     expect(spy).toHaveBeenCalledTimes(2);
+    expect(timeElapsed).toBeGreaterThanOrEqual(48);
+    expect(timeElapsed).toBeLessThanOrEqual(52); // a little extra fudge room
+
     await wait(0)
     expect(spy).toHaveBeenCalledTimes(2);
 
