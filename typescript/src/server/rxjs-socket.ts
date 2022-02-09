@@ -1,12 +1,14 @@
 import { Subject } from "rxjs";
 import WebSocket from "ws";
 import { createMessage, Message } from "../message";
+import { BaseSocket } from "./universal-types";
 
 export interface Socket {
+    push(data: object, cb?: () => void): void;
     events: Subject<Message>;
 }
 
-export default class SocketImpl implements Socket {
+export default class SocketImpl implements Socket, BaseSocket {
     events: Subject<Message>;
 
     constructor(private socket: WebSocket) {
@@ -27,6 +29,10 @@ export default class SocketImpl implements Socket {
 
     close(code?: number): void {
         this.socket.close(code);
+    }
+
+    push(data: object, cb?: () => void): void {
+        this.socket.send(JSON.stringify(data), cb);
     }
 }
 
