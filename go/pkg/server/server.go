@@ -3,43 +3,41 @@ package server
 import (
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
-type Server struct {
-	Out <-chan [2]Socket
-
-	out chan [2]Socket
-    other_socket Socket
-}
-
 var upgrader = websocket.Upgrader{} // use default options
 
-func NewServer() (*Server, error) {
-	out := make(chan [2]Socket, 9)
-	server := Server{
-		Out: out,
-		out: out,
-        other_socket: nil,
-	}
+func NewSocketServer() (*http.ServeMux, <-chan [2]*Socket) {
+	socketPairs := make(chan [2]*Socket, 9)
+	mux := http.NewServeMux()
 
-	return &server, nil
-}
+	mux.HandleFunc("/", func() http.HandlerFunc {
+		var pendingSocket *Socket
+		var mutex sync.Mutex
 
-func (s *Server) HandleNewConnection(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+			socket, err := NewSocket(w, r)
+			if err != nil {
+				log.Fatalln("couldn't upgrade socket.", err)
+				http.Error(w, err.Error(), 500)
+				return
+			}
 
-    socket, err := NewSocket(w, r)
+			mutex.Lock()
+			defer mutex.Unlock()
 
-	if err != nil {
-		log.Fatalln("couldn't upgrade socket.", err)
-		return
-	}
+			if pendingSocket == nil {
+				pendingSocket = socket
+				return
+			}
 
-    if s.other_socket != nil {
-        s.out <- [2]Socket{s.other_socket, socket}
-        s.other_socket = nil
-    } else {
-        s.other_socket = socket
-    }
+			socketPairs <- [2]*Socket{pendingSocket, socket}
+			pendingSocket = nil
+		}
+	}())
+
+	return mux, socketPairs
 }

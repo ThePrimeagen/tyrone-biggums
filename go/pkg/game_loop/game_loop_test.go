@@ -8,79 +8,69 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-
-type Socket struct {
-    outBound chan *server.Message
-    inBound chan *server.Message
+// TestSocket is like a server socket but with no rules about sending or receiving for the outbox and inbox channels
+type TestSocket struct {
+	Inbox, Outbox chan server.Message
 }
 
-func (s *Socket) GetOutBound() chan<- *server.Message {
-    return s.outBound
-}
+func newGameLoop() (*GameLoop, [2]TestSocket) {
+	sockets := [2]TestSocket{
+		{
+			Outbox: make(chan server.Message),
+			Inbox:  make(chan server.Message),
+		},
+		{
+			Outbox: make(chan server.Message),
+			Inbox:  make(chan server.Message),
+		},
+	}
 
-func (s *Socket) GetInBound() <-chan *server.Message {
-    return s.inBound
-}
+	gameLoop := NewGameLoop([2]*server.Socket{
+		{
+			Outbox: sockets[0].Outbox,
+			Inbox:  sockets[0].Inbox,
+		},
+		{
+			Outbox: sockets[1].Outbox,
+			Inbox:  sockets[1].Inbox,
+		},
+	})
 
-func (s *Socket) Close() error {
-    return nil;
-}
-
-func newSocket() *Socket {
-    return &Socket{
-        make(chan *server.Message),
-        make(chan *server.Message),
-    }
-}
-
-func newGameLoop() (*GameLoop, [2]*Socket) {
-    sockets := [2]*Socket{
-        newSocket(),
-        newSocket(),
-    }
-
-    gameLoop := NewGameLoop([2]server.Socket{
-        sockets[0],
-        sockets[1],
-    })
-
-    return gameLoop, sockets
+	return gameLoop, sockets
 }
 
 func TestGameLoopReady(t *testing.T) {
+	gameLoop, sockets := newGameLoop()
+	waitForReadyDone := gameLoop.waitForReady()
 
-    gameLoop, sockets := newGameLoop()
-    waitForReadyDone := gameLoop.waitForReady()
+	msg := <-sockets[0].Outbox
+	msg2 := <-sockets[1].Outbox
 
-    msg := <-sockets[0].outBound
-    msg2 := <-sockets[1].outBound
+	if msg.Message.Type != server.ReadyUp {
+		t.Errorf("msg1 type isn't readyup %d %+v", server.ReadyUp, msg)
+	}
 
-    if msg.Message.Type != server.ReadyUp {
-        t.Errorf("msg1 type isn't readyup %d %+v", server.ReadyUp, msg)
-    }
+	if msg2.Message.Type != server.ReadyUp {
+		t.Errorf("msg2 type isn't readyup %d %+v", server.ReadyUp, msg2)
+	}
 
-    if msg2.Message.Type != server.ReadyUp {
-        t.Errorf("msg2 type isn't readyup %d %+v", server.ReadyUp, msg2)
-    }
+	sockets[0].Inbox <- server.Message{
+		Type: websocket.TextMessage,
+		Message: server.GameMessage{
+			Type: 69,
+		},
+	}
 
-    sockets[0].inBound <- &server.Message {
-        Type: websocket.TextMessage,
-        Message: server.GameMessage {
-            Type: 69,
-        },
-    }
+	sockets[1].Inbox <- server.Message{
+		Type: websocket.TextMessage,
+		Message: server.GameMessage{
+			Type: 69,
+		},
+	}
 
-    sockets[1].inBound <- &server.Message {
-        Type: websocket.TextMessage,
-        Message: server.GameMessage {
-            Type: 69,
-        },
-    }
-
-    select {
-    case <-waitForReadyDone:
-    case <-time.After(1 * time.Second):
-        t.Error("1 second elapsed without waitForReadyDone ")
-    }
+	select {
+	case <-waitForReadyDone:
+	case <-time.After(1 * time.Second):
+		t.Error("1 second elapsed without waitForReadyDone ")
+	}
 }
-
