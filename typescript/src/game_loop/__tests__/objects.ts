@@ -2,7 +2,7 @@ import { Player } from "../objects";
 
 test("Player", function() {
     jest.useFakeTimers();
-    const player = new Player([0, 0], 40);
+    const player = new Player([0, 0], [0, 0], 40);
 
     expect(player.fire()).toEqual(true);
     expect(player.fire()).toEqual(false);

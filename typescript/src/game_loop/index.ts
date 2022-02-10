@@ -5,6 +5,7 @@ import { failedToConnect } from "../stats";
 import GameLoopTimer from "./game-loop-timer";
 import GameQueue from "./game-queue";
 import { setupWithCallbacks } from "./game-setup";
+import GameWorld from "./game-world";
 
 
 export default function gameCreator(server: Server): void {
@@ -23,6 +24,7 @@ function getTickRate(): number {
 class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
     private loop: GameLoopTimer;
     private queue!: GameQueue;
+    private world!: GameWorld;
 
     constructor(private p1: Socket, private p2: Socket) {
         super();
@@ -39,9 +41,10 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
 
     private startTheGame(): void {
         this.queue = new GameQueue(this.p1, this.p2);
+        this.world = new GameWorld(this.p1, this.p2);
+
         this.loop.start((delta: number) => {
             const messages = this.queue.flush();
-            if (
         });
     }
 }

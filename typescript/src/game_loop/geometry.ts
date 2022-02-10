@@ -12,7 +12,7 @@ export interface Geometry<T> {
 
 export class AABB implements Geometry<AABB>, Moveable {
     pos: Vector2D;
-    constructor(x1: number, y1: number, private width: number, private height: number) {
+    constructor(x1: number, y1: number, public width: number, public height: number) {
         this.pos = [x1, y1];
     }
 
