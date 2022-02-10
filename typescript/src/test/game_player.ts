@@ -9,7 +9,9 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: M
     let playing = false;
     socket.on("message", async function(message) {
         const msg = JSON.parse(message.toString()) as Message;
-        cb??(msg);
+        if (cb) {
+            cb(msg);
+        }
         switch (msg.type) {
             case MessageType.ReadyUp:
                 socket.send(JSON.stringify(createMessage(MessageType.ReadyUp)))

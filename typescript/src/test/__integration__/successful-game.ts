@@ -22,6 +22,7 @@ test("player disconnects", async () => {
 
         await wait(1000);
         expect(spy1).toHaveBeenCalledTimes(0);
+        expect(spy2).toHaveBeenCalledTimes(0);
 
         connect(50, "0.0.0.0", SUCCESS_PORT, spy2);
         await wait(1000);
