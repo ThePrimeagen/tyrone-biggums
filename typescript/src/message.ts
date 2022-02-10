@@ -1,6 +1,8 @@
 export enum MessageType {
     ReadyUp,
     Play,
+    Fire,
+    GameOver,
 }
 
 export type Message = {

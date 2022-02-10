@@ -1,15 +1,13 @@
 import WebSocket from "ws";
 import Socket from "./socket";
 
-import { Message } from "../message";
 import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 
 export interface Server extends EventEmitterBecausePeopleToldMeItWasDogShit {
     close(): void;
     on(event: "error", cb: (error: Error) => void): void;
-    on(event: "message", cb: (msg: Message) => void): void;
     on(event: "close", cb: () => void): void;
-    on(event: "socket-close", cb: (socket: Socket) => void): void;
+    on(event: "game", cb: (sockets: [Socket, Socket]) => void): void;
 }
 
 export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Server {
