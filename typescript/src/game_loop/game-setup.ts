@@ -23,8 +23,6 @@ function readyUp(socket: Socket, idx: number, done: [boolean, boolean], timeout:
 
 export function setupWithCallbacks(p1: Socket, p2: Socket, callback: Callback, timeout: number = 30000): void  {
     const done: [boolean, boolean] = [false, false];
-    p1.push(createReadyUpMessage());
-    p2.push(createReadyUpMessage());
 
     let finished = false;
     function finishedCB(error?: Error) {
@@ -41,6 +39,9 @@ export function setupWithCallbacks(p1: Socket, p2: Socket, callback: Callback, t
     setTimeout(() => {
         finishedCB(new Error("Timeout"));
     }, timeout)
+
+    p1.push(createReadyUpMessage());
+    p2.push(createReadyUpMessage());
 }
 
 

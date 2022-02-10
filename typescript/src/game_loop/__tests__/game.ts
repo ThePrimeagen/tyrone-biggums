@@ -1,6 +1,7 @@
 import { runGameLoop } from "..";
 import { createMessage, MessageType } from "../../message";
 import { createSocket } from "../../mocks/socket";
+import { setConfig } from "../config";
 import GameLoopTimer from "../game-loop-timer"
 import GameQueue from "../game-queue"
 import GameWorld from "../game-world"
@@ -8,6 +9,10 @@ import GameWorld from "../game-world"
 test("Ensure that the game ends when its suppose to", function() {
     jest.useFakeTimers();
 
+    setConfig({
+        winnerFireRate: 40,
+        loserFireRate: 75,
+    });
     const s1 = createSocket();
     const s2 = createSocket();
     const spy = jest.fn();

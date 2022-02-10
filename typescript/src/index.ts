@@ -1,17 +1,10 @@
-import { Chat } from "./chat";
 import Server from "./server";
-import { run } from "./test/test_client";
+import createGame from "./game_loop";
 
-const args = process.argv.slice(2);
-if (args[0] == "test") {
-    run(args.slice(1));
-} else {
-    const server = new Server("0.0.0.0", 42069);
+const server = new Server("0.0.0.0", 42069);
+createGame(server);
 
-    server.on("listening", () => {
-        console.log("listening on 42069");
-    });
-
-    new Chat(server);
-}
+server.on("listening", () => {
+    console.log("listening on 42069");
+});
 

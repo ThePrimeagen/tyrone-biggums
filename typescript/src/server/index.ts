@@ -12,7 +12,7 @@ export interface Server extends EventEmitterBecausePeopleToldMeItWasDogShit {
 
 export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Server {
     private other_socket?: Socket;
-    private server: WebSocket.WebSocketServer;
+    private server?: WebSocket.WebSocketServer;
 
     constructor(addr: string, port: number = 42069) {
         super();
@@ -48,6 +48,9 @@ export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogS
     }
 
     public close() {
-        this.server.close();
+        // TODO: Why doesn't this close the server?
+        this.server?.close();
+        this.server?.removeAllListeners();
+        this.server = undefined;
     }
 }

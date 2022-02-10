@@ -1,42 +1,49 @@
 import WebSocket from "ws";
+import { createMessage, Message, MessageType } from "../message";
 
-enum MessageType {
-    ReadyUp = 0,
+function wait(ms: number): Promise<void> {
+    return new Promise(res => setTimeout(res, ms));
 }
 
-type Message = {
-    type: MessageType
-}
-
-async function playTheGame(socket: WebSocket) {
-    socket.on("message", function(message) {
+async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: Message) => void) {
+    let playing = false;
+    socket.on("message", async function(message) {
         const msg = JSON.parse(message.toString()) as Message;
-        console.log(msg, msg.type, MessageType.ReadyUp, msg.type === MessageType.ReadyUp);
+        cb??(msg);
         switch (msg.type) {
             case MessageType.ReadyUp:
-                socket.send(JSON.stringify({
-                    ready: true,
-                    // TODO: Id?
-                }))
+                socket.send(JSON.stringify(createMessage(MessageType.ReadyUp)))
                 break;
 
-            default:
-                console.error("Should never get here");
-                process.exit(1);
+            case MessageType.Play:
+                playing = true;
+                do {
+                    socket.send(JSON.stringify(createMessage(MessageType.Fire)));
+                    await wait(fireRate);
+                } while (playing);
+
+                break;
         }
     });
 }
 
-async function connect() {
-    const url = `ws://0.0.0.0:42069`;
+export function connect(fireRate: number, addr: string, port: number, cb?: (message: Message) => void): WebSocket {
+    const url = `ws://${addr}:${port}`;
     console.log("url", url);
     const socket = new WebSocket(url);
 
     socket.on("open", () => {
-        playTheGame(socket);
+        playTheGame(socket, fireRate, cb);
     });
+
+    return socket;
 }
 
-connect();
+if (require.main === module) {
+    connect(200,
+            process.env.ADDR || "events.theprimeagen.tv",
+            Number(process.env.PORT) || 69420);
+
+}
 
 

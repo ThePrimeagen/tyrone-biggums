@@ -1,5 +1,5 @@
 import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
-import { createLoserMessage, createWinnerMessage } from "../message";
+import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server";
 import { Socket } from "../server/socket";
 import { failedToConnect } from "../stats";
@@ -45,10 +45,12 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
     private loop: GameLoopTimer;
     private queue!: GameQueue;
     private world!: GameWorld;
+    private endedWithError: boolean;
 
     constructor(private p1: Socket, private p2: Socket) {
         super();
         this.loop = new GameLoopTimer(getTickRate());
+        this.endedWithError = false;
 
         setupWithCallbacks(p1, p2, (error?: Error) => {
             if (error) {
@@ -59,15 +61,37 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
         });
     }
 
+    private stop(other: Socket): void {
+        this.p2.push(errorGameOver("The other player disconnected"));
+        this.p2.close();
+        this.world.stop();
+        this.loop.stop();
+        this.endedWithError = true;
+    }
+
     private startTheGame(): void {
         this.queue = new GameQueue(this.p1, this.p2);
         this.world = new GameWorld(this.p1, this.p2);
+
+        this.p1.push(createMessage(MessageType.Play));
+        this.p2.push(createMessage(MessageType.Play));
+
+        this.p1.on("close", () => {
+            if (!this.world.done) {
+                this.stop(this.p2);
+            }
+        });
+
         runGameLoop(this.loop, this.queue, this.world, () => {
             this.endGame();
         });
     }
 
     private endGame(): void {
+        if (this.endedWithError) {
+            return;
+        }
+
         const winner = this.world.getWinner();
         const loser = this.world.getLoser();
 

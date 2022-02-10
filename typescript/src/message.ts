@@ -36,3 +36,10 @@ export function createLoserMessage(): Message {
     };
 }
 
+export function errorGameOver(msg: string): Message {
+    return {
+        type: MessageType.GameOver,
+        msg,
+    };
+}
+

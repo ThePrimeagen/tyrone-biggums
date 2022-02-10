@@ -33,11 +33,23 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
         this.config = createConfig(config);
 
         if (++count % 2 == 0) {
-            this.p1 = new Player([-this.config.playerStartingX, 0], [1, 0], 40);
-            this.p2 = new Player([this.config.playerStartingX, 0], [-1, 0], 75);
+            this.p1 = new Player(
+                [-this.config.playerStartingX, 0],
+                [1, 0],
+                this.config.winnerFireRate);
+            this.p2 = new Player(
+                [this.config.playerStartingX, 0],
+                [-1, 0],
+                this.config.loserFireRate);
         } else {
-            this.p1 = new Player([-this.config.playerStartingX, 0], [1, 0], 75);
-            this.p2 = new Player([this.config.playerStartingX, 0], [-1, 0], 40);
+            this.p1 = new Player(
+                [-this.config.playerStartingX, 0],
+                [1, 0],
+                this.config.loserFireRate);
+            this.p2 = new Player(
+                [this.config.playerStartingX, 0],
+                [-1, 0],
+                this.config.winnerFireRate);
         }
 
         this._done = false;
@@ -46,6 +58,10 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
 
     private getPlayer(socket: BaseSocket): Player {
         return this.s1 === socket ? this.p1 : this.p2;
+    }
+
+    stop() {
+        this._done = true;
     }
 
     processMessage(socket: BaseSocket, message: Message) {

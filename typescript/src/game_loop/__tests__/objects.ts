@@ -24,6 +24,6 @@ test("Bullet.createFromPlayer(1)", function() {
     const player = new Player([0, 0], [1, 0], 40);
     const bullet = Bullet.createFromPlayer(player, 1);
 
-    expect(bullet.geo.pos).toEqual([1 + player.geo.width + Bullet.BulletWidth, 0]);
+    expect(bullet.geo.pos).toEqual([1 + player.geo.width, 0]);
 });
 
