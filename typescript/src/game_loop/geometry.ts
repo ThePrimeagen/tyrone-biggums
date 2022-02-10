@@ -5,6 +5,7 @@ export interface Collidable<T> {
 }
 
 export interface Geometry<T> {
+    readonly pos: Vector2D;
     hasCollision(other: T): boolean;
     setPosition(vec: Vector2D): Geometry<T>;
 }
@@ -52,3 +53,23 @@ export class AABB implements Geometry<AABB>, Moveable {
         return new AABB(0, 0, width, height);
     }
 }
+
+export type Collisions<T> = [Collidable<T>, Collidable<T>][];
+export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T> {
+    const out: Collisions<T> = [];
+
+    // TODO: We could implement a space partitioning algorithm to reduce search
+    // space.
+    for (let i = 0; i < items.length; i++) {
+        for (let j = i + 1; j < items.length; j++) {
+            // @ts-ignore
+            // TODO: I don't know how to make this work without an ignore.
+            if (items[i].geo.hasCollision(items[j].geo)) {
+                out.push([items[i], items[j]]);
+            }
+        }
+    }
+
+    return out;
+}
+

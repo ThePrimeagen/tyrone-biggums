@@ -1,4 +1,4 @@
-import { Player } from "../player";
+import { Player } from "../objects";
 
 test("Player", function() {
     jest.useFakeTimers();

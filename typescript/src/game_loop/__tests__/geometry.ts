@@ -1,4 +1,4 @@
-import { AABB } from "../geometry";
+import { AABB, checkForCollisions, Collidable, Geometry } from "../geometry";
 
 test("AABB intersections", function() {
     const a = AABB.fromWidthHeight(10, 10);
@@ -52,3 +52,21 @@ test("AABB intersections", function() {
     expect(a.hasCollision(b)).toEqual(false);
 });
 
+class TestCollidable<T> implements Collidable<T> {
+    constructor(public geo: Geometry<T>) {}
+}
+
+test("Test for collisions", function() {
+    const a = new TestCollidable<AABB>(AABB.fromWidthHeight(10, 10));
+    const b = new TestCollidable<AABB>(AABB.fromWidthHeight(10, 10));
+    const c = new TestCollidable<AABB>(AABB.fromWidthHeight(10, 10));
+    const d = new TestCollidable<AABB>(AABB.fromWidthHeight(10, 10));
+
+    b.geo.setPosition([11, 11]);
+    c.geo.setPosition([22, 22]);
+    d.geo.setPosition([35, 35]);
+
+    expect(checkForCollisions<AABB>([a, b, c, d])).toEqual([]);
+    b.geo.setPosition([9, 9]);
+    expect(checkForCollisions<AABB>([a, b, c, d])).toEqual([[a, b]]);
+});
