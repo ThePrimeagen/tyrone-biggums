@@ -61,13 +61,13 @@ export function setupWithRxJS(p1: SocketRxJS, p2: SocketRxJS, timeout: number = 
             map(() => new Error("Timeout"))
         )
     ).pipe(
-       take(1),
-       map((x) => {
-           if (x instanceof Error) {
-               throw x;
-           }
+        take(1),
+        map((x) => {
+            if (x instanceof Error) {
+                throw x;
+            }
 
-           return undefined;
-       })
+            return undefined;
+        })
     );
 }

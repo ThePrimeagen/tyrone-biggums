@@ -81,7 +81,7 @@ export function checkForCollisionsByGroup<T>(item: Collidable<T>, against: Colli
     for (let i = 0; i < against.length; i++) {
         // @ts-ignore
         // TODO: I don't know how to make this work without an ignore.
-        if (against[i].geo.hasCollision(item)) {
+        if (against[i].geo.hasCollision(item.geo)) {
             out = [item, against[i]];
             break;
         }

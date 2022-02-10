@@ -22,7 +22,7 @@ function getTickRate(): number {
     return +process.env.TICK_RATE || 60;
 }
 
-function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: () => void): void {
+export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: () => void): void {
     loop.start((delta: number) => {
         // 1. process messages
         queue.flush().forEach(m => world.processMessage(m.from, m.message));
@@ -38,7 +38,7 @@ function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb
             loop.stop();
             cb();
         }
-    })
+    });
 }
 
 class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {

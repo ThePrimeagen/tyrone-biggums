@@ -1,5 +1,5 @@
 import { AABB, Collidable, Geometry } from "./geometry";
-import { Moveable, Vector2D, Velocity } from "./physics";
+import { Moveable, scale, Vector2D, Velocity } from "./physics";
 
 export class Player implements Collidable<AABB> {
     public geo: AABB;
@@ -7,7 +7,7 @@ export class Player implements Collidable<AABB> {
 
     constructor(pos: Vector2D, public dir: Vector2D, private fireRate: number) {
         this.lastFire = 0;
-        this.geo = AABB.fromWidthHeight(10, 10).setPosition(pos) as AABB; // this Geometry<AABB> sucks..
+        this.geo = AABB.fromWidthHeight(100, 100).setPosition(pos) as AABB; // this Geometry<AABB> sucks..
     }
 
     fire(): boolean {
@@ -45,18 +45,19 @@ export class Bullet implements Collidable<AABB>, Moveable, Velocity {
         return aabb;
     }
 
-    static createFromPlayer(player: Player) {
+    static createFromPlayer(player: Player, speed: number) {
         if (player.dir[0] === 1) {
+
             return new Bullet([
-                player.geo.pos[0] + player.geo.width + Bullet.BulletWidth + 1,
+                player.geo.pos[0] + player.geo.width + 1,
                 0
-            ], player.dir);
+            ], scale(player.dir, speed));
         }
 
         return new Bullet([
             player.geo.pos[0] - Bullet.BulletWidth - 1,
             0
-        ], player.dir);
+        ], scale(player.dir, speed));
     }
 
     static BulletWidth = 25;

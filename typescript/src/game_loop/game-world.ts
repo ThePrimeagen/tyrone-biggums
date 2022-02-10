@@ -1,6 +1,7 @@
 import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { Message, MessageType } from "../message";
 import { BaseSocket } from "../server/universal-types";
+import createConfig, { GameConfig, PartialConfig } from "./config";
 import { checkForCollisions, checkForCollisionsByGroup } from "./geometry";
 import { Bullet, Player } from "./objects";
 import { applyVelocityAll } from "./physics";
@@ -14,26 +15,29 @@ export interface GameWorld {
 
 let count = 0;
 export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasDogShit {
-    private p1: Player;
-    private p2: Player;
+    // for easy inspection
+    public p1: Player;
+    public p2: Player;
 
     // If I were to make this faster, I would consider a linked list or ring buffer.
-    private bullets: Bullet[];
+    public bullets: Bullet[];
 
     private _done: boolean;
     private winner!: BaseSocket;
+    private config: GameConfig;
 
     get done(): boolean { return this._done; }
 
-    constructor(private s1: BaseSocket, private s2: BaseSocket) {
+    constructor(private s1: BaseSocket, private s2: BaseSocket, config?: PartialConfig) {
         super();
+        this.config = createConfig(config);
 
         if (++count % 2 == 0) {
-            this.p1 = new Player([-150, 0], [1, 0], 40);
-            this.p2 = new Player([150, 0], [-1, 0], 75);
+            this.p1 = new Player([-this.config.playerStartingX, 0], [1, 0], 40);
+            this.p2 = new Player([this.config.playerStartingX, 0], [-1, 0], 75);
         } else {
-            this.p1 = new Player([-150, 0], [1, 0], 75);
-            this.p2 = new Player([150, 0], [-1, 0], 40);
+            this.p1 = new Player([-this.config.playerStartingX, 0], [1, 0], 75);
+            this.p2 = new Player([this.config.playerStartingX, 0], [-1, 0], 40);
         }
 
         this._done = false;
@@ -48,7 +52,7 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
         const player = this.getPlayer(socket);
         if (message.type === MessageType.Fire) {
             if (player.fire()) {
-                this.bullets.push(Bullet.createFromPlayer(player));
+                this.bullets.push(Bullet.createFromPlayer(player, this.config.bulletSpeed));
             }
         }
     }
