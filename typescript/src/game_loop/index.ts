@@ -89,6 +89,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
             }
         });
 
+        GameStat.activeGames++;
         runGameLoop(this.loop, this.queue, this.world, (stats: GameStat) => {
             this.endGame(stats);
         });
@@ -104,6 +105,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
 
         winner.push(createWinnerMessage(stats), () => winner.close());
         loser.push(createLoserMessage(), () => loser.close());
+        GameStat.activeGames--;
     }
 }
 

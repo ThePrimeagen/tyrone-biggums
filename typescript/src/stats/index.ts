@@ -1,5 +1,6 @@
-
 export class GameStat {
+    static activeGames: number = 0;
+
     frameBuckets: number[]
     constructor() {
         this.frameBuckets = new Array(5).fill(0);
