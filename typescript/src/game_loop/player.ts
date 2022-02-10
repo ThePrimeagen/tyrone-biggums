@@ -1,7 +1,6 @@
 import { AABB, Geometry } from "./geometry";
 import { Vector2D } from "./physics";
 
-
 export class Player {
     public geo: Geometry<AABB>;
 
