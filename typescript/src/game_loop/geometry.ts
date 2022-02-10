@@ -54,9 +54,9 @@ export class AABB implements Geometry<AABB>, Moveable {
     }
 }
 
-export type Collisions<T> = [Collidable<T>, Collidable<T>][];
-export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T> {
-    const out: Collisions<T> = [];
+export type Collisions<T> = [Collidable<T>, Collidable<T>];
+export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T>[] {
+    const out: Collisions<T>[] = [];
 
     // TODO: We could implement a space partitioning algorithm to reduce search
     // space.
@@ -67,6 +67,23 @@ export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T> {
             if (items[i].geo.hasCollision(items[j].geo)) {
                 out.push([items[i], items[j]]);
             }
+        }
+    }
+
+    return out;
+}
+
+export function checkForCollisionsByGroup<T>(item: Collidable<T>, against: Collidable<T>[]): undefined | Collisions<T> {
+    let out: Collisions<T> | undefined = undefined;
+
+    // TODO: We could implement a space partitioning algorithm to reduce search
+    // space.
+    for (let i = 0; i < against.length; i++) {
+        // @ts-ignore
+        // TODO: I don't know how to make this work without an ignore.
+        if (against[i].geo.hasCollision(item)) {
+            out = [item, against[i]];
+            break;
         }
     }
 

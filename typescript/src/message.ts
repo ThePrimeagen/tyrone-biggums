@@ -7,6 +7,7 @@ export enum MessageType {
 
 export type Message = {
     type: MessageType,
+    msg?: string,
 };
 
 export function createMessage(type: MessageType): Message {
@@ -18,6 +19,20 @@ export function createMessage(type: MessageType): Message {
 export function createReadyUpMessage(): Message {
     return {
         type: MessageType.ReadyUp
+    };
+}
+
+export function createWinnerMessage(): Message {
+    return {
+        type: MessageType.GameOver,
+        msg: "winner",
+    };
+}
+
+export function createLoserMessage(): Message {
+    return {
+        type: MessageType.GameOver,
+        msg: "loser",
     };
 }
 

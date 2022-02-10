@@ -4,6 +4,7 @@ import { Message } from "../message";
 import { BaseSocket } from "./universal-types";
 
 export interface Socket {
+    close(code?: number): void;
     push(data: object, cb?: () => void): void;
     on(event: "error", cb: (error: Error) => void): void;
     on(event: "message", cb: (msg: Message) => void): void;
