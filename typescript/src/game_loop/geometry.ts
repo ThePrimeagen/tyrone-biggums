@@ -2,12 +2,13 @@ import { Vector2D } from "./physics";
 
 export interface Geometry<T> {
     hasCollision(other: T): boolean;
-    setPosition(x: number, y: number): void;
+    setPosition(vec: Vector2D): Geometry<T>;
+    applyPosition(delta: Vector2D): Geometry<T>;
 }
 
 export class AABB implements Geometry<AABB> {
     private position: Vector2D;
-    private constructor(x1: number, y1: number, private width: number, private height: number) {
+    constructor(x1: number, y1: number, private width: number, private height: number) {
         this.position = [x1, y1];
     }
 
@@ -33,18 +34,16 @@ export class AABB implements Geometry<AABB> {
         return true;
     }
 
-    setPosition(x: number, y: number): void {
-        this.position[0] = x;
-        this.position[1] = y;
+    setPosition(vec: Vector2D): Geometry<AABB> {
+        this.position[0] = vec[0];
+        this.position[1] = vec[1];
+        return this;
     }
 
-    applyPosition(vec: Vector2D): void {
+    applyPosition(vec: Vector2D): Geometry<AABB> {
         this.position[0] += vec[0];
         this.position[1] += vec[1];
-    }
-
-    getPosition(): Vector2D {
-        return this.position;
+        return this;
     }
 
     static fromWidthHeight(width: number, height: number): AABB {
