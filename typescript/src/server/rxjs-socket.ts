@@ -16,7 +16,7 @@ export default class SocketImpl implements Socket, BaseSocket {
         this.events = new Subject<Message>();
 
         this.socket.on("message", (msg) => {
-            this.events.next(createMessage(msg.toString()));
+            this.events.next(JSON.parse(msg.toString()));
         });
 
         this.socket.on("close", () => {

@@ -1,5 +1,5 @@
 import { setConfig } from "../../game_loop/config";
-import { createLoserMessage, createWinnerMessage } from "../../message";
+import { createLoserMessage, createWinnerMessage, MessageType } from "../../message";
 import { createServer } from "../createServer";
 import { connect } from "../game_player";
 
@@ -41,9 +41,11 @@ test("player disconnects", async () => {
 
         if (count === 1) {
             expect(spy1.mock.calls[2][0]).toEqual(createLoserMessage());
-            expect(spy2.mock.calls[2][0]).toEqual(createWinnerMessage());
+            expect(spy2.mock.calls[2][0].type).toEqual(MessageType.GameOver);
+            expect(spy2.mock.calls[2][0].msg.slice(0, "winner".length)).toEqual("winner");
         } else if (count === 2) {
-            expect(spy1.mock.calls[2][0]).toEqual(createWinnerMessage());
+            expect(spy1.mock.calls[2][0].type).toEqual(MessageType.GameOver);
+            expect(spy1.mock.calls[2][0].msg.slice(0, "winner".length)).toEqual("winner");
             expect(spy2.mock.calls[2][0]).toEqual(createLoserMessage());
         } else {
             expect(true).toEqual(false);

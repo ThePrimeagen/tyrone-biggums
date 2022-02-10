@@ -1,3 +1,5 @@
+import { GameStat } from "./stats";
+
 export enum MessageType {
     ReadyUp,
     Play,
@@ -22,10 +24,10 @@ export function createReadyUpMessage(): Message {
     };
 }
 
-export function createWinnerMessage(): Message {
+export function createWinnerMessage(stats: GameStat): Message {
     return {
         type: MessageType.GameOver,
-        msg: "winner",
+        msg: `winner:${stats.frameBuckets.join(",")}`,
     };
 }
 

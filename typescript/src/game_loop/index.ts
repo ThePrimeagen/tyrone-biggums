@@ -2,7 +2,7 @@ import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-becaus
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server";
 import { Socket } from "../server/socket";
-import { failedToConnect } from "../stats";
+import { GameStat } from "../stats";
 import GameLoopTimer from "./game-loop-timer";
 import GameQueue from "./game-queue";
 import { setupWithCallbacks } from "./game-setup";
@@ -22,8 +22,10 @@ function getTickRate(): number {
     return +process.env.TICK_RATE || 60;
 }
 
-export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: () => void): void {
+export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: (stats: GameStat) => void) {
+    const stats = new GameStat();
     loop.start((delta: number) => {
+        stats.addDelta(delta);
         // 1. process messages
         queue.flush().forEach(m => world.processMessage(m.from, m.message));
 
@@ -36,7 +38,7 @@ export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWo
         // 4. check for ending conditions
         if (world.done) {
             loop.stop();
-            cb();
+            cb(stats);
         }
     });
 }
@@ -54,7 +56,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
 
         setupWithCallbacks(p1, p2, (error?: Error) => {
             if (error) {
-                failedToConnect();
+                // TODO:?
             } else {
                 this.startTheGame();
             }
@@ -62,8 +64,8 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
     }
 
     private stop(other: Socket): void {
-        this.p2.push(errorGameOver("The other player disconnected"));
-        this.p2.close();
+        other.push(errorGameOver("The other player disconnected"));
+        other.close();
         this.world.stop();
         this.loop.stop();
         this.endedWithError = true;
@@ -81,13 +83,18 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
                 this.stop(this.p2);
             }
         });
+        this.p2.on("close", () => {
+            if (!this.world.done) {
+                this.stop(this.p1);
+            }
+        });
 
-        runGameLoop(this.loop, this.queue, this.world, () => {
-            this.endGame();
+        runGameLoop(this.loop, this.queue, this.world, (stats: GameStat) => {
+            this.endGame(stats);
         });
     }
 
-    private endGame(): void {
+    private endGame(stats: GameStat): void {
         if (this.endedWithError) {
             return;
         }
@@ -95,7 +102,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
         const winner = this.world.getWinner();
         const loser = this.world.getLoser();
 
-        winner.push(createWinnerMessage(), () => winner.close());
+        winner.push(createWinnerMessage(stats), () => winner.close());
         loser.push(createLoserMessage(), () => loser.close());
     }
 }
