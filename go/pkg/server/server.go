@@ -22,8 +22,6 @@ func NewSocketServer() (*http.ServeMux, <-chan [2]*Socket) {
 			socket, err := NewSocket(w, r)
 			if err != nil {
 				log.Fatalln("couldn't upgrade socket.", err)
-				http.Error(w, err.Error(), 500)
-				return
 			}
 
 			mutex.Lock()

@@ -5,15 +5,18 @@ import (
 	"log"
 	"net/http"
 
-	gameloop "github.com/ThePrimeagen/tyrone-biggums/pkg/game_loop"
+	"github.com/ThePrimeagen/tyrone-biggums/pkg/gameloop"
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
-var addr = flag.String("addr", "0.0.0.0:42069", "http service address")
+func init() {
+	log.SetFlags(0)
+}
 
 func main() {
+	addr := flag.String("addr", "0.0.0.0:42069", "http service address")
+
 	flag.Parse()
-	log.SetFlags(0)
 
 	mux, socketPairs := server.NewSocketServer()
 
@@ -24,5 +27,6 @@ func main() {
 		}
 	}()
 
+	log.Println("starting socket server on port", *addr)
 	log.Fatal(http.ListenAndServe(*addr, mux))
 }
