@@ -27,7 +27,7 @@ export function createReadyUpMessage(): Message {
 export function createWinnerMessage(stats: GameStat): Message {
     return {
         type: MessageType.GameOver,
-        msg: `winner(${GameStat.activeGames}):${stats.frameBuckets.join(",")}`,
+        msg: `winner(${GameStat.activeGames})___${stats.frameBuckets.join(",")}`,
     };
 }
 

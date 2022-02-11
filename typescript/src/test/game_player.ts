@@ -5,6 +5,14 @@ function wait(ms: number): Promise<void> {
     return new Promise(res => setTimeout(res, ms));
 }
 
+function parseAndReportWinnerStats(winnerData: string) {
+    const parts = winnerData.split("___");
+    const activeGames = +parts[0].split("(")[1].split(")")[0];
+    const buckets = parts[1].split(",").map(x => +x);
+
+    console.log("Results", activeGames, buckets);
+}
+
 async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: Message) => void) {
     let playing = false;
     socket.on("message", async function(message) {
@@ -25,6 +33,11 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: M
                 } while (playing);
 
                 break;
+
+            case MessageType.GameOver:
+                if (msg.msg?.startsWith("winner")) {
+                    parseAndReportWinnerStats(msg.msg);
+                }
         }
     });
 }
@@ -44,7 +57,7 @@ export function connect(fireRate: number, addr: string, port: number, cb?: (mess
 function repeatConnect(addr: string, port: number) {
     connect(200,
             addr || "events.theprimeagen.tv",
-            port || 69420, (msg) => {
+            port || 42069, (msg) => {
                 if (msg.type === MessageType.GameOver) {
                     console.log("Game Over: Restarting");
                     repeatConnect(addr, port);

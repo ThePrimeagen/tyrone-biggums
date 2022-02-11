@@ -69,6 +69,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
         this.world.stop();
         this.loop.stop();
         this.endedWithError = true;
+        GameStat.activeGames--;
     }
 
     private startTheGame(): void {
