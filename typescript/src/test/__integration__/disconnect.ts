@@ -1,5 +1,5 @@
 import { errorGameOver } from "../../message";
-import { createServer } from "../createServer";
+import { createTestServer } from "../createServer";
 import { connect } from "../game_player";
 
 function wait(ms: number): Promise<void> {
@@ -8,7 +8,7 @@ function wait(ms: number): Promise<void> {
 
 const DISCONNECT_PORT = 42069;
 test("player disconnects", async () => {
-    const server = await createServer(DISCONNECT_PORT);
+    const server = await createTestServer("callback", DISCONNECT_PORT);
     const spy1 = jest.fn();
     const spy2 = jest.fn();
 

@@ -1,6 +1,6 @@
 import { setConfig } from "../../game_loop/config";
 import { createLoserMessage, createWinnerMessage, MessageType } from "../../message";
-import { createServer } from "../createServer";
+import { createTestServer } from "../createServer";
 import { connect } from "../game_player";
 
 function wait(ms: number): Promise<void> {
@@ -9,7 +9,7 @@ function wait(ms: number): Promise<void> {
 
 const SUCCESS_PORT = 42070;
 test("player disconnects", async () => {
-    const server = await createServer(SUCCESS_PORT);
+    const server = await createTestServer("callback", SUCCESS_PORT);
     setConfig({
         winnerFireRate: 40,
         loserFireRate: 75,

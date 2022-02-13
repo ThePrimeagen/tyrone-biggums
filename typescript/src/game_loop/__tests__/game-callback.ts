@@ -1,4 +1,4 @@
-import { runGameLoop } from "..";
+import { runGameLoop } from "../game-callback";
 import { createMessage, MessageType } from "../../message";
 import { createSocket } from "../../mocks/socket";
 import { setConfig } from "../config";
