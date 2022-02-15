@@ -10,7 +10,7 @@ function parseAndReportWinnerStats(winnerData: string) {
     const activeGames = +parts[0].split("(")[1].split(")")[0];
     const buckets = parts[1].split(",").map(x => +x);
 
-    console.log("Results", activeGames, buckets);
+    console.log("Results", activeGames, JSON.stringify(buckets));
 }
 
 async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: Message) => void) {
@@ -44,7 +44,6 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: M
 
 export function connect(fireRate: number, addr: string, port: number, cb?: (message: Message) => void): WebSocket {
     const url = `ws://0.0.0.0:${port}`;
-    console.log("url", url);
     const socket = new WebSocket(url);
 
     socket.on("open", () => {
@@ -59,7 +58,6 @@ function repeatConnect(addr: string, port: number) {
             addr || "events.theprimeagen.tv",
             port || 42069, (msg) => {
                 if (msg.type === MessageType.GameOver) {
-                    console.log("Game Over: Restarting");
                     repeatConnect(addr, port);
                 }
             });

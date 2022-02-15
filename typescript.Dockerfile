@@ -5,5 +5,5 @@ COPY typescript/tsconfig.json .
 RUN yarn install
 COPY typescript/src .
 RUN ./node_modules/.bin/tsc
-CMD ["node", "dist/index.js"]
-
+ENTRYPOINT ["node"]
+CMD ["dist/index.js"]
