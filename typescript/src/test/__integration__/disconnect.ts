@@ -7,7 +7,6 @@ function wait(ms: number): Promise<void> {
 }
 
 const DISCONNECT_PORT = 42069;
-/*
 test("player disconnects", async () => {
     const server = await createTestServer("callback", DISCONNECT_PORT);
     const spy1 = jest.fn();
@@ -34,7 +33,6 @@ test("player disconnects", async () => {
     s2.close();
     server.close();
 });
-*/
 
 test("player disconnects (rxjs)", async () => {
     const server = await createTestServer("rxjs", DISCONNECT_PORT);

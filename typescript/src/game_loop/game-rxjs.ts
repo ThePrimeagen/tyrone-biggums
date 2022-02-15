@@ -31,6 +31,7 @@ export function runRxJSLoop([s1, s2]: [Socket, Socket]): Observable<GameResults>
             }
 
             loop.stop();
+            world.stop();
             other.push(errorGameOver("The other player disconnected"));
             observer.error(new Error("Disconnected"));
         }

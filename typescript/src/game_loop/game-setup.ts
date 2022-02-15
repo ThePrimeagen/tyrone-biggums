@@ -64,7 +64,6 @@ export function setupWithRxJS([p1, p2]: [SocketRxJS, SocketRxJS], timeout: numbe
     ).pipe(
         take(1),
         map((x) => {
-            console.log("setupWithRxJS#(anon)", x);// __AUTO_GENERATED_PRINTF__
             if (x instanceof Error) {
                 throw x;
             }

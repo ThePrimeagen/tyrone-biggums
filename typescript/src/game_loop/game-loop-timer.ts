@@ -1,4 +1,4 @@
-import { BehaviorSubject, interval, map, Observable, Subject, Subscription } from "rxjs";
+import { BehaviorSubject, interval, map, Observable, Subject, Subscription, tap } from "rxjs";
 import { explodePromise } from "../promise-helpers";
 
 type Callback = (delta: number) => void;
@@ -89,6 +89,9 @@ export class GameLoopRxJS implements StoppableTimer, GLRxJSTimer {
             this.ticker = interval(this.tickRate).pipe(
                 map(() => {
                     return Date.now() - lastTime;
+                }),
+                tap(() => {
+                    lastTime = Date.now();
                 })
             ).subscribe((diff) => {
                 this.subject.next(diff);
