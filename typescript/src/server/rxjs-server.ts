@@ -13,11 +13,11 @@ export default class ServerImpl implements Server {
     public listening: BehaviorSubject<boolean>;
     private server: WebSocket.Server;
 
-    constructor(addr: string, port: number = 42069) {
+    constructor(port: number = 42069) {
         this.subject = new Subject<[Socket, Socket]>();
         this.listening = new BehaviorSubject<boolean>(false);
         this.server = new WebSocket.Server({
-            host: addr,
+            host: "0.0.0.0",
             port,
         });
         this.startServer(this.server);
@@ -71,7 +71,6 @@ export default class ServerImpl implements Server {
         });
 
         server.on("listening", (e?: Error) => {
-            console.log("HELLO WORLD");
             if (e) {
                 this.listening.error(e);
             } else {

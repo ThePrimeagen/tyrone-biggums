@@ -14,10 +14,10 @@ export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogS
     private other_socket?: Socket;
     private server?: WebSocket.WebSocketServer;
 
-    constructor(addr: string, port: number = 42069) {
+    constructor(port: number = 42069) {
         super();
         this.server = new WebSocket.Server({
-            host: addr,
+            host: "0.0.0.0",
             port,
         });
         this.startServer(this.server);

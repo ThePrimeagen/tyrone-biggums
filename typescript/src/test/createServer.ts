@@ -7,7 +7,7 @@ export function createTestServer(style: "rxjs", port: number): Promise<ServerRx>
 export function createTestServer(style: "callback", port: number): Promise<Server>;
 export function createTestServer(style: "rxjs" | "callback", port: number): Promise<ServerRx | Server> {
     return new Promise((resolve, reject) => {
-        const server = createServer(style, "0.0.0.0", port);
+        const server = createServer(style, port);
         createGame(style, server);
 
         if (style === "callback") {
