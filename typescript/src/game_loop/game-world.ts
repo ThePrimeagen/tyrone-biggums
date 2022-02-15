@@ -87,14 +87,12 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
         // 2. check for collision with players
         const collidedWithPlayer1 = checkForCollisionsByGroup(this.p1, this.bullets);
         if (collidedWithPlayer1) {
-            console.log("GameWorldImpl#collisions#if1");// __AUTO_GENERATED_PRINTF__
             this._done = true;
             this.winner = this.s2;
         }
 
         const collidedWithPlayer2 = checkForCollisionsByGroup(this.p2, this.bullets);
         if (collidedWithPlayer2) {
-            console.log("GameWorldImpl#collisions#if2");// __AUTO_GENERATED_PRINTF__
             this._done = true;
             this.winner = this.s1;
         }

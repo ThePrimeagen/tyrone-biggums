@@ -36,12 +36,8 @@ test("player disconnects", async () => {
 
 test("player disconnects (rxjs)", async () => {
     const server = await createTestServer("rxjs", DISCONNECT_PORT);
-    const spy1 = jest.fn((arg) => {
-        console.log("spy1", arg);
-    });
-    const spy2 = jest.fn((arg) => {
-        console.log("spy2", arg);
-    });
+    const spy1 = jest.fn();
+    const spy2 = jest.fn();
 
     const s1 = connect(50, "0.0.0.0", DISCONNECT_PORT, spy1); // loser first round
 

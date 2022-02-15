@@ -63,16 +63,11 @@ export function runRxJSLoop([s1, s2]: [Socket, Socket]): Observable<GameResults>
                 // 4. check for ending conditions
                 if (world.done) {
                     loop.stop();
+                    const gameResult: GameResults = [stats, world.getWinner(), world.getLoser()];
+                    observer.next(gameResult);
                     observer.complete();
                 }
-            })
-        ).subscribe({
-            complete: () => {
-                const gameResult: GameResults = [stats, world.getWinner(), world.getLoser()];
-                observer.next(gameResult);
-                observer.complete();
-            }
-        });
+            })).subscribe();
     })
 }
 
