@@ -10,13 +10,24 @@ export function createTestServer(style: "rxjs" | "callback", port: number): Prom
         const server = createServer(style, "0.0.0.0", port);
         createGame(style, server);
 
-        server.on("listening", (e: Error) => {
-            if (e) {
-                reject(e);
-            } else {
-                resolve(server);
-            }
-        });
+        if (style === "callback") {
+            server.on("listening", (e: Error) => {
+                if (e) {
+                    reject(e);
+                } else {
+                    resolve(server);
+                }
+            });
+        } else {
+            (server as ServerRx).listening.subscribe({
+                next: (res) => {
+                    if (res) {
+                        resolve(server);
+                    }
+                },
+                error: reject,
+            });
+        }
     })
 }
 

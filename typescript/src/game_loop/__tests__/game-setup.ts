@@ -54,7 +54,7 @@ test("GameSetup, ready up timeout", function() {
     jest.useFakeTimers();
     const p1 = createSocketRxJS();
     const p2 = createSocketRxJS();
-    const ready$ = setupWithRxJS(p1, p2, 29001);
+    const ready$ = setupWithRxJS([p1, p2], 29001);
     const next = jest.fn();
     const error = jest.fn();
 
@@ -82,7 +82,7 @@ test("GameSetupRx, ready up, bad msg", function() {
     jest.useFakeTimers();
     const p1 = createSocketRxJS();
     const p2 = createSocketRxJS();
-    const ready$ = setupWithRxJS(p1, p2, 29001);
+    const ready$ = setupWithRxJS([p1, p2], 29001);
     expect(p1.push).toHaveBeenCalledTimes(1);
     expect(p2.push).toHaveBeenCalledTimes(1);
 
@@ -101,6 +101,6 @@ test("GameSetupRx, ready up, bad msg", function() {
 
     p2.events.next({type: MessageType.ReadyUp});
     expect(subbed).toHaveBeenCalledTimes(1);
-    expect(subbed).toHaveBeenCalledWith(undefined);
+    expect(subbed).toHaveBeenCalledWith([p1, p2]);
     expect(errored).toHaveBeenCalledTimes(0);
 });

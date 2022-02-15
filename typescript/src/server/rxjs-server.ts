@@ -1,27 +1,39 @@
 import WebSocket from "ws";
 import Socket from "./rxjs-socket";
-import { filter, map, Observable, Observer, scan, Subject } from "rxjs";
+import { BehaviorSubject, filter, map, Observable, Observer, scan, Subject } from "rxjs";
 
 export interface Server {
+    listening: BehaviorSubject<boolean>;
     close(): void;
-    on(): Subject<[Socket, Socket]>;
+    on(): Observable<[Socket, Socket]>;
 }
 
-export default class ServerImpl {
+export default class ServerImpl implements Server {
     private subject: Subject<[Socket, Socket]>;
+    public listening: BehaviorSubject<boolean>;
+    private server: WebSocket.Server;
+
     constructor(addr: string, port: number = 42069) {
         this.subject = new Subject<[Socket, Socket]>();
-        this.startServer(new WebSocket.Server({
+        this.listening = new BehaviorSubject<boolean>(false);
+        this.server = new WebSocket.Server({
             host: addr,
             port,
-        }));
+        });
+        this.startServer(this.server);
     }
 
-    public on(): Subject<[Socket, Socket]> {
+    close(): void {
+        this.subject.complete();
+        this.server.close();
+    }
+
+    public on(): Observable<[Socket, Socket]> {
         return this.subject;
     }
 
     private startServer(server: WebSocket.Server) {
+        this.server = server;
         const observable: Observable<WebSocket> = Observable.create((observer: Observer<WebSocket>) => {
             server.on("connection", ws => {
                 observer.next(ws);
@@ -58,8 +70,13 @@ export default class ServerImpl {
             this.subject.complete();
         });
 
-        server.on("listening", () => {
-            console.log("Server is listening");
+        server.on("listening", (e?: Error) => {
+            console.log("HELLO WORLD");
+            if (e) {
+                this.listening.error(e);
+            } else {
+                this.listening.next(true);
+            }
         });
     }
 }

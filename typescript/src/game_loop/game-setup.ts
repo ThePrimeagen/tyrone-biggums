@@ -45,17 +45,17 @@ export function setupWithCallbacks(p1: Socket, p2: Socket, callback: Callback, t
 }
 
 
-export function setupWithRxJS(p1: SocketRxJS, p2: SocketRxJS, timeout: number = 30000): Observable<undefined | Error>  {
+export function setupWithRxJS([p1, p2]: [SocketRxJS, SocketRxJS], timeout: number = 30000): Observable<[SocketRxJS, SocketRxJS]>  {
     p1.push(createReadyUpMessage());
     p2.push(createReadyUpMessage());
 
     return merge(
         zip(
             p1.events.pipe(
-                filter(msg => msg.type === MessageType.ReadyUp)
+                filter((msg: Message) => msg.type === MessageType.ReadyUp)
             ),
             p2.events.pipe(
-                filter(msg => msg.type === MessageType.ReadyUp)
+                filter((msg: Message) => msg.type === MessageType.ReadyUp)
             ),
         ),
         timer(timeout).pipe(
@@ -64,11 +64,11 @@ export function setupWithRxJS(p1: SocketRxJS, p2: SocketRxJS, timeout: number = 
     ).pipe(
         take(1),
         map((x) => {
+            console.log("setupWithRxJS#(anon)", x);// __AUTO_GENERATED_PRINTF__
             if (x instanceof Error) {
                 throw x;
             }
-
-            return undefined;
+            return [p1, p2];
         })
     );
 }

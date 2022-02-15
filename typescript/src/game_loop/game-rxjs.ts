@@ -1,18 +1,14 @@
-import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
+import { mergeMap, Observable, Subscriber, tap } from "rxjs";
+import { onErrorResumeNext } from "rxjs/operators";
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server/rxjs-server";
-import { Socket } from "../server/socket";
+import { Socket } from "../server/rxjs-socket";
+import { BaseSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
 import { GameLoopRxJS } from "./game-loop-timer";
-import { GameQueueRxJSImpl } from "./game-queue";
+import { GameQueue, GameQueueRxJSImpl } from "./game-queue";
 import { setupWithRxJS } from "./game-setup";
 import GameWorld from "./game-world";
-
-export default function gameCreator(server: Server): void {
-    server.on().forEach(([p1, p2]) => {
-        new Game(p1, p2);
-    });
-}
 
 function getTickRate(): number {
     if (!process.env.TICK_RATE) {
@@ -21,92 +17,91 @@ function getTickRate(): number {
     return +process.env.TICK_RATE || 60;
 }
 
-export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: (stats: GameStat) => void) {
-    const stats = new GameStat();
-    loop.start((delta: number) => {
-        stats.addDelta(delta);
-        // 1. process messages
-        queue.flush().forEach(m => world.processMessage(m.from, m.message));
+export type GameResults = [GameStat, BaseSocket, BaseSocket];
+export function runRxJSLoop([s1, s2]: [Socket, Socket]): Observable<GameResults> {
+    return Observable.create((observer: Subscriber<GameResults>) => {
+        const stats = new GameStat();
+        const queue = new GameQueueRxJSImpl(s1, s2);
+        const world = new GameWorld(s1, s2);
+        const loop = new GameLoopRxJS(getTickRate());
 
-        // 2. update all positions
-        world.update(delta);
+        function close(other: Socket) {
+            if (world.done) {
+                return;
+            }
 
-        // 3. process collisions
-        world.collisions();
-
-        // 4. check for ending conditions
-        if (world.done) {
             loop.stop();
-            cb(stats);
-        }
-    });
-}
-
-class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
-    private loop: GameLoopTimer;
-    private queue!: GameQueue;
-    private world!: GameWorld;
-    private endedWithError: boolean;
-
-    constructor(private p1: Socket, private p2: Socket) {
-        super();
-        this.loop = new GameLoopTimer(getTickRate());
-        this.endedWithError = false;
-
-        setupWithCallbacks(p1, p2, (error?: Error) => {
-            if (error) {
-                // TODO:?
-            } else {
-                this.startTheGame();
-            }
-        });
-    }
-
-    private stop(other: Socket): void {
-        other.push(errorGameOver("The other player disconnected"));
-        other.close();
-        this.world.stop();
-        this.loop.stop();
-        this.endedWithError = true;
-        GameStat.activeGames--;
-    }
-
-    private startTheGame(): void {
-        this.queue = new GameQueue(this.p1, this.p2);
-        this.world = new GameWorld(this.p1, this.p2);
-
-        this.p1.push(createMessage(MessageType.Play));
-        this.p2.push(createMessage(MessageType.Play));
-
-        this.p1.on("close", () => {
-            if (!this.world.done) {
-                this.stop(this.p2);
-            }
-        });
-        this.p2.on("close", () => {
-            if (!this.world.done) {
-                this.stop(this.p1);
-            }
-        });
-
-        GameStat.activeGames++;
-        runGameLoop(this.loop, this.queue, this.world, (stats: GameStat) => {
-            this.endGame(stats);
-        });
-    }
-
-    private endGame(stats: GameStat): void {
-        if (this.endedWithError) {
-            return;
+            other.push(errorGameOver("The other player disconnected"));
+            observer.error(new Error("Disconnected"));
         }
 
-        const winner = this.world.getWinner();
-        const loser = this.world.getLoser();
+        s1.events.subscribe({
+            complete: () => {
+                close(s2);
+            }
+        });
 
-        winner.push(createWinnerMessage(stats), () => winner.close());
-        loser.push(createLoserMessage(), () => loser.close());
-        GameStat.activeGames--;
-    }
+        s2.events.subscribe({
+            complete: () => {
+                close(s1);
+            }
+        });
+
+        loop.start().pipe(
+            tap((delta: number) => {
+                stats.addDelta(delta);
+                // 1. process messages
+                queue.flush().forEach(m => world.processMessage(m.from, m.message));
+
+                // 2. update all positions
+                world.update(delta);
+
+                // 3. process collisions
+                world.collisions();
+
+                // 4. check for ending conditions
+                if (world.done) {
+                    loop.stop();
+                    observer.complete();
+                }
+            })
+        ).subscribe({
+            complete: () => {
+                const gameResult: GameResults = [stats, world.getWinner(), world.getLoser()];
+                observer.next(gameResult);
+                observer.complete();
+            }
+        });
+    })
 }
 
+function empty<T>(): Observable<T> {
+    return Observable.create((observer: Subscriber<T>) => {
+        observer.complete();
+    })
+}
 
+export default function gameCreator(server: Server) {
+    server.on().pipe(
+        mergeMap(sockets => setupWithRxJS(sockets)),
+        tap(([s1, s2]) => {
+            s1.push(createMessage(MessageType.Play));
+            s2.push(createMessage(MessageType.Play));
+        }),
+        mergeMap(([s1, s2]) => {
+            return runRxJSLoop([s1, s2]).pipe(
+                tap({
+                    next: ([stats, winner, loser]) => {
+                        winner.push(createWinnerMessage(stats), () => winner.close());
+                        loser.push(createLoserMessage(), () => loser.close());
+                        GameStat.activeGames--;
+                    },
+                    error: (_) => {
+                        GameStat.activeGames--;
+                    }
+                }),
+                onErrorResumeNext(empty<GameResults>())
+            );
+        }),
+    ).subscribe();
+}
