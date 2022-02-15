@@ -51,6 +51,7 @@ export function runRxJSLoop([s1, s2]: [Socket, Socket]): Observable<GameResults>
         loop.start().pipe(
             tap((delta: number) => {
                 stats.addDelta(delta);
+
                 // 1. process messages
                 queue.flush().forEach(m => world.processMessage(m.from, m.message));
 
@@ -60,7 +61,8 @@ export function runRxJSLoop([s1, s2]: [Socket, Socket]): Observable<GameResults>
                 // 3. process collisions
                 world.collisions();
 
-                // 4. check for ending conditions
+            }),
+            tap((delta: number) => {
                 if (world.done) {
                     loop.stop();
                     const gameResult: GameResults = [stats, world.getWinner(), world.getLoser()];
@@ -85,6 +87,7 @@ export default function gameCreator(server: Server) {
             s2.push(createMessage(MessageType.Play));
         }),
         mergeMap(([s1, s2]) => {
+            GameStat.activeGames++;
             return runRxJSLoop([s1, s2]).pipe(
                 tap({
                     next: ([stats, winner, loser]) => {
