@@ -1,0 +1,78 @@
+#!/usr/bin/env node
+
+const readline = require('readline');
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+});
+
+function getTimeRange(idx) {
+    switch (idx) {
+        // if (delta > 40) {
+        case 7:
+            return [40, 75]; // whats upper end here?
+        // } else if (delta > 30) {
+        case 6:
+            return [31, 40];
+        // } else if (delta > 25) {
+        case 5:
+            return [26, 30];
+        // } else if (delta > 23) {
+        case 4:
+            return [24, 25];
+        // } else if (delta > 21) {
+        case 3:
+            return [22, 23];
+        // } else if (delta > 19) {
+        case 2:
+            return [20, 21];
+        // } else if (delta > 17) {
+        case 1:
+            return [18, 19];
+        // else this.frameBuckets[0]++;
+        case 0:
+            return [16, 17];
+        default:
+            throw new Error("NEVER EVER HAVE I EVER");
+    }
+}
+
+rl.on('line', function(line){
+    const tickCounts = line.split("[")[1].split("]")[0].split(",");
+    /*
+        * BUCKET TIMES from typescript/src/stats/index.ts
+        *
+        if (delta > 40) {
+            this.frameBuckets[7]++;
+        } else if (delta > 30) {
+            this.frameBuckets[6]++;
+        } else if (delta > 25) {
+            this.frameBuckets[5]++;
+        } else if (delta > 23) {
+            this.frameBuckets[4]++;
+        } else if (delta > 21) {
+            this.frameBuckets[3]++;
+        } else if (delta > 19) {
+            this.frameBuckets[2]++;
+        } else if (delta > 17) {
+            this.frameBuckets[1]++;
+        } else {
+            this.frameBuckets[0]++;
+        }
+    */
+
+    const estimatedTimeLow = tickCounts.
+        map((x, i) => x * getTimeRange(i)[0]).
+        reduce((acc, time) => acc + time, 0);
+
+    const estimatedTimeHigh = tickCounts.
+        map((x, i) => x * getTimeRange(i)[1]).
+        reduce((acc, time) => acc + time, 0);
+
+    console.log(`GAME_TIME_LOW, ${estimatedTimeLow}`);
+    console.log(`GAME_TIME_HIGH, ${estimatedTimeHigh}`);
+
+    tickCounts.forEach((count, i) => console.log(`TICK,${i},${count}`));
+});
+
