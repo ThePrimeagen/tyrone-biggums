@@ -73,7 +73,7 @@ if (require.main === module) {
             return new Promise(res => setTimeout(res, ms));
         }
         for (let i = 0; i < count; ++i) {
-            await wait(100);
+            await wait(50);
             repeatConnect(addr, port);
         }
     }

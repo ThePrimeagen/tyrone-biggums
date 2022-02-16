@@ -9,11 +9,13 @@ export interface Velocity {
     vel: Vector2D;
 }
 
+// PerfNote: Since the velocity is applied immediately, there is no need
+// to keep generating new arrays and then gc'ing them.
+const cachedVector: Vector2D = [0, 0];
 export function applyVelocity(vel: Vector2D, delta: number): Vector2D {
-    return [
-        vel[0] * delta,
-        vel[1] * delta,
-    ];
+    cachedVector[0] = vel[0] * delta;
+    cachedVector[1] = vel[1] * delta;
+    return cachedVector;
 }
 
 export function applyVelocityAll(items: (Moveable & Velocity)[], delta: number): void {

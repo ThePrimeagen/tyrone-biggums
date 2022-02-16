@@ -7,6 +7,7 @@ export interface Collidable<T> {
 export interface Geometry<T> {
     readonly pos: Vector2D;
     hasCollision(other: T): boolean;
+    hasCollisionFast(other: T): boolean; // when other is the same size
     setPosition(vec: Vector2D): Geometry<T>;
 }
 
@@ -14,6 +15,11 @@ export class AABB implements Geometry<AABB>, Moveable {
     pos: Vector2D;
     constructor(x1: number, y1: number, public width: number, public height: number) {
         this.pos = [x1, y1];
+    }
+
+    hasCollisionFast(other: AABB): boolean {
+        // Assuming that the boxes are the same size and are on the same plane
+        return Math.abs(this.pos[0] - other.pos[0]) < this.width;
     }
 
     hasCollision(other: AABB): boolean {
@@ -64,7 +70,7 @@ export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T>[] {
         for (let j = i + 1; j < items.length; j++) {
             // @ts-ignore
             // TODO: I don't know how to make this work without an ignore.
-            if (items[i].geo.hasCollision(items[j].geo)) {
+            if (items[i].geo.hasCollisionFast(items[j].geo)) {
                 out.push([items[i], items[j]]);
             }
         }

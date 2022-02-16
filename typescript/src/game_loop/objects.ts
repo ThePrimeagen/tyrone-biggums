@@ -1,5 +1,6 @@
-import { AABB, Collidable, Geometry } from "./geometry";
+import { AABB, Collidable } from "./geometry";
 import { Moveable, scale, Vector2D, Velocity } from "./physics";
+
 
 export class Player implements Collidable<AABB> {
     public geo: AABB;
@@ -60,5 +61,5 @@ export class Bullet implements Collidable<AABB>, Moveable, Velocity {
         ], scale(player.dir, speed));
     }
 
-    static BulletWidth = 25;
+    static BulletWidth = 35;
 }
