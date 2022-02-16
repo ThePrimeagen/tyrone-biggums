@@ -65,7 +65,6 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
     private stop(other: Socket): void {
         other.push(errorGameOver("The other player disconnected"));
         other.close();
-        this.world.stop();
         this.loop.stop();
         this.endedWithError = true;
         GameStat.activeGames--;
@@ -90,12 +89,15 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
         });
 
         GameStat.activeGames++;
+
         runGameLoop(this.loop, this.queue, this.world, (stats: GameStat) => {
             this.endGame(stats);
         });
     }
 
     private endGame(stats: GameStat): void {
+        this.world.stop();
+
         if (this.endedWithError) {
             return;
         }

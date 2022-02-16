@@ -65,6 +65,8 @@ export function runRxJSLoop([s1, s2]: [Socket, Socket]): Observable<GameResults>
             tap((delta: number) => {
                 if (world.done) {
                     loop.stop();
+                    world.stop();
+
                     const gameResult: GameResults = [stats, world.getWinner(), world.getLoser()];
                     observer.next(gameResult);
                     observer.complete();

@@ -1,23 +1,12 @@
 #!/usr/bin/env bash
 
 docker kill $(docker ps -q)
-docker run -d --rm -it -p 42069:42069 $1-ws-test
+docker run -e SERVER_PORT=42069 -e SERVER_STYLE=$1 -d --rm -it -p 42069:42069 ts-ws-test
+sleep 1
+node=$(pgrep node)
 
-name="main"
-if [ "$1" = "ts" ]; then
-        name="node"
-fi
+echo "./measure $node $($((60*4))) $2"
+./measure $node $((60*4)) $2
 
-echo "measure $name, $1, $2"
-./measure $name $1.$2.csv &
-pid_of_measure=$!
-tail -F $1.$2.csv &
-pid_of_tail=$!
-
-echo "measure: $pid_of_measure, tail: $pid_of_tail"
-
-sleep $3
 docker kill $(docker ps -q)
-kill -9 $pid_of_measure
-kill -9 $pid_of_tail
 

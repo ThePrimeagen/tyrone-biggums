@@ -62,6 +62,7 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
 
     stop() {
         this._done = true;
+        this.bullets.forEach(b => b.cleanUp());
     }
 
     processMessage(socket: BaseSocket, message: Message) {
@@ -107,6 +108,7 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
     }
 
     private removeBullet(b: Bullet): void {
+        b.cleanUp();
         this.bullets.splice(this.bullets.indexOf(b), 1);
     }
 }

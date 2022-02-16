@@ -9,6 +9,7 @@ export interface Geometry<T> {
     hasCollision(other: T): boolean;
     hasCollisionFast(other: T): boolean; // when other is the same size
     setPosition(vec: Vector2D): Geometry<T>;
+    setPositionXY(x: number, y: number): Geometry<T>;
 }
 
 export class AABB implements Geometry<AABB>, Moveable {
@@ -47,6 +48,12 @@ export class AABB implements Geometry<AABB>, Moveable {
     setPosition(vec: Vector2D): Geometry<AABB> {
         this.pos[0] = vec[0];
         this.pos[1] = vec[1];
+        return this;
+    }
+
+    setPositionXY(x: number, y: number): Geometry<AABB> {
+        this.pos[0] = x;
+        this.pos[1] = y;
         return this;
     }
 

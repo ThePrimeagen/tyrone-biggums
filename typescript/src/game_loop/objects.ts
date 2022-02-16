@@ -1,6 +1,6 @@
 import { AABB, Collidable } from "./geometry";
 import { Moveable, scale, Vector2D, Velocity } from "./physics";
-
+import ObjectPool from "./pool";
 
 export class Player implements Collidable<AABB> {
     public geo: AABB;
@@ -22,6 +22,7 @@ export class Player implements Collidable<AABB> {
     }
 }
 
+const bulletPool = new ObjectPool<Bullet>(200, () => new Bullet([0, 0], [0, 0]));
 export class Bullet implements Collidable<AABB>, Moveable, Velocity {
     public geo: AABB;
 
@@ -39,6 +40,10 @@ export class Bullet implements Collidable<AABB>, Moveable, Velocity {
         this.geo.applyDelta(delta);
     }
 
+    cleanUp(): void {
+        bulletPool.push(this);
+    }
+
     static standardBulletGeometry(pos: Vector2D): AABB {
         const aabb = AABB.fromWidthHeight(Bullet.BulletWidth, 3);
         aabb.setPosition(pos);
@@ -47,18 +52,21 @@ export class Bullet implements Collidable<AABB>, Moveable, Velocity {
     }
 
     static createFromPlayer(player: Player, speed: number) {
-        if (player.dir[0] === 1) {
+        const bullet = bulletPool.pop();
 
-            return new Bullet([
+        if (player.dir[0] === 1) {
+            bullet.geo.setPositionXY(
                 player.geo.pos[0] + player.geo.width + 1,
-                0
-            ], scale(player.dir, speed));
+                0);
+        } else {
+            bullet.geo.setPositionXY(
+                player.geo.pos[0] - Bullet.BulletWidth - 1,
+                0);
         }
 
-        return new Bullet([
-            player.geo.pos[0] - Bullet.BulletWidth - 1,
-            0
-        ], scale(player.dir, speed));
+        bullet.vel[0] = player.dir[0] * speed;
+        bullet.vel[1] = player.dir[1] * speed;
+        return bullet;
     }
 
     static BulletWidth = 35;
