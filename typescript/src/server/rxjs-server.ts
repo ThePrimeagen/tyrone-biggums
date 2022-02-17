@@ -43,7 +43,6 @@ export default class ServerImpl implements Server {
   }
 
   private startServer(server: WebSocket.Server) {
-    this.server = server;
     const observable: Observable<WebSocket> = Observable.create(
       (observer: Observer<WebSocket>) => {
         server.on("connection", (ws) => {
