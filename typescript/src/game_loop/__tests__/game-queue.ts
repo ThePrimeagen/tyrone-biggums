@@ -1,6 +1,5 @@
-import { MessageType } from "../../message";
-import { createSocket, createSocketRxJS } from "../../mocks/socket";
-import GameQueue, { GameQueueRxJSImpl } from "../game-queue";
+import { createSocket } from "../../mocks/socket";
+import GameQueue from "../game-queue";
 
 test("GameQueue", function () {
   const p1 = createSocket();

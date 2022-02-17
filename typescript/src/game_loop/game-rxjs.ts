@@ -12,7 +12,6 @@ import { Server } from "../server/rxjs-server";
 import { BaseSocket, RxSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
 import { getRxJSGameLoop } from "./game-loop-timer";
-import { GameQueueRxJSImpl } from "./game-queue";
 import GameWorld from "./game-world";
 
 function getTickRate(): number {
@@ -37,14 +36,20 @@ class GameResultsImpl implements GameResults {
   ) {}
 }
 
+export class MessageEnvelope {
+  constructor(
+    public readonly message: Message,
+    public readonly from: BaseSocket
+  ) {}
+}
+
 export function runRxJSLoop(
   subscriber: Subscriber<GameResults>,
   s1: RxSocket,
   s2: RxSocket
 ): void {
   const stats = new GameStat();
-  const queue = new GameQueueRxJSImpl(s1, s2);
-  subscriber.add(() => queue.stop());
+  const queue: MessageEnvelope[] = [];
 
   const world = new GameWorld(s1, s2);
   subscriber.add(() => world.stop());
@@ -60,17 +65,15 @@ export function runRxJSLoop(
 
   subscriber.add(
     s1.events.subscribe({
-      complete: () => {
-        close(s2);
-      },
+      next: (message) => queue.push(new MessageEnvelope(message, s1)),
+      complete: () => close(s2),
     })
   );
 
   subscriber.add(
     s2.events.subscribe({
-      complete: () => {
-        close(s1);
-      },
+      next: (message) => queue.push(new MessageEnvelope(message, s2)),
+      complete: () => close(s1),
     })
   );
 
@@ -79,7 +82,8 @@ export function runRxJSLoop(
       stats.addDelta(delta);
 
       // 1. process messages
-      const messageEnvolopes = queue.flush();
+      const messageEnvolopes = Array.from(queue);
+      queue.length = 0;
       for (let i = 0; i < messageEnvolopes.length; i++) {
         const m = messageEnvolopes[i];
         world.processMessage(m.from, m.message);
