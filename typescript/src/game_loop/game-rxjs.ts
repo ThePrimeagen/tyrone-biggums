@@ -30,16 +30,19 @@ export function runRxJSLoop([s1, s2]: [
   return new Observable((subscriber) => {
     const stats = new GameStat();
     const queue = new GameQueueRxJSImpl(s1, s2);
+
     const world = new GameWorld(s1, s2);
     const loop = new GameLoopRxJS(getTickRate());
+
+    subscriber.add(() => {
+      loop.stop();
+      world.stop();
+    });
 
     function close(other: RxSocket) {
       if (world.done) {
         return;
       }
-
-      loop.stop();
-      world.stop();
       other.push(errorGameOver("The other player disconnected"));
       subscriber.error(new Error("Disconnected"));
     }
@@ -56,37 +59,41 @@ export function runRxJSLoop([s1, s2]: [
       },
     });
 
-    loop
-      .start()
-      .pipe(
-        tap((delta: number) => {
-          stats.addDelta(delta);
+    subscriber.add(
+      loop
+        .start()
+        .pipe(
+          tap((delta: number) => {
+            stats.addDelta(delta);
 
-          // 1. process messages
-          queue.flush().forEach((m) => world.processMessage(m.from, m.message));
+            // 1. process messages
+            queue
+              .flush()
+              .forEach((m) => world.processMessage(m.from, m.message));
 
-          // 2. update all positions
-          world.update(delta);
+            // 2. update all positions
+            world.update(delta);
 
-          // 3. process collisions
-          world.collisions();
-        }),
-        tap((delta: number) => {
-          if (world.done) {
-            loop.stop();
-            world.stop();
+            // 3. process collisions
+            world.collisions();
+          }),
+          tap((delta: number) => {
+            if (world.done) {
+              loop.stop();
+              world.stop();
 
-            const gameResult: GameResults = [
-              stats,
-              world.getWinner(),
-              world.getLoser(),
-            ];
-            subscriber.next(gameResult);
-            subscriber.complete();
-          }
-        })
-      )
-      .subscribe();
+              const gameResult: GameResults = [
+                stats,
+                world.getWinner(),
+                world.getLoser(),
+              ];
+              subscriber.next(gameResult);
+              subscriber.complete();
+            }
+          })
+        )
+        .subscribe()
+    );
   });
 }
 
