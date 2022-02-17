@@ -18,12 +18,12 @@ export interface Server {
 }
 
 export default class ServerImpl implements Server {
-  private subject: Subject<[Socket, Socket]>;
+  private readonly socketPairs: Subject<[Socket, Socket]>;
   public readonly listening: Promise<any>;
   private server: WebSocket.Server;
 
   constructor(port: number = 42069) {
-    this.subject = new Subject<[Socket, Socket]>();
+    this.socketPairs = new Subject<[Socket, Socket]>();
     this.server = new WebSocket.Server({
       host: "0.0.0.0",
       port,
@@ -57,24 +57,24 @@ export default class ServerImpl implements Server {
         })
       )
       .subscribe((socketGroup: [Socket, Socket]) => {
-        this.subject.next(socketGroup);
+        this.socketPairs.next(socketGroup);
       });
 
     server.on("error", (e) => {
-      this.subject.error(e);
+      this.socketPairs.error(e);
     });
 
     server.on("close", () => {
-      this.subject.complete();
+      this.socketPairs.complete();
     });
   }
 
   close(): void {
-    this.subject.complete();
+    this.socketPairs.complete();
     this.server.close();
   }
 
   public on(): Observable<[Socket, Socket]> {
-    return this.subject;
+    return this.socketPairs;
   }
 }
