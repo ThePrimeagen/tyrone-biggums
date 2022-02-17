@@ -47,17 +47,21 @@ export function runRxJSLoop([s1, s2]: [
       subscriber.error(new Error("Disconnected"));
     }
 
-    s1.events.subscribe({
-      complete: () => {
-        close(s2);
-      },
-    });
+    subscriber.add(
+      s1.events.subscribe({
+        complete: () => {
+          close(s2);
+        },
+      })
+    );
 
-    s2.events.subscribe({
-      complete: () => {
-        close(s1);
-      },
-    });
+    subscriber.add(
+      s2.events.subscribe({
+        complete: () => {
+          close(s1);
+        },
+      })
+    );
 
     subscriber.add(
       loop
