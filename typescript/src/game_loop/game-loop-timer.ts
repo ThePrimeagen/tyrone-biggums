@@ -77,11 +77,11 @@ export default class GameLoopTimerImpl
 export class GameLoopRxJS implements StoppableTimer, GLRxJSTimer {
   private tickRate: number;
   private tickerSubscription?: Subscription;
-  private subject: BehaviorSubject<number>;
+  private elapsedSinceLastTick: BehaviorSubject<number>;
 
   constructor(fps: number) {
     this.tickRate = 1000 / fps;
-    this.subject = new BehaviorSubject<number>(0);
+    this.elapsedSinceLastTick = new BehaviorSubject<number>(0);
   }
 
   stop() {
@@ -104,12 +104,12 @@ export class GameLoopRxJS implements StoppableTimer, GLRxJSTimer {
           })
         )
         .subscribe((diff) => {
-          this.subject.next(diff);
+          this.elapsedSinceLastTick.next(diff);
         });
 
-      this.subject.next(0);
+      this.elapsedSinceLastTick.next(0);
     }
 
-    return this.subject;
+    return this.elapsedSinceLastTick;
   }
 }
