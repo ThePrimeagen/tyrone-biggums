@@ -2,8 +2,10 @@ import { mergeMap, Observable } from "rxjs";
 import {
   createLoserMessage,
   createMessage,
+  createReadyUpMessage,
   createWinnerMessage,
   errorGameOver,
+  Message,
   MessageType,
 } from "../message";
 import { Server } from "../server/rxjs-server";
@@ -130,4 +132,34 @@ export default function gameCreator(server: Server) {
         GameStat.activeGames--;
       },
     });
+}
+
+export function setupWithRxJS(
+  playerSockets: [RxSocket, RxSocket],
+  timeout: number = 30000
+): Observable<[RxSocket, RxSocket]> {
+  const [p1, p2] = playerSockets;
+  p1.push(createReadyUpMessage());
+  p2.push(createReadyUpMessage());
+
+  return new Observable((subscriber) => {
+    let timeoutId = setTimeout(() => {
+      subscriber.error(new Error("Timeout"));
+    }, timeout);
+    subscriber.add(() => clearTimeout(timeoutId));
+
+    let readyCount = 0;
+    const checkReady = (msg: Message) => {
+      if (msg.type === MessageType.ReadyUp) {
+        readyCount++;
+        if (readyCount === 2) {
+          clearTimeout(timeoutId);
+          subscriber.next(playerSockets);
+          subscriber.complete();
+        }
+      }
+    };
+    subscriber.add(p1.events.subscribe(checkReady));
+    subscriber.add(p2.events.subscribe(checkReady));
+  });
 }
