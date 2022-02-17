@@ -1,5 +1,4 @@
-import { EMPTY, mergeMap, Observable, Subscriber, tap } from "rxjs";
-import { onErrorResumeNext } from "rxjs/operators";
+import { mergeMap, Observable } from "rxjs";
 import {
   createLoserMessage,
   createMessage,
@@ -10,7 +9,7 @@ import {
 import { Server } from "../server/rxjs-server";
 import { BaseSocket, RxSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
-import { GameLoopRxJS, getRxJSGameLoop } from "./game-loop-timer";
+import { getRxJSGameLoop } from "./game-loop-timer";
 import { GameQueueRxJSImpl } from "./game-queue";
 import { setupWithRxJS } from "./game-setup";
 import GameWorld from "./game-world";
@@ -94,24 +93,20 @@ export default function gameCreator(server: Server) {
     .on()
     .pipe(
       mergeMap((sockets) => setupWithRxJS(sockets)),
-      tap(([s1, s2]) => {
+      mergeMap(([s1, s2]) => {
         s1.push(createMessage(MessageType.Play));
         s2.push(createMessage(MessageType.Play));
-      }),
-      mergeMap(([s1, s2]) => {
         GameStat.activeGames++;
-        return runRxJSLoop([s1, s2]).pipe(
-          tap({
-            next: ([stats, winner, loser, playerDisconnect]) => {
-              if (!playerDisconnect) {
-                winner.push(createWinnerMessage(stats), () => winner.close());
-                loser.push(createLoserMessage(), () => loser.close());
-              }
-              GameStat.activeGames--;
-            },
-          })
-        );
+        return runRxJSLoop([s1, s2]);
       })
     )
-    .subscribe();
+    .subscribe({
+      next: ([stats, winner, loser, playerDisconnect]) => {
+        if (!playerDisconnect) {
+          winner.push(createWinnerMessage(stats), () => winner.close());
+          loser.push(createLoserMessage(), () => loser.close());
+        }
+        GameStat.activeGames--;
+      },
+    });
 }
