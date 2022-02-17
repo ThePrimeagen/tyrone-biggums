@@ -30,19 +30,7 @@ export default class ServerImpl implements Server {
     });
     this.listening = once(this.server, "listening");
 
-    this.startServer(this.server);
-  }
-
-  close(): void {
-    this.subject.complete();
-    this.server.close();
-  }
-
-  public on(): Observable<[Socket, Socket]> {
-    return this.subject;
-  }
-
-  private startServer(server: WebSocket.Server) {
+    const server = this.server;
     const observable: Observable<WebSocket> = Observable.create(
       (observer: Observer<WebSocket>) => {
         server.on("connection", (ws) => {
@@ -79,5 +67,14 @@ export default class ServerImpl implements Server {
     server.on("close", () => {
       this.subject.complete();
     });
+  }
+
+  close(): void {
+    this.subject.complete();
+    this.server.close();
+  }
+
+  public on(): Observable<[Socket, Socket]> {
+    return this.subject;
   }
 }
