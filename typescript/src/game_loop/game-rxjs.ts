@@ -109,13 +109,16 @@ export default function gameCreator(server: Server) {
   server
     .on()
     .pipe(
-      mergeMap((sockets) => setupWithRxJS(sockets)),
-      mergeMap(([s1, s2]) => {
-        s1.push(createMessage(MessageType.Play));
-        s2.push(createMessage(MessageType.Play));
-        GameStat.activeGames++;
-        return runRxJSLoop([s1, s2]);
-      })
+      mergeMap((sockets) =>
+        setupWithRxJS(sockets).pipe(
+          mergeMap(([s1, s2]) => {
+            s1.push(createMessage(MessageType.Play));
+            s2.push(createMessage(MessageType.Play));
+            GameStat.activeGames++;
+            return runRxJSLoop([s1, s2]);
+          })
+        )
+      )
     )
     .subscribe({
       next: (results) => {
