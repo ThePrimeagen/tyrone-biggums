@@ -31,7 +31,7 @@ export default class ServerImpl implements Server {
 
     this.socketPairs = new Observable((subscriber) => {
       const server = this.server;
-      const observable: Observable<WebSocket> = Observable.create(
+      const observable = new Observable<WebSocket>(
         (observer: Observer<WebSocket>) => {
           server.on("connection", (ws) => {
             observer.next(ws);
