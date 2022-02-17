@@ -70,7 +70,6 @@ export default class ServerImpl implements Server {
   }
 
   close(): void {
-    this.socketPairs.complete();
     this.server.close();
   }
 
