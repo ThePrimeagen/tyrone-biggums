@@ -1,14 +1,6 @@
 import WebSocket from "ws";
 import Socket from "./rxjs-socket";
-import {
-  BehaviorSubject,
-  filter,
-  map,
-  Observable,
-  Observer,
-  scan,
-  Subject,
-} from "rxjs";
+import { Observable } from "rxjs";
 import { once } from "events";
 
 export interface Server {
