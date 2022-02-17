@@ -64,39 +64,31 @@ export function runRxJSLoop([s1, s2]: [
     );
 
     subscriber.add(
-      loop
-        .start()
-        .pipe(
-          tap((delta: number) => {
-            stats.addDelta(delta);
+      loop.start().subscribe((delta) => {
+        stats.addDelta(delta);
 
-            // 1. process messages
-            queue
-              .flush()
-              .forEach((m) => world.processMessage(m.from, m.message));
+        // 1. process messages
+        queue.flush().forEach((m) => world.processMessage(m.from, m.message));
 
-            // 2. update all positions
-            world.update(delta);
+        // 2. update all positions
+        world.update(delta);
 
-            // 3. process collisions
-            world.collisions();
-          }),
-          tap((delta: number) => {
-            if (world.done) {
-              loop.stop();
-              world.stop();
+        // 3. process collisions
+        world.collisions();
 
-              const gameResult: GameResults = [
-                stats,
-                world.getWinner(),
-                world.getLoser(),
-              ];
-              subscriber.next(gameResult);
-              subscriber.complete();
-            }
-          })
-        )
-        .subscribe()
+        if (world.done) {
+          loop.stop();
+          world.stop();
+
+          const gameResult: GameResults = [
+            stats,
+            world.getWinner(),
+            world.getLoser(),
+          ];
+          subscriber.next(gameResult);
+          subscriber.complete();
+        }
+      })
     );
   });
 }
