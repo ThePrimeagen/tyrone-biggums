@@ -2,7 +2,7 @@ import { mergeMap, Observable, Subscriber, tap } from "rxjs";
 import { onErrorResumeNext } from "rxjs/operators";
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server/rxjs-server";
-import { Socket } from "../server/rxjs-socket";
+import { RxSocket } from "../server/rxjs-socket";
 import { BaseSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
 import { GameLoopRxJS } from "./game-loop-timer";
@@ -18,14 +18,14 @@ function getTickRate(): number {
 }
 
 export type GameResults = [GameStat, BaseSocket, BaseSocket];
-export function runRxJSLoop([s1, s2]: [Socket, Socket]): Observable<GameResults> {
+export function runRxJSLoop([s1, s2]: [RxSocket, RxSocket]): Observable<GameResults> {
     return Observable.create((observer: Subscriber<GameResults>) => {
         const stats = new GameStat();
         const queue = new GameQueueRxJSImpl(s1, s2);
         const world = new GameWorld(s1, s2);
         const loop = new GameLoopRxJS(getTickRate());
 
-        function close(other: Socket) {
+        function close(other: RxSocket) {
             if (world.done) {
                 return;
             }

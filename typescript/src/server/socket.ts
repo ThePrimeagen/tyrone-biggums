@@ -1,18 +1,9 @@
 import WebSocket from "ws";
-import EventEmitterBecausePeopleToldMeItWasDogShit, { Callback, NonDogShitEventEmitter } from "../event-emitter-because-people-told-me-it-was-dogshit";
+import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { Message } from "../message";
-import { BaseSocket } from "./universal-types";
+import { BaseSocket, CallbackSocket } from "./universal-types";
 
-export interface Socket {
-    close(code?: number): void;
-    push(data: object, cb?: () => void): void;
-    on(event: "error", cb: (error: Error) => void): void;
-    on(event: "message", cb: (msg: Message) => void): void;
-    on(event: "close", cb: () => void): void;
-    off(event: string, cb: (arg?: any) => void): void;
-}
-
-export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Socket, BaseSocket {
+export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements CallbackSocket, BaseSocket {
 
     constructor(private socket: WebSocket) {
         super();

@@ -1,15 +1,9 @@
 import { Subject } from "rxjs";
 import WebSocket from "ws";
 import { createMessage, Message } from "../message";
-import { BaseSocket } from "./universal-types";
+import { BaseSocket, RxSocket } from "./universal-types";
 
-export interface Socket {
-    close(code?: number): void;
-    push(data: object, cb?: () => void): void;
-    events: Subject<Message>;
-}
-
-export default class SocketImpl implements Socket, BaseSocket {
+export default class SocketImpl implements RxSocket, BaseSocket {
     events: Subject<Message>;
 
     constructor(private socket: WebSocket) {

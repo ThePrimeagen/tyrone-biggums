@@ -1,7 +1,7 @@
 import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server/callback-server";
-import { Socket } from "../server/socket";
+import { CallbackSocket } from "../server/socket";
 import { GameStat } from "../stats";
 import GameLoopTimer from "./game-loop-timer";
 import GameQueue from "./game-queue";
@@ -48,7 +48,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
     private world!: GameWorld;
     private endedWithError: boolean;
 
-    constructor(private p1: Socket, private p2: Socket) {
+    constructor(private p1: CallbackSocket, private p2: CallbackSocket) {
         super();
         this.loop = new GameLoopTimer(getTickRate());
         this.endedWithError = false;
@@ -62,7 +62,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
         });
     }
 
-    private stop(other: Socket): void {
+    private stop(other: CallbackSocket): void {
         other.push(errorGameOver("The other player disconnected"));
         other.close();
         this.loop.stop();

@@ -1,9 +1,9 @@
-import { Socket } from "../server/socket";
-import { Socket as SocketRxJS } from "../server/rxjs-socket";
+import { CallbackSocket } from "../server/socket";
+import { RxSocket as SocketRxJS } from "../server/rxjs-socket";
 import { Subject } from "rxjs";
 import { Message } from "../message";
 
-export function createSocket(): Socket {
+export function createSocket(): CallbackSocket {
     return {
         push: jest.fn(),
         close: jest.fn(),

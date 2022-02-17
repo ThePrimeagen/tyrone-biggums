@@ -1,11 +1,11 @@
 import { createReadyUpMessage, Message, MessageType } from "../message";
-import { Socket } from "../server/socket";
-import { Socket as SocketRxJS } from "../server/rxjs-socket";
+import { CallbackSocket } from "../server/socket";
+import { RxSocket as SocketRxJS } from "../server/rxjs-socket";
 import { filter, map, merge, Observable, take, timer, zip } from "rxjs";
 
 type Callback = (e?: Error) => void;
 
-function readyUp(socket: Socket, idx: number, done: [boolean, boolean], timeout: number, callback: Callback) {
+function readyUp(socket: CallbackSocket, idx: number, done: [boolean, boolean], timeout: number, callback: Callback) {
     function onMsg(msg: Message) {
         if (msg.type === MessageType.ReadyUp) {
             done[idx] = true;
@@ -21,7 +21,7 @@ function readyUp(socket: Socket, idx: number, done: [boolean, boolean], timeout:
 }
 
 
-export function setupWithCallbacks(p1: Socket, p2: Socket, callback: Callback, timeout: number = 30000): void  {
+export function setupWithCallbacks(p1: CallbackSocket, p2: CallbackSocket, callback: Callback, timeout: number = 30000): void  {
     const done: [boolean, boolean] = [false, false];
 
     let finished = false;
