@@ -30,12 +30,10 @@ export function runRxJSLoop([s1, s2]: [
   return new Observable((subscriber) => {
     const stats = new GameStat();
     const queue = new GameQueueRxJSImpl(s1, s2);
+    subscriber.add(() => queue.stop());
 
     const world = new GameWorld(s1, s2);
-
-    subscriber.add(() => {
-      world.stop();
-    });
+    subscriber.add(() => world.stop());
 
     function close(other: RxSocket) {
       if (world.done) {
