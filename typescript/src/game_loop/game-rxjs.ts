@@ -22,7 +22,8 @@ function getTickRate(): number {
   return +process.env.TICK_RATE || 60;
 }
 
-export type GameResults = [GameStat, BaseSocket, BaseSocket];
+export type GameResults = [GameStat, BaseSocket, BaseSocket, boolean];
+
 export function runRxJSLoop([s1, s2]: [
   RxSocket,
   RxSocket
@@ -40,7 +41,8 @@ export function runRxJSLoop([s1, s2]: [
         return;
       }
       other.push(errorGameOver("The other player disconnected"));
-      subscriber.error(new Error("Disconnected"));
+      subscriber.next([stats, s1, s2, true]);
+      subscriber.complete();
     }
 
     subscriber.add(
@@ -77,6 +79,7 @@ export function runRxJSLoop([s1, s2]: [
             stats,
             world.getWinner(),
             world.getLoser(),
+            false,
           ];
           subscriber.next(gameResult);
           subscriber.complete();
@@ -99,16 +102,14 @@ export default function gameCreator(server: Server) {
         GameStat.activeGames++;
         return runRxJSLoop([s1, s2]).pipe(
           tap({
-            next: ([stats, winner, loser]) => {
-              winner.push(createWinnerMessage(stats), () => winner.close());
-              loser.push(createLoserMessage(), () => loser.close());
+            next: ([stats, winner, loser, playerDisconnect]) => {
+              if (!playerDisconnect) {
+                winner.push(createWinnerMessage(stats), () => winner.close());
+                loser.push(createLoserMessage(), () => loser.close());
+              }
               GameStat.activeGames--;
             },
-            error: (_) => {
-              GameStat.activeGames--;
-            },
-          }),
-          onErrorResumeNext(EMPTY)
+          })
         );
       })
     )
