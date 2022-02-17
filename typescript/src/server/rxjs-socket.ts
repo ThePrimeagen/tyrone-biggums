@@ -1,6 +1,6 @@
-import { Observable, Subject } from "rxjs";
-import WebSocket from "ws";
-import { createMessage, Message } from "../message";
+import { Observable } from "rxjs";
+import WebSocket, { RawData } from "ws";
+import { Message } from "../message";
 import { BaseSocket, RxSocket } from "./universal-types";
 
 export default class SocketImpl implements RxSocket, BaseSocket {
@@ -8,17 +8,21 @@ export default class SocketImpl implements RxSocket, BaseSocket {
 
   constructor(private socket: WebSocket) {
     this.events = new Observable((subscriber) => {
-      this.socket.on("message", (msg) => {
+      const messageHandler = (msg: RawData) =>
         subscriber.next(JSON.parse(msg.toString()));
-      });
+      this.socket.on("message", messageHandler);
 
-      this.socket.on("close", () => {
-        subscriber.complete();
-      });
+      const closeHandler = () => subscriber.complete();
+      this.socket.on("close", closeHandler);
 
-      this.socket.on("error", (e: Error) => {
-        subscriber.error(e);
-      });
+      const errorHandler = (e: Error) => subscriber.error(e);
+      this.socket.on("error", errorHandler);
+
+      return () => {
+        this.socket.off("message", messageHandler);
+        this.socket.off("close", closeHandler);
+        this.socket.off("error", errorHandler);
+      };
     });
   }
 
