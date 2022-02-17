@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+const readline = require('readline');
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+});
+
+const counts = new Array(8).fill(0);
+rl.on('line', function(line){
+    if (!line.includes("TICK")) {
+        return;
+    }
+
+    const tickCounts = line.split(",");
+    counts[+tickCounts[1]] += +tickCounts[2];
+
+    for (let i = 0; i < counts.length; ++i) {
+        console.log(counts[i]);
+    }
+    console.log();
+    console.log();
+});
+
+
