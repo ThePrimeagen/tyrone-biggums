@@ -5,69 +5,81 @@ import { noop } from "../server/socket";
 
 type Callback = (e?: Error) => void;
 
-function readyUp(socket: CallbackSocket, idx: number, done: [boolean, boolean], timeout: number, callback: Callback) {
-    function onMsg(msg: Message) {
-        if (msg.type === MessageType.ReadyUp) {
-            done[idx] = true;
-            socket.onmessage = noop;
+function readyUp(
+  socket: CallbackSocket,
+  idx: number,
+  done: [boolean, boolean],
+  timeout: number,
+  callback: Callback
+) {
+  function onMsg(msg: Message) {
+    if (msg.type === MessageType.ReadyUp) {
+      done[idx] = true;
+      socket.onmessage = noop;
 
-            if (done[0] && done[1]) {
-                callback();
-            }
-        }
-    };
-
-    socket.onmessage = onMsg;
-}
-
-
-export function setupWithCallbacks(p1: CallbackSocket, p2: CallbackSocket, callback: Callback, timeout: number = 30000): void  {
-    const done: [boolean, boolean] = [false, false];
-
-    let finished = false;
-    function finishedCB(error?: Error) {
-        if (finished) {
-            return;
-        }
-        finished = true;
-        callback(error);
+      if (done[0] && done[1]) {
+        callback();
+      }
     }
+  }
 
-    readyUp(p1, 0, done, timeout, finishedCB);
-    readyUp(p2, 1, done, timeout, finishedCB);
-
-    setTimeout(() => {
-        finishedCB(new Error("Timeout"));
-    }, timeout)
-
-    p1.push(createReadyUpMessage());
-    p2.push(createReadyUpMessage());
+  socket.onmessage = onMsg;
 }
 
+export function setupWithCallbacks(
+  p1: CallbackSocket,
+  p2: CallbackSocket,
+  callback: Callback,
+  timeout: number = 30000
+): void {
+  const done: [boolean, boolean] = [false, false];
 
-export function setupWithRxJS([p1, p2]: [RxSocket, RxSocket], timeout: number = 30000): Observable<[RxSocket, RxSocket]>  {
-    p1.push(createReadyUpMessage());
-    p2.push(createReadyUpMessage());
+  let finished = false;
+  function finishedCB(error?: Error) {
+    if (finished) {
+      return;
+    }
+    finished = true;
+    callback(error);
+  }
 
-    return merge(
-        zip(
-            p1.events.pipe(
-                filter((msg: Message) => msg.type === MessageType.ReadyUp)
-            ),
-            p2.events.pipe(
-                filter((msg: Message) => msg.type === MessageType.ReadyUp)
-            ),
-        ),
-        timer(timeout).pipe(
-            map(() => new Error("Timeout"))
-        )
-    ).pipe(
-        take(1),
-        map((x) => {
-            if (x instanceof Error) {
-                throw x;
-            }
-            return [p1, p2];
-        })
-    );
+  readyUp(p1, 0, done, timeout, finishedCB);
+  readyUp(p2, 1, done, timeout, finishedCB);
+
+  setTimeout(() => {
+    finishedCB(new Error("Timeout"));
+  }, timeout);
+
+  p1.push(createReadyUpMessage());
+  p2.push(createReadyUpMessage());
+}
+
+export function setupWithRxJS(
+  playerSockets: [RxSocket, RxSocket],
+  timeout: number = 30000
+): Observable<[RxSocket, RxSocket]> {
+  const [p1, p2] = playerSockets;
+  p1.push(createReadyUpMessage());
+  p2.push(createReadyUpMessage());
+
+  return new Observable((subscriber) => {
+    let timeoutId = setTimeout(() => {
+      subscriber.error(new Error("Timeout"));
+    }, timeout);
+    subscriber.add(() => clearTimeout(timeoutId));
+
+    let readyCount = 0;
+    const checkReady = (msg: Message) => {
+      if (msg.type === MessageType.ReadyUp) {
+        readyCount++;
+        if (readyCount === 2) {
+          clearTimeout(timeoutId);
+          subscriber.next(playerSockets);
+          subscriber.complete();
+        }
+      }
+    };
+    subscriber.add(p1.events.subscribe(checkReady));
+    subscriber.add(p2.events.subscribe(checkReady));
+  });
 }
