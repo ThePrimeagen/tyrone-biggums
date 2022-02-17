@@ -1,4 +1,4 @@
-import { mergeMap, Observable } from "rxjs";
+import { mergeMap, Observable, Subscriber } from "rxjs";
 import {
   createLoserMessage,
   createMessage,
@@ -38,72 +38,71 @@ class GameResultsImpl implements GameResults {
 }
 
 export function runRxJSLoop(
+  subscriber: Subscriber<GameResults>,
   s1: RxSocket,
   s2: RxSocket
-): Observable<GameResults> {
-  return new Observable((subscriber) => {
-    const stats = new GameStat();
-    const queue = new GameQueueRxJSImpl(s1, s2);
-    subscriber.add(() => queue.stop());
+): void {
+  const stats = new GameStat();
+  const queue = new GameQueueRxJSImpl(s1, s2);
+  subscriber.add(() => queue.stop());
 
-    const world = new GameWorld(s1, s2);
-    subscriber.add(() => world.stop());
+  const world = new GameWorld(s1, s2);
+  subscriber.add(() => world.stop());
 
-    function close(other: RxSocket) {
-      if (world.done) {
-        return;
-      }
-      other.push(errorGameOver("The other player disconnected"));
-      subscriber.next(new GameResultsImpl(stats, s1, s2, true));
-      subscriber.complete();
+  function close(other: RxSocket) {
+    if (world.done) {
+      return;
     }
+    other.push(errorGameOver("The other player disconnected"));
+    subscriber.next(new GameResultsImpl(stats, s1, s2, true));
+    subscriber.complete();
+  }
 
-    subscriber.add(
-      s1.events.subscribe({
-        complete: () => {
-          close(s2);
-        },
-      })
-    );
+  subscriber.add(
+    s1.events.subscribe({
+      complete: () => {
+        close(s2);
+      },
+    })
+  );
 
-    subscriber.add(
-      s2.events.subscribe({
-        complete: () => {
-          close(s1);
-        },
-      })
-    );
+  subscriber.add(
+    s2.events.subscribe({
+      complete: () => {
+        close(s1);
+      },
+    })
+  );
 
-    subscriber.add(
-      getRxJSGameLoop(getTickRate()).subscribe((delta) => {
-        stats.addDelta(delta);
+  subscriber.add(
+    getRxJSGameLoop(getTickRate()).subscribe((delta) => {
+      stats.addDelta(delta);
 
-        // 1. process messages
-        const messageEnvolopes = queue.flush();
-        for (let i = 0; i < messageEnvolopes.length; i++) {
-          const m = messageEnvolopes[i];
-          world.processMessage(m.from, m.message);
-        }
+      // 1. process messages
+      const messageEnvolopes = queue.flush();
+      for (let i = 0; i < messageEnvolopes.length; i++) {
+        const m = messageEnvolopes[i];
+        world.processMessage(m.from, m.message);
+      }
 
-        // 2. update all positions
-        world.update(delta);
+      // 2. update all positions
+      world.update(delta);
 
-        // 3. process collisions
-        world.collisions();
+      // 3. process collisions
+      world.collisions();
 
-        if (world.done) {
-          const gameResult = new GameResultsImpl(
-            stats,
-            world.getWinner(),
-            world.getLoser(),
-            false
-          );
-          subscriber.next(gameResult);
-          subscriber.complete();
-        }
-      })
-    );
-  });
+      if (world.done) {
+        const gameResult = new GameResultsImpl(
+          stats,
+          world.getWinner(),
+          world.getLoser(),
+          false
+        );
+        subscriber.next(gameResult);
+        subscriber.complete();
+      }
+    })
+  );
 }
 
 export default function gameCreator(server: Server) {
@@ -146,7 +145,7 @@ export function setupWithRxJS(
           s1.push(createMessage(MessageType.Play));
           s2.push(createMessage(MessageType.Play));
           GameStat.activeGames++;
-          runRxJSLoop(s1, s2).subscribe(subscriber);
+          runRxJSLoop(subscriber, s1, s2);
         }
       }
     };
