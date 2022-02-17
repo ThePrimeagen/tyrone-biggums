@@ -1,4 +1,4 @@
-import { mergeMap, Observable, Subscriber, Subscription, tap } from "rxjs";
+import { EMPTY, mergeMap, Observable, Subscriber, tap } from "rxjs";
 import { onErrorResumeNext } from "rxjs/operators";
 import {
   createLoserMessage,
@@ -86,12 +86,6 @@ export function runRxJSLoop([s1, s2]: [
   });
 }
 
-function empty<T>(): Observable<T> {
-  return Observable.create((observer: Subscriber<T>) => {
-    observer.complete();
-  });
-}
-
 export default function gameCreator(server: Server) {
   server
     .on()
@@ -114,7 +108,7 @@ export default function gameCreator(server: Server) {
               GameStat.activeGames--;
             },
           }),
-          onErrorResumeNext(empty<GameResults>())
+          onErrorResumeNext(EMPTY)
         );
       })
     )
