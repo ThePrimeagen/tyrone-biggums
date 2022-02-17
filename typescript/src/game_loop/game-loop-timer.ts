@@ -1,14 +1,4 @@
-import {
-  BehaviorSubject,
-  defer,
-  interval,
-  map,
-  Observable,
-  Subject,
-  Subscription,
-  tap,
-} from "rxjs";
-import { explodePromise } from "../promise-helpers";
+import { Observable, Subject } from "rxjs";
 
 type Callback = (delta: number) => void;
 
@@ -77,55 +67,15 @@ export default class GameLoopTimerImpl
 
 export function getRxJSGameLoop(fps: number): Observable<number> {
   const tickRate = 1000 / fps;
-  return defer(() => {
+  return new Observable((subscriber) => {
     let lastTime = Date.now();
-    return interval(tickRate).pipe(
-      map(() => {
-        return Date.now() - lastTime;
-      }),
-      tap(() => {
-        lastTime = Date.now();
-      })
-    );
+    subscriber.next(0);
+    const id = setInterval(() => {
+      const currentTime = Date.now();
+      const diff = Date.now() - lastTime;
+      lastTime = currentTime;
+      subscriber.next(diff);
+    }, tickRate);
+    return () => clearInterval(id);
   });
-}
-
-export class GameLoopRxJS implements StoppableTimer, GLRxJSTimer {
-  private tickRate: number;
-  private tickerSubscription?: Subscription;
-  private elapsedSinceLastTick: BehaviorSubject<number>;
-
-  constructor(fps: number) {
-    this.tickRate = 1000 / fps;
-    this.elapsedSinceLastTick = new BehaviorSubject<number>(0);
-  }
-
-  stop() {
-    if (this.tickerSubscription) {
-      this.tickerSubscription.unsubscribe();
-      this.tickerSubscription = undefined;
-    }
-  }
-
-  start(): Subject<number> {
-    if (!this.tickerSubscription) {
-      let lastTime: number = Date.now();
-      this.tickerSubscription = interval(this.tickRate)
-        .pipe(
-          map(() => {
-            return Date.now() - lastTime;
-          }),
-          tap(() => {
-            lastTime = Date.now();
-          })
-        )
-        .subscribe((diff) => {
-          this.elapsedSinceLastTick.next(diff);
-        });
-
-      this.elapsedSinceLastTick.next(0);
-    }
-
-    return this.elapsedSinceLastTick;
-  }
 }
