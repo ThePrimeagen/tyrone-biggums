@@ -1,7 +1,6 @@
-import { CallbackSocket } from "../server/socket";
-import { RxSocket as SocketRxJS } from "../server/rxjs-socket";
 import { Subject } from "rxjs";
 import { Message } from "../message";
+import { CallbackSocket, RxSocket } from "../server/universal-types";
 
 export function createSocket(): CallbackSocket {
     return {
@@ -12,7 +11,7 @@ export function createSocket(): CallbackSocket {
     };
 }
 
-export function createSocketRxJS(): SocketRxJS {
+export function createSocketRxJS(): RxSocket {
     return {
         close: jest.fn(),
         push: jest.fn(),

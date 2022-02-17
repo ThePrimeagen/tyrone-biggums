@@ -1,7 +1,5 @@
 import { Message } from "../message";
-import { CallbackSocket } from "../server/socket";
-import { RxSocket as SocketRxJS } from "../server/rxjs-socket";
-import { BaseSocket } from "../server/universal-types";
+import { BaseSocket, CallbackSocket, RxSocket } from "../server/universal-types";
 
 type MessageEnvelope = {
     message: Message
@@ -39,13 +37,13 @@ export default class GameQueueImpl {
 
 export class GameQueueRxJSImpl {
     private queue: MessageEnvelope[];
-    constructor(private p1: SocketRxJS, private p2: SocketRxJS) {
+    constructor(private p1: RxSocket, private p2: RxSocket) {
         this.queue = [];
         this.listenToSocket(this.p1);
         this.listenToSocket(this.p2);
     }
 
-    private listenToSocket(from: SocketRxJS) {
+    private listenToSocket(from: RxSocket) {
         from.events.subscribe((message: Message) => {
             this.queue.push({
                 message,
