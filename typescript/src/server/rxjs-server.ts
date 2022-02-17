@@ -31,34 +31,15 @@ export default class ServerImpl implements Server {
 
     this.socketPairs = new Observable((subscriber) => {
       const server = this.server;
-      const observable = new Observable<WebSocket>(
-        (observer: Observer<WebSocket>) => {
-          server.on("connection", (ws) => {
-            observer.next(ws);
-          });
+      let group: Socket[] = [];
+
+      server.on("connection", (ws) => {
+        group.push(new Socket(ws));
+        if (group.length === 2) {
+          subscriber.next(group as [Socket, Socket]);
+          group = [];
         }
-      );
-
-      observable
-        .pipe(
-          scan((group: WebSocket[], ws: WebSocket) => {
-            if (!group || group.length === 2) {
-              group = [];
-            }
-
-            group.push(ws);
-            return group;
-          }, []),
-          filter((group: WebSocket[]) => {
-            return group.length === 2;
-          }),
-          map<WebSocket[], [Socket, Socket]>((group: WebSocket[]) => {
-            return [new Socket(group[0]), new Socket(group[1])];
-          })
-        )
-        .subscribe((socketGroup: [Socket, Socket]) => {
-          subscriber.next(socketGroup);
-        });
+      });
 
       server.on("error", (e) => {
         subscriber.error(e);
