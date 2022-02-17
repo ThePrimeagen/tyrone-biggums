@@ -1,7 +1,7 @@
 import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server/callback-server";
-import { CallbackSocket } from "../server/socket";
+import { CallbackSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
 import GameLoopTimer from "./game-loop-timer";
 import GameQueue from "./game-queue";

@@ -1,7 +1,6 @@
 import { createReadyUpMessage, Message, MessageType } from "../message";
-import { CallbackSocket } from "../server/socket";
-import { RxSocket as SocketRxJS } from "../server/rxjs-socket";
 import { filter, map, merge, Observable, take, timer, zip } from "rxjs";
+import { CallbackSocket, RxSocket } from "../server/universal-types";
 
 type Callback = (e?: Error) => void;
 
@@ -45,7 +44,7 @@ export function setupWithCallbacks(p1: CallbackSocket, p2: CallbackSocket, callb
 }
 
 
-export function setupWithRxJS([p1, p2]: [SocketRxJS, SocketRxJS], timeout: number = 30000): Observable<[SocketRxJS, SocketRxJS]>  {
+export function setupWithRxJS([p1, p2]: [RxSocket, RxSocket], timeout: number = 30000): Observable<[RxSocket, RxSocket]>  {
     p1.push(createReadyUpMessage());
     p2.push(createReadyUpMessage());
 

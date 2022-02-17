@@ -2,11 +2,10 @@ import { mergeMap, Observable, Subscriber, tap } from "rxjs";
 import { onErrorResumeNext } from "rxjs/operators";
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server/rxjs-server";
-import { RxSocket } from "../server/rxjs-socket";
-import { BaseSocket } from "../server/universal-types";
+import { BaseSocket, RxSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
 import { GameLoopRxJS } from "./game-loop-timer";
-import { GameQueue, GameQueueRxJSImpl } from "./game-queue";
+import { GameQueueRxJSImpl } from "./game-queue";
 import { setupWithRxJS } from "./game-setup";
 import GameWorld from "./game-world";
 
