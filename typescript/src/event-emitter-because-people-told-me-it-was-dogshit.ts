@@ -5,17 +5,18 @@ export interface NonDogShitEventEmitter {
     emit(eventName: string, args?: any): void;
     on(eventName: string, cb: Callback): void;
     off(eventName: string, cb: Callback): void;
+    offAll(): void;
 }
 
 export default class EventEmitterBecausePeopleToldMeItWasDogShit implements NonDogShitEventEmitter {
-    private callbacks: Map<String, Callback[]>;
+    private callbacks: Map<String, Callback[]> | undefined;
 
     constructor() {
         this.callbacks = new Map<String, Callback[]>();
     }
 
     emit(eventName: string, args?: any): void {
-        const callbacks = this.callbacks.get(eventName);
+        const callbacks = this.callbacks?.get(eventName);
 
         if (!callbacks) {
             return;
@@ -27,17 +28,17 @@ export default class EventEmitterBecausePeopleToldMeItWasDogShit implements NonD
     }
 
     public on(eventName: string, cb: Callback): void {
-        let callbacks = this.callbacks.get(eventName);
+        let callbacks = this.callbacks?.get(eventName);
         if (!callbacks) {
             callbacks = [];
-            this.callbacks.set(eventName, callbacks);
+            this.callbacks?.set(eventName, callbacks);
         }
 
         callbacks.push(cb);
     }
 
     public off(eventName: string, cb: Callback): void {
-        let callbacks = this.callbacks.get(eventName);
+        let callbacks = this.callbacks?.get(eventName);
         if (!callbacks) {
             return;
         }
@@ -46,6 +47,10 @@ export default class EventEmitterBecausePeopleToldMeItWasDogShit implements NonD
         if (idx != -1) {
             callbacks.splice(idx, 1);
         }
+    }
+
+    public offAll(): void {
+        this.callbacks = undefined;
     }
 }
 

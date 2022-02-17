@@ -13,6 +13,16 @@ function parseAndReportWinnerStats(winnerData: string) {
     console.log("Results", activeGames, JSON.stringify(buckets));
 }
 
+let countSend = 0;
+function sendMessage(socket: WebSocket) {
+    countSend++;
+    if (countSend % 10000 === 0) {
+        console.log("Sent 10000 Messages");
+    }
+    socket.send(fireMessage);
+}
+
+const fireMessage = JSON.stringify(createMessage(MessageType.Fire));
 async function playTheGame(socket: WebSocket, fireRate: number, cb: (msg: Message) => void = () => {}) {
     let playing = false;
     socket.on("message", async function(message) {
@@ -26,7 +36,7 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb: (msg: Messag
             case MessageType.Play:
                 playing = true;
                 do {
-                    socket.send(JSON.stringify(createMessage(MessageType.Fire)));
+                    sendMessage(socket);
                     await wait(fireRate);
                 } while (playing);
 
@@ -36,6 +46,8 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb: (msg: Messag
                 if (msg.msg?.startsWith("winner")) {
                     parseAndReportWinnerStats(msg.msg);
                 }
+                playing = false;
+                socket.close();
         }
     });
 }

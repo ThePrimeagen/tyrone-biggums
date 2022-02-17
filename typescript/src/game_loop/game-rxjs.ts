@@ -1,4 +1,4 @@
-import { mergeMap, Observable, Subscriber, tap } from "rxjs";
+import { mergeMap, Observable, Subscriber, Subscription, tap } from "rxjs";
 import { onErrorResumeNext } from "rxjs/operators";
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server/rxjs-server";
@@ -18,7 +18,8 @@ function getTickRate(): number {
 
 export type GameResults = [GameStat, BaseSocket, BaseSocket];
 export function runRxJSLoop([s1, s2]: [RxSocket, RxSocket]): Observable<GameResults> {
-    return Observable.create((observer: Subscriber<GameResults>) => {
+    return new Observable((observer: Subscriber<GameResults>) => {
+        const subs: Subscription[] = [];
         const stats = new GameStat();
         const queue = new GameQueueRxJSImpl(s1, s2);
         const world = new GameWorld(s1, s2);
@@ -35,24 +36,27 @@ export function runRxJSLoop([s1, s2]: [RxSocket, RxSocket]): Observable<GameResu
             observer.error(new Error("Disconnected"));
         }
 
-        s1.events.subscribe({
+        subs.push(s1.events.subscribe({
             complete: () => {
                 close(s2);
             }
-        });
+        }));
 
-        s2.events.subscribe({
+        subs.push(s2.events.subscribe({
             complete: () => {
                 close(s1);
             }
-        });
+        }));
 
-        loop.start().pipe(
+        subs.push(loop.start().pipe(
             tap((delta: number) => {
                 stats.addDelta(delta);
 
                 // 1. process messages
-                queue.flush().forEach(m => world.processMessage(m.from, m.message));
+                const msgs = queue.flush();
+                if (msgs) {
+                    msgs.forEach(m => world.processMessage(m.from, m.message));
+                }
 
                 // 2. update all positions
                 world.update(delta);
@@ -61,7 +65,7 @@ export function runRxJSLoop([s1, s2]: [RxSocket, RxSocket]): Observable<GameResu
                 world.collisions();
 
             }),
-            tap((delta: number) => {
+            tap(() => {
                 if (world.done) {
                     loop.stop();
                     world.stop();
@@ -69,13 +73,16 @@ export function runRxJSLoop([s1, s2]: [RxSocket, RxSocket]): Observable<GameResu
                     const gameResult: GameResults = [stats, world.getWinner(), world.getLoser()];
                     observer.next(gameResult);
                     observer.complete();
+                    subs.forEach(s => {
+                        s.unsubscribe();
+                    });
                 }
-            })).subscribe();
+            })).subscribe());
     })
 }
 
 function empty<T>(): Observable<T> {
-    return Observable.create((observer: Subscriber<T>) => {
+    return new Observable((observer: Subscriber<T>) => {
         observer.complete();
     })
 }
@@ -103,5 +110,6 @@ export default function gameCreator(server: Server) {
                 onErrorResumeNext(empty<GameResults>())
             );
         }),
-    ).subscribe();
+    ).subscribe(); // this sub is fine to live forever.  Once this is done, our
+    // server is done.
 }

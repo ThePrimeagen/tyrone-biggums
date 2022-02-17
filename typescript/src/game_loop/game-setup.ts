@@ -1,6 +1,7 @@
 import { createReadyUpMessage, Message, MessageType } from "../message";
 import { filter, map, merge, Observable, take, timer, zip } from "rxjs";
 import { CallbackSocket, RxSocket } from "../server/universal-types";
+import { noop } from "../server/socket";
 
 type Callback = (e?: Error) => void;
 
@@ -8,7 +9,7 @@ function readyUp(socket: CallbackSocket, idx: number, done: [boolean, boolean], 
     function onMsg(msg: Message) {
         if (msg.type === MessageType.ReadyUp) {
             done[idx] = true;
-            socket.off("message", onMsg);
+            socket.onmessage = noop;
 
             if (done[0] && done[1]) {
                 callback();
@@ -16,7 +17,7 @@ function readyUp(socket: CallbackSocket, idx: number, done: [boolean, boolean], 
         }
     };
 
-    socket.on("message", onMsg);
+    socket.onmessage = onMsg;
 }
 
 

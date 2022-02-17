@@ -1,23 +1,25 @@
 import WebSocket from "ws";
-import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { Message } from "../message";
 import { BaseSocket, CallbackSocket } from "./universal-types";
 
-export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements CallbackSocket, BaseSocket {
+export function noop() {};
+export default class SocketImpl implements CallbackSocket, BaseSocket {
+    public onmessage: (message: Message) => void = noop;
+    public onclose: () => void = noop;
+    public onerror: (error: Error) => void = noop;
 
     constructor(private socket: WebSocket) {
-        super();
         this.socket.on("message", (msg) => {
             const message = JSON.parse(msg.toString()) as Message;
-            this.emit("message", message);
+            this.onmessage(message);
         });
 
         this.socket.on("close", () => {
-            this.emit("close");
+            this.onclose();
         });
 
         this.socket.on("error", (e: Error) => {
-            this.emit("error", e);
+            this.onerror(e);
         });
     }
 
@@ -27,6 +29,10 @@ export default class SocketImpl extends EventEmitterBecausePeopleToldMeItWasDogS
 
     push(data: object, cb?: () => void): void {
         this.socket.send(JSON.stringify(data), cb);
+    }
+
+    clean(): void {
+        this.onclose = this.onerror = this.onmessage = noop;
     }
 }
 

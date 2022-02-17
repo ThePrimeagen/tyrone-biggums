@@ -26,7 +26,10 @@ export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWo
     loop.start((delta: number) => {
         stats.addDelta(delta);
         // 1. process messages
-        queue.flush().forEach(m => world.processMessage(m.from, m.message));
+        const msgs = queue.flush();
+        if (msgs) {
+            msgs.forEach(m => world.processMessage(m.from, m.message));
+        }
 
         // 2. update all positions
         world.update(delta);
@@ -77,16 +80,16 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
         this.p1.push(createMessage(MessageType.Play));
         this.p2.push(createMessage(MessageType.Play));
 
-        this.p1.on("close", () => {
+        this.p1.onclose = () => {
             if (!this.world.done) {
                 this.stop(this.p2);
             }
-        });
-        this.p2.on("close", () => {
+        };
+        this.p2.onclose = () => {
             if (!this.world.done) {
                 this.stop(this.p1);
             }
-        });
+        };
 
         GameStat.activeGames++;
 
@@ -97,6 +100,7 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
 
     private endGame(stats: GameStat): void {
         this.world.stop();
+        this.offAll();
 
         if (this.endedWithError) {
             return;

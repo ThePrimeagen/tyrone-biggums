@@ -7,8 +7,8 @@ test("GameQueue", function() {
     const p2 = createSocket();
     const queue = new GameQueue(p1, p2);
 
-    expect(p1.on).toHaveBeenCalled();
-    expect(p2.on).toHaveBeenCalled();
+    expect(p1.onmessage).toHaveBeenCalled();
+    expect(p2.onmessage).toHaveBeenCalled();
     expect(queue.flush()).toEqual([])
 
     // @ts-ignore

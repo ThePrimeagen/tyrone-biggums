@@ -1,4 +1,3 @@
-import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { Message, MessageType } from "../message";
 import { BaseSocket } from "../server/universal-types";
 import createConfig, { GameConfig, PartialConfig } from "./config";
@@ -14,7 +13,7 @@ export interface GameWorld {
 }
 
 let count = 0;
-export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasDogShit {
+export default class GameWorldImpl {
     // for easy inspection
     public p1: Player;
     public p2: Player;
@@ -25,11 +24,11 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
     private _done: boolean;
     private winner!: BaseSocket;
     private config: GameConfig;
+    private count: number = 0;
 
     get done(): boolean { return this._done; }
 
     constructor(private s1: BaseSocket, private s2: BaseSocket, config?: PartialConfig) {
-        super();
         this.config = createConfig(config);
 
         if (++count % 2 == 0) {
@@ -75,6 +74,15 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
     }
 
     update(delta: number): void {
+        if (++this.count === 300) {
+            if (this.bullets.length === 0) {
+                // nothing has been fired... what?
+                this.stop();
+                this.winner = this.s1;
+                console.error("stopping game due to no bullets fired");
+            }
+        }
+
         applyVelocityAll(this.bullets, delta);
     }
 

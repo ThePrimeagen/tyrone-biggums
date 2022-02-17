@@ -7,10 +7,10 @@ type MessageEnvelope = {
 }
 
 export interface GameQueue {
-    flush(): MessageEnvelope[];
+    flush(): MessageEnvelope[] | undefined;
 }
 
-export default class GameQueueImpl {
+export default class GameQueueImpl implements GameQueue {
     private queue: MessageEnvelope[];
     constructor(private p1: CallbackSocket, private p2: CallbackSocket) {
         this.queue = [];
@@ -19,23 +19,27 @@ export default class GameQueueImpl {
     }
 
     private listenToSocket(from: CallbackSocket) {
-        from.on("message", (message: Message) => {
+        from.onmessage = (message: Message) => {
             this.queue.push({
                 message,
                 from,
             });
-        });
+        };
     }
 
     // technically if this is an issue we can make it return a dummy array.
-    flush(): MessageEnvelope[] {
+    flush(): undefined | MessageEnvelope[] {
+        if (this.queue.length === 0) {
+            return undefined;
+        }
+
         const messages = this.queue;
         this.queue = [];
         return messages;
     }
 }
 
-export class GameQueueRxJSImpl {
+export class GameQueueRxJSImpl implements GameQueue {
     private queue: MessageEnvelope[];
     constructor(private p1: RxSocket, private p2: RxSocket) {
         this.queue = [];
@@ -53,7 +57,10 @@ export class GameQueueRxJSImpl {
     }
 
     // technically if this is an issue we can make it return a dummy array.
-    flush(): MessageEnvelope[] {
+    flush(): MessageEnvelope[] | undefined{
+        if (this.queue.length === 0) {
+            return undefined;
+        }
         const messages = this.queue;
         this.queue = [];
         return messages;

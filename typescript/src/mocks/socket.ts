@@ -6,8 +6,10 @@ export function createSocket(): CallbackSocket {
     return {
         push: jest.fn(),
         close: jest.fn(),
-        on: jest.fn(),
-        off: jest.fn(),
+        onmessage: jest.fn(),
+        onerror: jest.fn(),
+        onclose: jest.fn(),
+        clean: jest.fn(),
     };
 }
 

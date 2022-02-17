@@ -10,10 +10,10 @@ export interface BaseSocket {
 export interface CallbackSocket {
     close(code?: number): void;
     push(data: object, cb?: () => void): void;
-    on(event: "error", cb: (error: Error) => void): void;
-    on(event: "message", cb: (msg: Message) => void): void;
-    on(event: "close", cb: () => void): void;
-    off(event: string, cb: (arg?: any) => void): void;
+    onclose?: () => void,
+    onmessage?: (message: Message) => void,
+    onerror?: (e: Error) => void,
+    clean(): void;
 }
 
 export interface RxSocket {
