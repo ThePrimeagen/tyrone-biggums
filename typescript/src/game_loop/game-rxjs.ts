@@ -110,18 +110,7 @@ export function runRxJSLoop([s1, s2]: [
 export default function gameCreator(server: Server) {
   server
     .on()
-    .pipe(
-      mergeMap((sockets) =>
-        setupWithRxJS(sockets).pipe(
-          mergeMap(([s1, s2]) => {
-            s1.push(createMessage(MessageType.Play));
-            s2.push(createMessage(MessageType.Play));
-            GameStat.activeGames++;
-            return runRxJSLoop([s1, s2]);
-          })
-        )
-      )
-    )
+    .pipe(mergeMap((sockets) => setupWithRxJS(sockets)))
     .subscribe({
       next: (results) => {
         if (!results.disconnected) {
@@ -137,7 +126,7 @@ export default function gameCreator(server: Server) {
 export function setupWithRxJS(
   playerSockets: [RxSocket, RxSocket],
   timeout: number = 30000
-): Observable<[RxSocket, RxSocket]> {
+): Observable<GameResults> {
   const [p1, p2] = playerSockets;
   p1.push(createReadyUpMessage());
   p2.push(createReadyUpMessage());
@@ -154,8 +143,11 @@ export function setupWithRxJS(
         readyCount++;
         if (readyCount === 2) {
           clearTimeout(timeoutId);
-          subscriber.next(playerSockets);
-          subscriber.complete();
+          const [s1, s2] = playerSockets;
+          s1.push(createMessage(MessageType.Play));
+          s2.push(createMessage(MessageType.Play));
+          GameStat.activeGames++;
+          runRxJSLoop([s1, s2]).subscribe(subscriber);
         }
       }
     };
