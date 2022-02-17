@@ -1,81 +1,63 @@
 import WebSocket from "ws";
 import Socket from "./rxjs-socket";
-import { BehaviorSubject, filter, map, Observable, Observer, scan, Subject } from "rxjs";
+import { Observable } from "rxjs";
+import { once } from "events";
 
 export interface Server {
-    listening: BehaviorSubject<boolean>;
-    close(): void;
-    on(): Observable<[Socket, Socket]>;
+  listening: Promise<any>;
+  close(): void;
+  on(): Observable<[Socket, Socket]>;
+}
+
+export function getServerPairs(
+  server: WebSocket.Server
+): Observable<[Socket, Socket]> {
+  return new Observable((subscriber) => {
+    let group: Socket[] = [];
+    const connectionHandler = (ws: WebSocket) => {
+      group.push(new Socket(ws));
+      if (group.length === 2) {
+        subscriber.next(group as [Socket, Socket]);
+        group = [];
+      }
+    };
+    server.on("connection", connectionHandler);
+
+    const errorHandler = (e: Error) => {
+      subscriber.error(e);
+    };
+    server.on("error", errorHandler);
+
+    const completeHandler = () => subscriber.complete();
+    server.on("close", completeHandler);
+
+    return () => {
+      server.off("connection", connectionHandler);
+      server.off("error", errorHandler);
+      server.off("complete", completeHandler);
+    };
+  });
 }
 
 export default class ServerImpl implements Server {
-    private subject: Subject<[Socket, Socket]>;
-    public listening: BehaviorSubject<boolean>;
-    private server: WebSocket.Server;
+  private readonly socketPairs: Observable<[Socket, Socket]>;
+  public readonly listening: Promise<any>;
+  private server: WebSocket.Server;
 
-    constructor(port: number = 42069) {
-        this.subject = new Subject<[Socket, Socket]>();
-        this.listening = new BehaviorSubject<boolean>(false);
-        this.server = new WebSocket.Server({
-            host: "0.0.0.0",
-            port,
-        });
-        this.startServer(this.server);
-    }
+  constructor(port: number = 42069) {
+    this.server = new WebSocket.Server({
+      host: "0.0.0.0",
+      port,
+    });
+    this.listening = once(this.server, "listening");
+    this.socketPairs = getServerPairs(this.server);
+  }
 
-    close(): void {
-        this.subject.complete();
-        this.server.close();
-    }
+  close(): void {
+    this.server.close();
+  }
 
-    public on(): Observable<[Socket, Socket]> {
-        return this.subject;
-    }
-
-    private startServer(server: WebSocket.Server) {
-        this.server = server;
-        const observable: Observable<WebSocket> = Observable.create((observer: Observer<WebSocket>) => {
-            server.on("connection", ws => {
-                observer.next(ws);
-            });
-        });
-
-        observable.pipe(
-            scan((group: WebSocket[], ws: WebSocket) => {
-                if (!group || group.length === 2) {
-                    group = [];
-                }
-
-                group.push(ws);
-                return group;
-            }, []),
-            filter((group: WebSocket[]) => {
-                return group.length === 2;
-            }),
-            map<WebSocket[], [Socket, Socket]>((group: WebSocket[]) => {
-                return [
-                    new Socket(group[0]),
-                    new Socket(group[1]),
-                ];
-            })
-        ).subscribe((socketGroup: [Socket, Socket]) => {
-            this.subject.next(socketGroup);
-        });
-
-        server.on("error", e => {
-            this.subject.error(e);
-        });
-
-        server.on("close", () => {
-            this.subject.complete();
-        });
-
-        server.on("listening", (e?: Error) => {
-            if (e) {
-                this.listening.error(e);
-            } else {
-                this.listening.next(true);
-            }
-        });
-    }
+  public on(): Observable<[Socket, Socket]> {
+    return this.socketPairs;
+  }
 }

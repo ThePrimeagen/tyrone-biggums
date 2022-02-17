@@ -1,115 +1,158 @@
-import { mergeMap, Observable, Subscriber, Subscription, tap } from "rxjs";
-import { onErrorResumeNext } from "rxjs/operators";
-import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
+import { mergeMap, Observable, Subscriber } from "rxjs";
+import {
+  createLoserMessage,
+  createMessage,
+  createReadyUpMessage,
+  createWinnerMessage,
+  errorGameOver,
+  Message,
+  MessageType,
+} from "../message";
 import { Server } from "../server/rxjs-server";
 import { BaseSocket, RxSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
-import { GameLoopRxJS } from "./game-loop-timer";
-import { GameQueueRxJSImpl } from "./game-queue";
-import { setupWithRxJS } from "./game-setup";
+import { getRxJSGameLoop } from "./game-loop-timer";
 import GameWorld from "./game-world";
 
 function getTickRate(): number {
-    if (!process.env.TICK_RATE) {
-        return 60;
+  if (!process.env.TICK_RATE) {
+    return 60;
+  }
+  return +process.env.TICK_RATE || 60;
+}
+export interface GameResults {
+  readonly stats: GameStat;
+  readonly winner: BaseSocket;
+  readonly loser: BaseSocket;
+  readonly disconnected: boolean;
+}
+
+class GameResultsImpl implements GameResults {
+  constructor(
+    public readonly stats: GameStat,
+    public readonly winner: BaseSocket,
+    public readonly loser: BaseSocket,
+    public readonly disconnected: boolean
+  ) {}
+}
+
+export class MessageEnvelope {
+  constructor(
+    public readonly message: Message,
+    public readonly from: BaseSocket
+  ) {}
+}
+
+export function runRxJSLoop(
+  subscriber: Subscriber<GameResults>,
+  s1: RxSocket,
+  s2: RxSocket
+): void {
+  const stats = new GameStat();
+  const queue: MessageEnvelope[] = [];
+
+  const world = new GameWorld(s1, s2);
+  subscriber.add(() => world.stop());
+
+  function close(other: RxSocket) {
+    if (world.done) {
+      return;
     }
-    return +process.env.TICK_RATE || 60;
-}
+    other.push(errorGameOver("The other player disconnected"));
+    subscriber.next(new GameResultsImpl(stats, s1, s2, true));
+    subscriber.complete();
+  }
 
-export type GameResults = [GameStat, BaseSocket, BaseSocket];
-export function runRxJSLoop([s1, s2]: [RxSocket, RxSocket]): Observable<GameResults> {
-    return new Observable((observer: Subscriber<GameResults>) => {
-        const subs: Subscription[] = [];
-        const stats = new GameStat();
-        const queue = new GameQueueRxJSImpl(s1, s2);
-        const world = new GameWorld(s1, s2);
-        const loop = new GameLoopRxJS(getTickRate());
-
-        function close(other: RxSocket) {
-            if (world.done) {
-                return;
-            }
-
-            loop.stop();
-            world.stop();
-            other.push(errorGameOver("The other player disconnected"));
-            observer.error(new Error("Disconnected"));
-        }
-
-        subs.push(s1.events.subscribe({
-            complete: () => {
-                close(s2);
-            }
-        }));
-
-        subs.push(s2.events.subscribe({
-            complete: () => {
-                close(s1);
-            }
-        }));
-
-        subs.push(loop.start().pipe(
-            tap((delta: number) => {
-                stats.addDelta(delta);
-
-                // 1. process messages
-                const msgs = queue.flush();
-                if (msgs) {
-                    msgs.forEach(m => world.processMessage(m.from, m.message));
-                }
-
-                // 2. update all positions
-                world.update(delta);
-
-                // 3. process collisions
-                world.collisions();
-
-            }),
-            tap(() => {
-                if (world.done) {
-                    loop.stop();
-                    world.stop();
-
-                    const gameResult: GameResults = [stats, world.getWinner(), world.getLoser()];
-                    observer.next(gameResult);
-                    observer.complete();
-                    subs.forEach(s => {
-                        s.unsubscribe();
-                    });
-                }
-            })).subscribe());
+  subscriber.add(
+    s1.events.subscribe({
+      next: (message) => queue.push(new MessageEnvelope(message, s1)),
+      complete: () => close(s2),
     })
-}
+  );
 
-function empty<T>(): Observable<T> {
-    return new Observable((observer: Subscriber<T>) => {
-        observer.complete();
+  subscriber.add(
+    s2.events.subscribe({
+      next: (message) => queue.push(new MessageEnvelope(message, s2)),
+      complete: () => close(s1),
     })
+  );
+
+  subscriber.add(
+    getRxJSGameLoop(getTickRate()).subscribe((delta) => {
+      stats.addDelta(delta);
+
+      // 1. process messages
+      const messageEnvolopes = Array.from(queue);
+      queue.length = 0;
+      for (let i = 0; i < messageEnvolopes.length; i++) {
+        const m = messageEnvolopes[i];
+        world.processMessage(m.from, m.message);
+      }
+
+      // 2. update all positions
+      world.update(delta);
+
+      // 3. process collisions
+      world.collisions();
+
+      if (world.done) {
+        const gameResult = new GameResultsImpl(
+          stats,
+          world.getWinner(),
+          world.getLoser(),
+          false
+        );
+        subscriber.next(gameResult);
+        subscriber.complete();
+      }
+    })
+  );
 }
 
 export default function gameCreator(server: Server) {
-    server.on().pipe(
-        mergeMap(sockets => setupWithRxJS(sockets)),
-        tap(([s1, s2]) => {
-            s1.push(createMessage(MessageType.Play));
-            s2.push(createMessage(MessageType.Play));
-        }),
-        mergeMap(([s1, s2]) => {
-            GameStat.activeGames++;
-            return runRxJSLoop([s1, s2]).pipe(
-                tap({
-                    next: ([stats, winner, loser]) => {
-                        winner.push(createWinnerMessage(stats), () => winner.close());
-                        loser.push(createLoserMessage(), () => loser.close());
-                        GameStat.activeGames--;
-                    },
-                    error: (_) => {
-                        GameStat.activeGames--;
-                    }
-                }),
-                onErrorResumeNext(empty<GameResults>())
-            );
-        }),
-    ).subscribe(); // this sub is fine to live forever.  Once this is done, our
-    // server is done.
+  server
+    .on()
+    .pipe(mergeMap((sockets) => setupWithRxJS(sockets)))
+    .subscribe({
+      next: (results) => {
+        if (!results.disconnected) {
+          const { stats, winner, loser } = results;
+          winner.push(createWinnerMessage(stats), () => winner.close());
+          loser.push(createLoserMessage(), () => loser.close());
+        }
+        GameStat.activeGames--;
+      },
+    });
+}
+
+export function setupWithRxJS(
+  playerSockets: [RxSocket, RxSocket],
+  timeout: number = 30000
+): Observable<GameResults> {
+  return new Observable((subscriber) => {
+    const [p1, p2] = playerSockets;
+    p1.push(createReadyUpMessage());
+    p2.push(createReadyUpMessage());
+    let timeoutId = setTimeout(() => {
+      subscriber.error(new Error("Timeout"));
+    }, timeout);
+    subscriber.add(() => clearTimeout(timeoutId));
+
+    let readyCount = 0;
+    const checkReady = (msg: Message) => {
+      if (msg.type === MessageType.ReadyUp) {
+        readyCount++;
+        if (readyCount === 2) {
+          clearTimeout(timeoutId);
+          const [s1, s2] = playerSockets;
+          s1.push(createMessage(MessageType.Play));
+          s2.push(createMessage(MessageType.Play));
+          GameStat.activeGames++;
+          runRxJSLoop(subscriber, s1, s2);
+        }
+      }
+    };
+    subscriber.add(p1.events.subscribe(checkReady));
+    subscriber.add(p2.events.subscribe(checkReady));
+  });
 }
