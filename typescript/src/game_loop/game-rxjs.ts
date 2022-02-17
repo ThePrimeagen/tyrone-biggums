@@ -75,8 +75,6 @@ export function runRxJSLoop([s1, s2]: [
         world.collisions();
 
         if (world.done) {
-          world.stop();
-
           const gameResult: GameResults = [
             stats,
             world.getWinner(),
