@@ -78,7 +78,11 @@ export function runRxJSLoop([s1, s2]: [
         stats.addDelta(delta);
 
         // 1. process messages
-        queue.flush().forEach((m) => world.processMessage(m.from, m.message));
+        const messageEnvolopes = queue.flush();
+        for (let i = 0; i < messageEnvolopes.length; i++) {
+          const m = messageEnvolopes[i];
+          world.processMessage(m.from, m.message);
+        }
 
         // 2. update all positions
         world.update(delta);
