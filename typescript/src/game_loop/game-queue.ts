@@ -1,5 +1,9 @@
 import { Message } from "../message";
-import { BaseSocket, CallbackSocket } from "../server/universal-types";
+import {
+  BaseSocket,
+  CallbackSocket,
+  RxSocket,
+} from "../server/universal-types";
 
 type MessageEnvelope = {
   message: Message;
