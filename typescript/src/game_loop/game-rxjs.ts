@@ -20,8 +20,21 @@ function getTickRate(): number {
   }
   return +process.env.TICK_RATE || 60;
 }
+export interface GameResults {
+  readonly stats: GameStat;
+  readonly winner: BaseSocket;
+  readonly loser: BaseSocket;
+  readonly disconnected: boolean;
+}
 
-export type GameResults = [GameStat, BaseSocket, BaseSocket, boolean];
+class GameResultsImpl implements GameResults {
+  constructor(
+    public readonly stats: GameStat,
+    public readonly winner: BaseSocket,
+    public readonly loser: BaseSocket,
+    public readonly disconnected: boolean
+  ) {}
+}
 
 export function runRxJSLoop([s1, s2]: [
   RxSocket,
@@ -40,7 +53,7 @@ export function runRxJSLoop([s1, s2]: [
         return;
       }
       other.push(errorGameOver("The other player disconnected"));
-      subscriber.next([stats, s1, s2, true]);
+      subscriber.next(new GameResultsImpl(stats, s1, s2, true));
       subscriber.complete();
     }
 
@@ -74,12 +87,12 @@ export function runRxJSLoop([s1, s2]: [
         world.collisions();
 
         if (world.done) {
-          const gameResult: GameResults = [
+          const gameResult = new GameResultsImpl(
             stats,
             world.getWinner(),
             world.getLoser(),
-            false,
-          ];
+            false
+          );
           subscriber.next(gameResult);
           subscriber.complete();
         }
@@ -101,8 +114,9 @@ export default function gameCreator(server: Server) {
       })
     )
     .subscribe({
-      next: ([stats, winner, loser, playerDisconnect]) => {
-        if (!playerDisconnect) {
+      next: (results) => {
+        if (!results.disconnected) {
+          const { stats, winner, loser } = results;
           winner.push(createWinnerMessage(stats), () => winner.close());
           loser.push(createLoserMessage(), () => loser.close());
         }
