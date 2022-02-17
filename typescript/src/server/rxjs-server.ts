@@ -23,13 +23,13 @@ export default class ServerImpl implements Server {
   private server: WebSocket.Server;
 
   constructor(port: number = 42069) {
-    this.socketPairs = new Subject<[Socket, Socket]>();
     this.server = new WebSocket.Server({
       host: "0.0.0.0",
       port,
     });
     this.listening = once(this.server, "listening");
 
+    this.socketPairs = new Subject<[Socket, Socket]>();
     const server = this.server;
     const observable: Observable<WebSocket> = Observable.create(
       (observer: Observer<WebSocket>) => {
