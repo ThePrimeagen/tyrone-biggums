@@ -13,7 +13,6 @@ import { BaseSocket, RxSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
 import { getRxJSGameLoop } from "./game-loop-timer";
 import { GameQueueRxJSImpl } from "./game-queue";
-import { setupWithRxJS } from "./game-setup";
 import GameWorld from "./game-world";
 
 function getTickRate(): number {
@@ -38,10 +37,10 @@ class GameResultsImpl implements GameResults {
   ) {}
 }
 
-export function runRxJSLoop([s1, s2]: [
-  RxSocket,
-  RxSocket
-]): Observable<GameResults> {
+export function runRxJSLoop(
+  s1: RxSocket,
+  s2: RxSocket
+): Observable<GameResults> {
   return new Observable((subscriber) => {
     const stats = new GameStat();
     const queue = new GameQueueRxJSImpl(s1, s2);
@@ -147,7 +146,7 @@ export function setupWithRxJS(
           s1.push(createMessage(MessageType.Play));
           s2.push(createMessage(MessageType.Play));
           GameStat.activeGames++;
-          runRxJSLoop([s1, s2]).subscribe(subscriber);
+          runRxJSLoop(s1, s2).subscribe(subscriber);
         }
       }
     };
