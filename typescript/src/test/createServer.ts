@@ -2,7 +2,6 @@ import createServer from "../server";
 import ServerRx from "../server/rxjs-server";
 import Server from "../server/callback-server";
 import createGame from "../game_loop";
-import { once } from "events";
 
 export function createTestServer(
   style: "rxjs",

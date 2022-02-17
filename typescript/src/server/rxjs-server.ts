@@ -9,6 +9,36 @@ export interface Server {
   on(): Observable<[Socket, Socket]>;
 }
 
+export function getServerPairs(
+  server: WebSocket.Server
+): Observable<[Socket, Socket]> {
+  return new Observable((subscriber) => {
+    let group: Socket[] = [];
+    const connectionHandler = (ws: WebSocket) => {
+      group.push(new Socket(ws));
+      if (group.length === 2) {
+        subscriber.next(group as [Socket, Socket]);
+        group = [];
+      }
+    };
+    server.on("connection", connectionHandler);
+
+    const errorHandler = (e: Error) => {
+      subscriber.error(e);
+    };
+    server.on("error", errorHandler);
+
+    const completeHandler = () => subscriber.complete();
+    server.on("close", completeHandler);
+
+    return () => {
+      server.off("connection", connectionHandler);
+      server.off("error", errorHandler);
+      server.off("complete", completeHandler);
+    };
+  });
+}
+
 export default class ServerImpl implements Server {
   private readonly socketPairs: Observable<[Socket, Socket]>;
   public readonly listening: Promise<any>;
@@ -20,34 +50,7 @@ export default class ServerImpl implements Server {
       port,
     });
     this.listening = once(this.server, "listening");
-
-    this.socketPairs = new Observable((subscriber) => {
-      const server = this.server;
-
-      let group: Socket[] = [];
-      const connectionHandler = (ws: WebSocket) => {
-        group.push(new Socket(ws));
-        if (group.length === 2) {
-          subscriber.next(group as [Socket, Socket]);
-          group = [];
-        }
-      };
-      server.on("connection", connectionHandler);
-
-      const errorHandler = (e: Error) => {
-        subscriber.error(e);
-      };
-      server.on("error", errorHandler);
-
-      const completeHandler = () => subscriber.complete();
-      server.on("close", completeHandler);
-
-      return () => {
-        server.off("connection", connectionHandler);
-        server.off("error", errorHandler);
-        server.off("complete", completeHandler);
-      };
-    });
+    this.socketPairs = getServerPairs(this.server);
   }
 
   close(): void {
