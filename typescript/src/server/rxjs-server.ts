@@ -18,7 +18,7 @@ export interface Server {
 }
 
 export default class ServerImpl implements Server {
-  private readonly socketPairs: Subject<[Socket, Socket]>;
+  private readonly socketPairs: Observable<[Socket, Socket]>;
   public readonly listening: Promise<any>;
   private server: WebSocket.Server;
 
@@ -29,43 +29,44 @@ export default class ServerImpl implements Server {
     });
     this.listening = once(this.server, "listening");
 
-    this.socketPairs = new Subject<[Socket, Socket]>();
-    const server = this.server;
-    const observable: Observable<WebSocket> = Observable.create(
-      (observer: Observer<WebSocket>) => {
-        server.on("connection", (ws) => {
-          observer.next(ws);
+    this.socketPairs = new Observable((subscriber) => {
+      const server = this.server;
+      const observable: Observable<WebSocket> = Observable.create(
+        (observer: Observer<WebSocket>) => {
+          server.on("connection", (ws) => {
+            observer.next(ws);
+          });
+        }
+      );
+
+      observable
+        .pipe(
+          scan((group: WebSocket[], ws: WebSocket) => {
+            if (!group || group.length === 2) {
+              group = [];
+            }
+
+            group.push(ws);
+            return group;
+          }, []),
+          filter((group: WebSocket[]) => {
+            return group.length === 2;
+          }),
+          map<WebSocket[], [Socket, Socket]>((group: WebSocket[]) => {
+            return [new Socket(group[0]), new Socket(group[1])];
+          })
+        )
+        .subscribe((socketGroup: [Socket, Socket]) => {
+          subscriber.next(socketGroup);
         });
-      }
-    );
 
-    observable
-      .pipe(
-        scan((group: WebSocket[], ws: WebSocket) => {
-          if (!group || group.length === 2) {
-            group = [];
-          }
-
-          group.push(ws);
-          return group;
-        }, []),
-        filter((group: WebSocket[]) => {
-          return group.length === 2;
-        }),
-        map<WebSocket[], [Socket, Socket]>((group: WebSocket[]) => {
-          return [new Socket(group[0]), new Socket(group[1])];
-        })
-      )
-      .subscribe((socketGroup: [Socket, Socket]) => {
-        this.socketPairs.next(socketGroup);
+      server.on("error", (e) => {
+        subscriber.error(e);
       });
 
-    server.on("error", (e) => {
-      this.socketPairs.error(e);
-    });
-
-    server.on("close", () => {
-      this.socketPairs.complete();
+      server.on("close", () => {
+        subscriber.complete();
+      });
     });
   }
 
