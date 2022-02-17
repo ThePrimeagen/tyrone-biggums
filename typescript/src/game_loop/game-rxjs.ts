@@ -125,11 +125,10 @@ export function setupWithRxJS(
   playerSockets: [RxSocket, RxSocket],
   timeout: number = 30000
 ): Observable<GameResults> {
-  const [p1, p2] = playerSockets;
-  p1.push(createReadyUpMessage());
-  p2.push(createReadyUpMessage());
-
   return new Observable((subscriber) => {
+    const [p1, p2] = playerSockets;
+    p1.push(createReadyUpMessage());
+    p2.push(createReadyUpMessage());
     let timeoutId = setTimeout(() => {
       subscriber.error(new Error("Timeout"));
     }, timeout);
