@@ -31,23 +31,30 @@ export default class ServerImpl implements Server {
 
     this.socketPairs = new Observable((subscriber) => {
       const server = this.server;
-      let group: Socket[] = [];
 
-      server.on("connection", (ws) => {
+      let group: Socket[] = [];
+      const connectionHandler = (ws: WebSocket) => {
         group.push(new Socket(ws));
         if (group.length === 2) {
           subscriber.next(group as [Socket, Socket]);
           group = [];
         }
-      });
+      };
+      server.on("connection", connectionHandler);
 
-      server.on("error", (e) => {
+      const errorHandler = (e: Error) => {
         subscriber.error(e);
-      });
+      };
+      server.on("error", errorHandler);
 
-      server.on("close", () => {
-        subscriber.complete();
-      });
+      const completeHandler = () => subscriber.complete();
+      server.on("close", completeHandler);
+
+      return () => {
+        server.off("connection", connectionHandler);
+        server.off("error", errorHandler);
+        server.off("complete", completeHandler);
+      };
     });
   }
 
