@@ -10,7 +10,7 @@ import {
 import { Server } from "../server/rxjs-server";
 import { BaseSocket, RxSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
-import { GameLoopRxJS } from "./game-loop-timer";
+import { GameLoopRxJS, getRxJSGameLoop } from "./game-loop-timer";
 import { GameQueueRxJSImpl } from "./game-queue";
 import { setupWithRxJS } from "./game-setup";
 import GameWorld from "./game-world";
@@ -32,10 +32,8 @@ export function runRxJSLoop([s1, s2]: [
     const queue = new GameQueueRxJSImpl(s1, s2);
 
     const world = new GameWorld(s1, s2);
-    const loop = new GameLoopRxJS(getTickRate());
 
     subscriber.add(() => {
-      loop.stop();
       world.stop();
     });
 
@@ -64,7 +62,7 @@ export function runRxJSLoop([s1, s2]: [
     );
 
     subscriber.add(
-      loop.start().subscribe((delta) => {
+      getRxJSGameLoop(getTickRate()).subscribe((delta) => {
         stats.addDelta(delta);
 
         // 1. process messages
@@ -77,7 +75,6 @@ export function runRxJSLoop([s1, s2]: [
         world.collisions();
 
         if (world.done) {
-          loop.stop();
           world.stop();
 
           const gameResult: GameResults = [

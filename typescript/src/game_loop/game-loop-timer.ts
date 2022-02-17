@@ -1,5 +1,6 @@
 import {
   BehaviorSubject,
+  defer,
   interval,
   map,
   Observable,
@@ -72,6 +73,21 @@ export default class GameLoopTimerImpl
 
     run();
   }
+}
+
+export function getRxJSGameLoop(fps: number): Observable<number> {
+  const tickRate = 1000 / fps;
+  return defer(() => {
+    let lastTime = Date.now();
+    return interval(tickRate).pipe(
+      map(() => {
+        return Date.now() - lastTime;
+      }),
+      tap(() => {
+        lastTime = Date.now();
+      })
+    );
+  });
 }
 
 export class GameLoopRxJS implements StoppableTimer, GLRxJSTimer {
