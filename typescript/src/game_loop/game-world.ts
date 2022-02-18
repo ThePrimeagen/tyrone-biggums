@@ -55,6 +55,7 @@ export default class GameWorldImpl {
         Player.release(this.p1);
         Player.release(this.p2);
         bulletListPool.toCache(this.bullets);
+        this.bullets.length = 0;
     }
 
     processMessage(socket: BaseSocket, message: Message) {

@@ -44,6 +44,7 @@ export class Player implements Collidable<AABB>, Attachable<null> {
 const bulletPool = new AttachablePool<null, Bullet>(200, () => new Bullet([0, 0], [0, 0]));
 export class Bullet implements Collidable<AABB>, Moveable, Velocity {
     public geo: AABB;
+    public who?: Player;
 
     get pos(): Vector2D {
         // @ts-ignore no its not possibly undefined.  The constructor ensures
@@ -88,6 +89,8 @@ export class Bullet implements Collidable<AABB>, Moveable, Velocity {
 
         bullet.vel[0] = player.dir[0] * speed;
         bullet.vel[1] = player.dir[1] * speed;
+        bullet.who = player;
+
         return bullet;
     }
 
