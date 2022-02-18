@@ -12,9 +12,6 @@ use tokio::{
     sync::mpsc::{channel, Sender, Receiver},
     task::JoinHandle,
 };
-use tokio_tungstenite::{WebSocketStream};
-
-
 
 use super::{
     message::{Message},
@@ -22,9 +19,6 @@ use super::{
 };
 
 type Rx = Receiver<(Socket, Socket)>;
-type Tx = Sender<Message>;
-type Sockets = Arc<Mutex<HashMap<usize, Socket>>>;
-type MessageStream = SplitStream<WebSocketStream<tokio::net::TcpStream>>;
 
 pub async fn handle_connection(raw_stream: TcpStream) -> Socket {
     info!("Incoming TCP connection from");
@@ -72,6 +66,7 @@ impl Server {
             rx: Some(rx),
         });
     }
+
     pub fn get_receiver(&mut self) -> Option<Rx> {
         return std::mem::take(&mut self.rx);
     }

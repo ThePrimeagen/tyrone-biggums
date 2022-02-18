@@ -11,12 +11,12 @@ use tokio_tungstenite::{WebSocketStream, tungstenite};
 use super::message::{Message};
 
 type Tx = Sender<Message>;
+type Rx = Receiver<Message>;
 type WSStream = WebSocketStream<TcpStream>;
 type MessageStream = SplitStream<WSStream>;
 
 pub struct Socket {
-    listener: Option<Tx>,
-    pub rx: Receiver<Message>,
+    rx: Option<Receiver<Message>>,
     outgoing: SplitSink<WebSocketStream<TcpStream>, tungstenite::Message>
 }
 
@@ -42,8 +42,7 @@ impl Socket {
         tokio::spawn(handle_messages(incoming, incoming_tx));
 
         return Socket {
-            listener: None,
-            rx: incoming_rx,
+            rx: Some(incoming_rx),
             outgoing,
         };
     }
@@ -55,6 +54,10 @@ impl Socket {
             },
             _ => {}
         };
+    }
+
+    pub fn get_receiver(&mut self) -> Option<Rx> {
+        return std::mem::take(&mut self.rx);
     }
 }
 
