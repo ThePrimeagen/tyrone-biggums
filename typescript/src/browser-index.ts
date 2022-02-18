@@ -131,6 +131,7 @@ function playRx(style: "rxjs") {
 
 function playCallback(style: "callback") {
     const server = new _CallbackServer();
+    // @ts-ignore I DONT THINK I'LL DO THIS BROWSER THING
     createCallbackJSGame(server);
 }
 

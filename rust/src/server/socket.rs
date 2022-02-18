@@ -77,6 +77,11 @@ impl Socket {
     pub async fn off(&mut self, id: u16) {
         self.listeners.lock().await.remove_entry(&id);
     }
+
+    pub async fn close(&mut self) -> Result<(), BoomerError> {
+        self.outgoing.close().await?;
+        return Ok(());
+    }
 }
 
 impl Display for Socket {

@@ -1,7 +1,8 @@
 #![feature(vec_retain_mut)]
 
+use log::warn;
 use rust::{
-    server::{server::Server},
+    server::server::Server, game::{game_setup::wait_for_ready, play_the_game},
 };
 
 #[tokio::main]
@@ -9,13 +10,13 @@ async fn main() -> Result<(), std::io::Error> {
     env_logger::init();
 
     let mut server = Server::new().await?;
+    warn!("starting server");
     let receiver = server.get_receiver();
 
     tokio::spawn(async move {
         let mut receiver = receiver.unwrap();
         while let Some(two_sockets) = receiver.recv().await {
-            println!("{}", two_sockets.0);
-            println!("{}", two_sockets.1);
+            tokio::spawn(play_the_game(two_sockets));
         }
     });
 

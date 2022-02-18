@@ -1,8 +1,10 @@
 use std::{fmt::Display};
 
 use serde::{Serialize, Deserialize};
+use serde_repr::{Serialize_repr, Deserialize_repr};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize_repr, Deserialize_repr)]
+#[repr(u8)]
 pub enum MessageType {
     ReadyUp = 0,
     Play = 1,
@@ -46,7 +48,8 @@ impl TryInto<Message> for String {
     type Error = serde_json::Error;
 
     fn try_into(self) -> Result<Message, Self::Error> {
-        return serde_json::from_str::<Message>(&self)
+        let msg = serde_json::from_str::<GameMessage>(&self)?;
+        return Ok(Message::Message(msg));
     }
 }
 
@@ -54,7 +57,10 @@ impl TryInto<String> for Message {
     type Error = serde_json::Error;
 
     fn try_into(self) -> Result<String, Self::Error> {
-        return serde_json::to_string(&self)
+        return match self {
+            Message::Message(msg) => serde_json::to_string(&msg),
+            _ => Ok("{}".to_string()),
+        }
     }
 }
 

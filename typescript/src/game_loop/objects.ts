@@ -22,7 +22,7 @@ export class Player implements Collidable<AABB> {
     }
 }
 
-const bulletPool = new ObjectPool<Bullet>(200, () => new Bullet([0, 0], [0, 0]));
+const bulletPool = new ObjectPool<null, Bullet>(200, () => new Bullet([0, 0], [0, 0]));
 export class Bullet implements Collidable<AABB>, Moveable, Velocity {
     public geo: AABB;
 
@@ -44,6 +44,9 @@ export class Bullet implements Collidable<AABB>, Moveable, Velocity {
         bulletPool.push(this);
     }
 
+    attach() { }
+    detach(): void {}
+
     static standardBulletGeometry(pos: Vector2D): AABB {
         const aabb = AABB.fromWidthHeight(Bullet.BulletWidth, 3);
         aabb.setPosition(pos);
@@ -51,7 +54,7 @@ export class Bullet implements Collidable<AABB>, Moveable, Velocity {
         return aabb;
     }
 
-    static createFromPlayer(player: Player, speed: number) {
+    static createFromPlayer(player: Player, speed: number): Bullet {
         const bullet = bulletPool.pop();
 
         if (player.dir[0] === 1) {

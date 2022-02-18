@@ -6,10 +6,13 @@ import GameLoopTimer from "./game-loop-timer";
 import GameQueue from "./game-queue";
 import { setupWithCallbacks } from "./game-setup";
 import GameWorld from "./game-world";
+import { Attachable } from "./pool";
 
 export default function gameCreator(server: Server): void {
     server.ongame = (p1, p2) => {
-        new Game(p1, p2);
+
+        // @ts-ignore -- I REALLY SHOULD STOP...
+        new Game(p1, p2, server);
     };
 }
 
@@ -50,7 +53,7 @@ class Game {
     private world!: GameWorld;
     private endedWithError: boolean;
 
-    constructor(private p1: CallbackSocket, private p2: CallbackSocket) {
+    constructor(private p1: CallbackSocket & Attachable<WebSocket>, private p2: CallbackSocket & Attachable<WebSocket>, private server: Server) {
         this.loop = new GameLoopTimer(getTickRate());
         this.endedWithError = false;
 
@@ -83,6 +86,7 @@ class Game {
                 this.stop(this.p2);
             }
         };
+
         this.p2.onclose = () => {
             if (!this.world.done) {
                 this.stop(this.p1);
@@ -100,6 +104,7 @@ class Game {
         this.world.stop();
 
         if (this.endedWithError) {
+            this.release();
             return;
         }
 
@@ -108,7 +113,15 @@ class Game {
 
         winner.push(createWinnerMessage(stats), () => winner.close());
         loser.push(createLoserMessage(), () => loser.close());
+        this.release();
         GameStat.activeGames--;
+    }
+
+    private release() {
+        // @ts-ignore -- I REALLY should stop doing this...
+        this.server.release(this.p1);
+        // @ts-ignore -- I REALLY should stop doing this...
+        this.server.release(this.p2);
     }
 }
 

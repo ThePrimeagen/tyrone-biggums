@@ -19,6 +19,7 @@ type Rx = Receiver<(Socket, Socket)>;
 pub async fn handle_connection(raw_stream: TcpStream) -> Socket {
     info!("Incoming TCP connection from");
 
+    // TODO: move this into Error
     let ws_stream = tokio_tungstenite::accept_async(raw_stream)
         .await
         .expect("Error during the websocket handshake occurred");

@@ -48,6 +48,11 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb: (msg: Messag
                 }
                 playing = false;
                 socket.close();
+                break;
+
+            default:
+                // @ts-ignore
+                console.log("DEFAULT???", msg.type, MessageType.ReadyUp, msg.type === MessageType.ReadyUp);
         }
     });
 }
@@ -66,7 +71,7 @@ export function connect(fireRate: number, addr: string, port: number, cb: (msg: 
 let _id = 0;
 let MAX = process.env.MAX || 2;
 function repeatConnect(addr: string, port: number, count: number = 0) {
-    if (count === MAX) {
+    if (count >= MAX) {
         return;
     }
 
@@ -74,7 +79,7 @@ function repeatConnect(addr: string, port: number, count: number = 0) {
     const socket = connect(200,
             addr || "events.theprimeagen.tv",
             port || 42069, (msg: any) => {
-                console.log("GOT MSG", msg);
+                // console.log("GOT MSG", msg);
             });
 
     socket.on("close", () => {

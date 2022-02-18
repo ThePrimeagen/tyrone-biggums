@@ -1,4 +1,9 @@
-export default class ObjectPool<T> {
+export interface Attachable<T> {
+    attach(item?: T): void;
+    detach(): void;
+}
+
+export default class ObjectPool<E, T extends Attachable<E>> {
     private insertIndex = 0;
     private removalIndex = 0;
     private buffer: T[];
@@ -11,17 +16,23 @@ export default class ObjectPool<T> {
         return this.buffer.length;
     }
 
-    pop(): T {
+    pop(item?: E): T {
         if (this.insertIndex === this.removalIndex) {
-            return this.factory();
+            const out: T = this.factory();
+            out.attach(item);
+            return out;
         }
 
         const out = this.buffer[this.removalIndex];
         this.removalIndex = (this.removalIndex + 1) % this.buffer.length;
+
+        out.attach(item);
         return out;
     }
 
     push(item: T) {
+        item.detach();
+
         this.buffer[this.insertIndex] = item;
         this.insertIndex = (this.insertIndex + 1) % this.buffer.length;
 
