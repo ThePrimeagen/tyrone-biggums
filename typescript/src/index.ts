@@ -22,7 +22,3 @@ if (style !== "rxjs" && style !== "callback") {
 const server = createServer(style, port);
 createGame(style, server);
 
-server.on("listening", () => {
-    console.log("listening on 42069");
-});
-

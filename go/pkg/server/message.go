@@ -2,35 +2,73 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/ThePrimeagen/tyrone-biggums/pkg/stats"
 	"github.com/gorilla/websocket"
 )
 
-type Message struct {
+type MessageEnvelope struct {
 	Type    int
 	Message GameMessage
 }
 
 const (
     ReadyUp int = iota
+    Play
+    Fire
+    GameOver
 )
 
 type GameMessage struct {
     Type int `json:"type"`
+    Msg string `json:"msg,omitempty"` // how to optionally specify?
 }
 
-func FromSocket(msg []byte) *Message {
+func FromSocket(msg []byte) MessageEnvelope {
     var gameMessage GameMessage
     json.Unmarshal(msg, &gameMessage)
-    return &Message {
+    return MessageEnvelope {
         Type: websocket.TextMessage,
         Message: gameMessage,
     }
 }
 
-func ReadyUpMessage() *Message {
-    return &Message{
+func CreateMessage(messageType int) MessageEnvelope {
+    return MessageEnvelope{
         Type: websocket.TextMessage,
-        Message: GameMessage{ReadyUp},
+        Message: GameMessage{
+            messageType, "",
+        },
+    }
+}
+
+func CreateWinnerMessage(stats stats.GameStats) MessageEnvelope {
+    return MessageEnvelope{
+        Type: websocket.TextMessage,
+        Message: GameMessage{
+            Type: GameOver,
+            Msg: fmt.Sprintf("winner(%v)___%v", "REPLACE ME", "DADDY"),
+        },
+    }
+}
+
+func CreateLoserMessage() MessageEnvelope {
+    return MessageEnvelope{
+        Type: websocket.TextMessage,
+        Message: GameMessage{
+            Type: GameOver,
+            Msg: "loser",
+        },
+    }
+}
+
+func ErrorGameOver(msg string) MessageEnvelope {
+    return MessageEnvelope{
+        Type: websocket.TextMessage,
+        Message: GameMessage{
+            Type: GameOver,
+            Msg: msg,
+        },
     }
 }

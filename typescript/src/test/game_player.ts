@@ -73,7 +73,9 @@ function repeatConnect(addr: string, port: number, count: number = 0) {
     const id = ++_id;
     const socket = connect(200,
             addr || "events.theprimeagen.tv",
-            port || 42069);
+            port || 42069, (msg: any) => {
+                console.log("GOT MSG", msg);
+            });
 
     socket.on("close", () => {
         repeatConnect(addr, port, count + 1);

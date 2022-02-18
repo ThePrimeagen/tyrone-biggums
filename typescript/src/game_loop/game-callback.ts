@@ -1,4 +1,3 @@
-import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
 import { createLoserMessage, createMessage, createWinnerMessage, errorGameOver, MessageType } from "../message";
 import { Server } from "../server/callback-server";
 import { CallbackSocket } from "../server/universal-types";
@@ -9,9 +8,9 @@ import { setupWithCallbacks } from "./game-setup";
 import GameWorld from "./game-world";
 
 export default function gameCreator(server: Server): void {
-    server.on("game", ([p1, p2]) => {
+    server.ongame = (p1, p2) => {
         new Game(p1, p2);
-    });
+    };
 }
 
 function getTickRate(): number {
@@ -45,14 +44,13 @@ export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWo
     });
 }
 
-class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
+class Game {
     private loop: GameLoopTimer;
     private queue!: GameQueue;
     private world!: GameWorld;
     private endedWithError: boolean;
 
     constructor(private p1: CallbackSocket, private p2: CallbackSocket) {
-        super();
         this.loop = new GameLoopTimer(getTickRate());
         this.endedWithError = false;
 
@@ -100,7 +98,6 @@ class Game extends EventEmitterBecausePeopleToldMeItWasDogShit {
 
     private endGame(stats: GameStat): void {
         this.world.stop();
-        this.offAll();
 
         if (this.endedWithError) {
             return;

@@ -1,21 +1,21 @@
 import WebSocket from "ws";
-import Socket from "./socket";
+import Socket, { noop } from "./socket";
 
-import EventEmitterBecausePeopleToldMeItWasDogShit from "../event-emitter-because-people-told-me-it-was-dogshit";
-
-export interface Server extends EventEmitterBecausePeopleToldMeItWasDogShit {
+export interface Server {
     close(): void;
-    on(event: "error", cb: (error: Error) => void): void;
-    on(event: "close", cb: () => void): void;
-    on(event: "game", cb: (sockets: [Socket, Socket]) => void): void;
+    ongame: (p1: Socket, p2: Socket) => void;
+    onlisten: (e?: Error) => void;
 }
 
-export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogShit implements Server {
+export default class ServerImpl implements Server {
     private other_socket?: Socket;
     private server?: WebSocket.WebSocketServer;
+    public ongame: (p1: Socket, p2: Socket) => void;
+    public onlisten: (e?: Error) => void;
 
     constructor(port: number = 42069) {
-        super();
+        this.ongame = noop;
+        this.onlisten = noop;
         this.server = new WebSocket.Server({
             host: "0.0.0.0",
             port,
@@ -27,30 +27,19 @@ export default class ServerImpl extends EventEmitterBecausePeopleToldMeItWasDogS
         server.on("connection", ws => {
             const socket = new Socket(ws);
             if (this.other_socket) {
-                this.emit("game", [this.other_socket, socket]);
+                this.ongame(this.other_socket, socket);
                 this.other_socket = undefined;
             } else {
                 this.other_socket = socket;
             }
         });
 
-        server.on("error", e => {
-            this.emit("error", e);
-        });
-
-        server.on("close", () => {
-            this.emit("close");
-        });
-
-        server.on("listening", () => {
-            this.emit("listening");
-        });
+        server.on("listening", (e?: Error) => this.onlisten(e));
     }
 
     public close() {
         // TODO: Why doesn't this close the server?
         this.server?.close();
-        this.server?.removeAllListeners();
         this.server = undefined;
     }
 }

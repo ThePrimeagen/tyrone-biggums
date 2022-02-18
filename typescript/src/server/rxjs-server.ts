@@ -1,11 +1,12 @@
 import WebSocket from "ws";
 import Socket from "./rxjs-socket";
 import { BehaviorSubject, filter, map, Observable, Observer, scan, Subject } from "rxjs";
+import { RxSocket } from "./universal-types";
 
 export interface Server {
     listening: BehaviorSubject<boolean>;
     close(): void;
-    on(): Observable<[Socket, Socket]>;
+    on(): Observable<[RxSocket, RxSocket]>;
 }
 
 export default class ServerImpl implements Server {
@@ -28,7 +29,7 @@ export default class ServerImpl implements Server {
         this.server.close();
     }
 
-    public on(): Observable<[Socket, Socket]> {
+    public on(): Observable<[RxSocket, RxSocket]> {
         return this.subject;
     }
 

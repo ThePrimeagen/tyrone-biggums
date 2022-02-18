@@ -9,22 +9,22 @@ import (
 )
 
 type Socket interface {
-    GetOutBound() chan<- *Message
-    GetInBound() <-chan *Message
+    GetOutBound() chan<- MessageEnvelope
+    GetInBound() <-chan MessageEnvelope
     Close() error
 }
 
 type SocketImpl struct {
-    outBound chan<- *Message
-    inBound <-chan *Message
+    outBound chan<- MessageEnvelope
+    inBound <-chan MessageEnvelope
     conn *websocket.Conn
 }
 
-func (s *SocketImpl) GetOutBound() chan<- *Message {
+func (s *SocketImpl) GetOutBound() chan<- MessageEnvelope {
     return s.outBound
 }
 
-func (s *SocketImpl) GetInBound() <-chan *Message {
+func (s *SocketImpl) GetInBound() <-chan MessageEnvelope {
     return s.inBound
 }
 
@@ -39,10 +39,10 @@ func NewSocket(w http.ResponseWriter, r *http.Request) (Socket, error) {
     }
 
     // from me to network
-    out := make(chan *Message)
+    out := make(chan MessageEnvelope)
 
     // from network to me
-    in := make(chan *Message) // other type
+    in := make(chan MessageEnvelope) // other type
 
     go func() {
         defer func() {
