@@ -1,8 +1,8 @@
 import { AABB, Collidable } from "./geometry";
 import { Moveable, scale, Vector2D, Velocity } from "./physics";
-import ObjectPool, { Attachable } from "./pool";
+import AttachablePool, { Attachable } from "./pool";
 
-const playerPool = new ObjectPool<null, Player>(1200, () => new Player([0, 0], [0, 0], 0));
+const playerPool = new AttachablePool<null, Player>(1200, () => new Player([0, 0], [0, 0], 0));
 
 export class Player implements Collidable<AABB>, Attachable<null> {
     public geo: AABB;
@@ -41,7 +41,7 @@ export class Player implements Collidable<AABB>, Attachable<null> {
     }
 }
 
-const bulletPool = new ObjectPool<null, Bullet>(200, () => new Bullet([0, 0], [0, 0]));
+const bulletPool = new AttachablePool<null, Bullet>(200, () => new Bullet([0, 0], [0, 0]));
 export class Bullet implements Collidable<AABB>, Moveable, Velocity {
     public geo: AABB;
 

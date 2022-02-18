@@ -3,7 +3,7 @@ export interface Attachable<T> {
     detach(): void;
 }
 
-export default class ObjectPool<E, T extends Attachable<E>> {
+export class Pool<T> {
     private insertIndex = 0;
     private removalIndex = 0;
     private buffer: T[];
@@ -16,22 +16,19 @@ export default class ObjectPool<E, T extends Attachable<E>> {
         return this.buffer.length;
     }
 
-    pop(item?: E): T {
+    fromCache(): T {
         if (this.insertIndex === this.removalIndex) {
             const out: T = this.factory();
-            out.attach(item);
             return out;
         }
 
         const out = this.buffer[this.removalIndex];
         this.removalIndex = (this.removalIndex + 1) % this.buffer.length;
 
-        out.attach(item);
         return out;
     }
 
-    push(item: T) {
-        item.detach();
+    toCache(item: T) {
 
         this.buffer[this.insertIndex] = item;
         this.insertIndex = (this.insertIndex + 1) % this.buffer.length;
@@ -46,6 +43,24 @@ export default class ObjectPool<E, T extends Attachable<E>> {
             this.insertIndex = this.buffer.length; // at the end of the list
             this.buffer = nextBuffer;
         }
+    }
+}
+
+export default class AttachablePool<E, T extends Attachable<E>> extends Pool<T> {
+
+    constructor(initialCapacity: number, factory: () => T) {
+        super(initialCapacity, factory);
+    }
+
+    pop(item?: E): T {
+        const out = super.fromCache();
+        out.attach(item);
+        return out;
+    }
+
+    push(item: T) {
+        item.detach();
+        super.toCache(item);
     }
 }
 

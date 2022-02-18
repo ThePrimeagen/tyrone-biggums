@@ -1,4 +1,4 @@
-import ObjectPool, { Attachable } from "../pool";
+import AttachablePool, { Attachable } from "../pool";
 
 class Item implements Attachable<null> {
     constructor(public value: number) {
@@ -9,7 +9,7 @@ class Item implements Attachable<null> {
 
 test("Pool", function() {
     let id = 68;
-    const testPool = new ObjectPool<null, Item>(2, () => new Item(++id));
+    const testPool = new AttachablePool<null, Item>(2, () => new Item(++id));
 
     const o1 = testPool.pop();
     const o2 = testPool.pop();

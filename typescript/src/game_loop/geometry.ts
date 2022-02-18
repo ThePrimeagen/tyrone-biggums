@@ -1,4 +1,5 @@
 import { Moveable, Vector2D } from "./physics";
+import { Pool } from "./pool";
 
 export interface Collidable<T> {
     geo: Geometry<T>
@@ -67,9 +68,11 @@ export class AABB implements Geometry<AABB>, Moveable {
     }
 }
 
-export type Collisions<T> = [Collidable<T>, Collidable<T>];
-export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T>[] {
-    const out: Collisions<T>[] = [];
+// TODO: this seems like great hack of the universe
+// I am a bit skeptic about this approach in general
+export const collidablePool = new Pool<[]>(100, () => []);
+export function checkForCollisions<T>(items: Collidable<T>[]): Collidable<T>[] {
+    const out = collidablePool.fromCache() as Collidable<T>[];
 
     // TODO: We could implement a space partitioning algorithm to reduce search
     // space.
@@ -78,7 +81,7 @@ export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T>[] {
             // @ts-ignore
             // TODO: I don't know how to make this work without an ignore.
             if (items[i].geo.hasCollisionFast(items[j].geo)) {
-                out.push([items[i], items[j]]);
+                out.push(items[i], items[j]);
             }
         }
     }
@@ -86,8 +89,8 @@ export function checkForCollisions<T>(items: Collidable<T>[]): Collisions<T>[] {
     return out;
 }
 
-export function checkForCollisionsByGroup<T>(item: Collidable<T>, against: Collidable<T>[]): undefined | Collisions<T> {
-    let out: Collisions<T> | undefined = undefined;
+export function checkForCollisionsByGroup<T>(item: Collidable<T>, against: Collidable<T>[]): undefined | Collidable<T> {
+    let out = undefined;
 
     // TODO: We could implement a space partitioning algorithm to reduce search
     // space.
@@ -95,7 +98,7 @@ export function checkForCollisionsByGroup<T>(item: Collidable<T>, against: Colli
         // @ts-ignore
         // TODO: I don't know how to make this work without an ignore.
         if (against[i].geo.hasCollision(item.geo)) {
-            out = [item, against[i]];
+            out = against[i];
             break;
         }
     }

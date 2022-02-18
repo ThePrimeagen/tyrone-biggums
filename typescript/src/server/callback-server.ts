@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import Socket, { noop } from "./socket";
 
-import ObjectPool from "../game_loop/pool"
+import AttachablePool from "../game_loop/pool"
 
 export interface Server {
     close(): void;
@@ -16,13 +16,13 @@ export default class ServerImpl implements Server {
 
     private other_socket?: Socket;
     private server?: WebSocket.WebSocketServer;
-    private pool: ObjectPool<WebSocket, Socket>;
+    private pool: AttachablePool<WebSocket, Socket>;
 
     constructor(port: number = 42069) {
         this.ongame = noop;
         this.onlisten = noop;
 
-        this.pool = new ObjectPool<WebSocket, Socket>(2000, () => {
+        this.pool = new AttachablePool<WebSocket, Socket>(2000, () => {
             return new Socket();
         });
 

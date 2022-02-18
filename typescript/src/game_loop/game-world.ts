@@ -1,10 +1,10 @@
 import { Message, MessageType } from "../message";
 import { BaseSocket } from "../server/universal-types";
 import createConfig, { GameConfig, PartialConfig } from "./config";
-import { checkForCollisions, checkForCollisionsByGroup } from "./geometry";
+import { checkForCollisions, checkForCollisionsByGroup, collidablePool } from "./geometry";
 import { Bullet, Player } from "./objects";
 import { applyVelocityAll } from "./physics";
-import ObjectPool from "./pool";
+import { Pool } from "./pool";
 
 export interface GameWorld {
     processMessage(socket: BaseSocket, message: Message): void;
@@ -14,7 +14,7 @@ export interface GameWorld {
 }
 
 let count = 0;
-// const bulletListPool = new ObjectPool<null, Bullet[]>(1200, () => []);
+const bulletListPool = new Pool<Bullet[]>(1200, () => []);
 export default class GameWorldImpl {
     // for easy inspection
     public p1: Player;
@@ -42,7 +42,7 @@ export default class GameWorldImpl {
         }
 
         this._done = false;
-        this.bullets = [];
+        this.bullets = bulletListPool.fromCache();
     }
 
     private getPlayer(socket: BaseSocket): Player {
@@ -54,6 +54,7 @@ export default class GameWorldImpl {
         this.bullets.forEach(b => b.cleanUp());
         Player.release(this.p1);
         Player.release(this.p2);
+        bulletListPool.toCache(this.bullets);
     }
 
     processMessage(socket: BaseSocket, message: Message) {
@@ -80,10 +81,12 @@ export default class GameWorldImpl {
 
     collisions(): void {
         // 1. Remove all bullets
-        checkForCollisions(this.bullets).forEach(([b1, b2]) => {
-            this.removeBullet(b1 as Bullet);
-            this.removeBullet(b2 as Bullet);
-        });
+        let collided = checkForCollisions(this.bullets);
+        for (let i = 0; i < collided.length; i++) {
+            this.removeBullet(collided[i] as Bullet);
+        }
+        collided.length = 0;
+        collidablePool.toCache(collided as []);
 
         // 2. check for collision with players
         const collidedWithPlayer1 = checkForCollisionsByGroup(this.p1, this.bullets);
