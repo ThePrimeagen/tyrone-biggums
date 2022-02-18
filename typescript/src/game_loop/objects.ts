@@ -1,8 +1,10 @@
 import { AABB, Collidable } from "./geometry";
 import { Moveable, scale, Vector2D, Velocity } from "./physics";
-import ObjectPool from "./pool";
+import ObjectPool, { Attachable } from "./pool";
 
-export class Player implements Collidable<AABB> {
+const playerPool = new ObjectPool<null, Player>(1200, () => new Player([0, 0], [0, 0], 0));
+
+export class Player implements Collidable<AABB>, Attachable<null> {
     public geo: AABB;
     private lastFire: number;
 
@@ -10,6 +12,9 @@ export class Player implements Collidable<AABB> {
         this.lastFire = 0;
         this.geo = AABB.fromWidthHeight(100, 100).setPosition(pos) as AABB; // this Geometry<AABB> sucks..
     }
+
+    attach() {}
+    detach() {}
 
     fire(): boolean {
         const now = Date.now();
@@ -19,6 +24,20 @@ export class Player implements Collidable<AABB> {
 
         this.lastFire = now;
         return true;
+    }
+
+    static create(posX: number, posY: number, dirX: number, fireRate: number): Player {
+        const player = playerPool.pop();
+
+        player.geo.setPositionXY(posX, posY);
+        player.dir[0] = dirX;
+        player.fireRate = fireRate;
+
+        return player;
+    }
+
+    static release(player: Player): void {
+        playerPool.push(player);
     }
 }
 

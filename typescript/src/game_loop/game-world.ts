@@ -4,6 +4,7 @@ import createConfig, { GameConfig, PartialConfig } from "./config";
 import { checkForCollisions, checkForCollisionsByGroup } from "./geometry";
 import { Bullet, Player } from "./objects";
 import { applyVelocityAll } from "./physics";
+import ObjectPool from "./pool";
 
 export interface GameWorld {
     processMessage(socket: BaseSocket, message: Message): void;
@@ -13,6 +14,7 @@ export interface GameWorld {
 }
 
 let count = 0;
+// const bulletListPool = new ObjectPool<null, Bullet[]>(1200, () => []);
 export default class GameWorldImpl {
     // for easy inspection
     public p1: Player;
@@ -32,23 +34,11 @@ export default class GameWorldImpl {
         this.config = createConfig(config);
 
         if (++count % 2 == 0) {
-            this.p1 = new Player(
-                [-this.config.playerStartingX, 0],
-                [1, 0],
-                this.config.winnerFireRate);
-            this.p2 = new Player(
-                [this.config.playerStartingX, 0],
-                [-1, 0],
-                this.config.loserFireRate);
+            this.p1 = Player.create(-this.config.playerStartingX, 0, 1, this.config.winnerFireRate);
+            this.p2 = Player.create(this.config.playerStartingX, 0, -1, this.config.loserFireRate);
         } else {
-            this.p1 = new Player(
-                [-this.config.playerStartingX, 0],
-                [1, 0],
-                this.config.loserFireRate);
-            this.p2 = new Player(
-                [this.config.playerStartingX, 0],
-                [-1, 0],
-                this.config.winnerFireRate);
+            this.p1 = Player.create(-this.config.playerStartingX, 0, 1, this.config.loserFireRate);
+            this.p2 = Player.create(this.config.playerStartingX, 0, -1, this.config.winnerFireRate);
         }
 
         this._done = false;
@@ -62,6 +52,8 @@ export default class GameWorldImpl {
     stop() {
         this._done = true;
         this.bullets.forEach(b => b.cleanUp());
+        Player.release(this.p1);
+        Player.release(this.p2);
     }
 
     processMessage(socket: BaseSocket, message: Message) {
