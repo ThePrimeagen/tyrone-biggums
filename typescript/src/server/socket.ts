@@ -4,7 +4,6 @@ import { Message } from "../message";
 import { BaseSocket, CallbackSocket } from "./universal-types";
 
 export function noop() {};
-let _id = 0;
 export default class SocketImpl implements CallbackSocket, BaseSocket, Attachable<WebSocket> {
 
     public onmessage: (message: Message) => void = noop;
@@ -15,10 +14,8 @@ export default class SocketImpl implements CallbackSocket, BaseSocket, Attachabl
     private boundClose: () => void;
     private boundError: (e: Error) => void;
     private ws!: WebSocket;
-    private id: number;
 
     constructor() {
-        this.id = _id++;
         this.boundMessage = this._onmessage.bind(this);
         this.boundClose = this._onclose.bind(this);
         this.boundError = this._onerror.bind(this);
