@@ -4,9 +4,12 @@ use std::fmt::Display;
 
 use futures::{stream::{SplitStream, SplitSink}, StreamExt, SinkExt};
 
+use log::error;
 use tokio::{sync::mpsc::{Sender, channel, Receiver}, net::TcpStream};
 use tokio_tungstenite::{WebSocketStream, tungstenite};
 
+
+use crate::error::BoomerError;
 
 use super::message::{Message};
 
@@ -27,7 +30,12 @@ pub async fn handle_messages(mut incoming: MessageStream, tx: Tx) {
                 Err(_) => return,
                 Ok(txt) => txt,
             };
-            tx.send(Message::new(text)).await;
+
+            if let Ok(msg) = text.try_into() {
+                tx.send(msg).await;
+            } else {
+                error!("unable to deserialize message from socket")
+            }
         }
     }
 }
@@ -47,13 +55,10 @@ impl Socket {
         };
     }
 
-    pub async fn push(&mut self, msg: &Message) {
-        match msg {
-            Message::Message(msg) => {
-                self.outgoing.send(tokio_tungstenite::tungstenite::Message::Text(msg.msg.clone())).await;
-            },
-            _ => {}
-        };
+    pub async fn push(&mut self, msg: Message) -> Result<(), BoomerError> {
+        let msg: tungstenite::Message = tungstenite::Message::Text(msg.try_into()?);
+        self.outgoing.send(msg).await;
+        return Ok(());
     }
 
     pub fn get_receiver(&mut self) -> Option<Rx> {

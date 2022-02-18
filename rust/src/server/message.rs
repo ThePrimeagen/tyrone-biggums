@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display};
 
 use serde::{Serialize, Deserialize};
 
@@ -16,7 +16,7 @@ pub struct ChatMessage {
     pub msg: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Message {
     Message(ChatMessage),
     Close(),
@@ -36,13 +36,33 @@ impl Message {
             msg: Some(msg),
         });
     }
+
+    pub fn close() -> Message {
+        return Message::Close()
+    }
+}
+
+impl TryInto<Message> for String {
+    type Error = serde_json::Error;
+
+    fn try_into(self) -> Result<Message, Self::Error> {
+        return serde_json::from_str::<Message>(&self)
+    }
+}
+
+impl TryInto<String> for Message {
+    type Error = serde_json::Error;
+
+    fn try_into(self) -> Result<String, Self::Error> {
+        return serde_json::to_string(&self)
+    }
 }
 
 impl Display for Message {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
             Message::Message(c) => {
-                match c.msg {
+                match &c.msg {
                     Some(m) => write!(f, "Message: {:?} {}", c.r#type, m),
                     None => write!(f, "Message: {:?}", c.r#type)
                 }
