@@ -11,27 +11,27 @@ pub enum MessageType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChatMessage {
+pub struct GameMessage {
     pub r#type: MessageType,
     pub msg: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Message {
-    Message(ChatMessage),
+    Message(GameMessage),
     Close(),
 }
 
 impl Message {
     pub fn new(t: MessageType) -> Message {
-        return Message::Message(ChatMessage {
+        return Message::Message(GameMessage {
             r#type: t,
             msg: None
         });
     }
 
     pub fn with_message(t: MessageType, msg: String) -> Message {
-        return Message::Message(ChatMessage {
+        return Message::Message(GameMessage {
             r#type: t,
             msg: Some(msg),
         });

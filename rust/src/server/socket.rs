@@ -1,11 +1,9 @@
-
-
-use std::fmt::Display;
+use std::{fmt::Display, collections::HashMap, sync::{Arc}};
 
 use futures::{stream::{SplitStream, SplitSink}, StreamExt, SinkExt};
 
 use log::error;
-use tokio::{sync::mpsc::{Sender, channel, Receiver}, net::TcpStream};
+use tokio::{sync::{mpsc::{Sender, channel, Receiver}, Mutex}, net::TcpStream};
 use tokio_tungstenite::{WebSocketStream, tungstenite};
 
 
@@ -14,16 +12,17 @@ use crate::error::BoomerError;
 use super::message::{Message};
 
 type Tx = Sender<Message>;
-type Rx = Receiver<Message>;
+type Listener = Arc<Mutex<HashMap<u16, Tx>>>;
 type WSStream = WebSocketStream<TcpStream>;
 type MessageStream = SplitStream<WSStream>;
 
 pub struct Socket {
-    rx: Option<Receiver<Message>>,
+    current_id: u16,
+    listeners: Listener,
     outgoing: SplitSink<WebSocketStream<TcpStream>, tungstenite::Message>
 }
 
-pub async fn handle_messages(mut incoming: MessageStream, tx: Tx) {
+pub async fn handle_messages(mut incoming: MessageStream, listeners: Listener) {
     while let Some(Ok(msg)) = incoming.next().await {
         if msg.is_text() {
             let text = match msg.into_text() {
@@ -31,8 +30,13 @@ pub async fn handle_messages(mut incoming: MessageStream, tx: Tx) {
                 Ok(txt) => txt,
             };
 
-            if let Ok(msg) = text.try_into() {
-                tx.send(msg).await;
+            let msg: Result<Message, serde_json::Error> = text.try_into();
+
+            if let Ok(msg) = msg {
+                let listener = listeners.lock().await;
+                for (k, tx) in listener.iter() {
+                    tx.send(msg.clone()).await;
+                }
             } else {
                 error!("unable to deserialize message from socket")
             }
@@ -45,13 +49,14 @@ impl Socket {
         let (outgoing, incoming) = ws_stream.split();
 
         // from network to me
-        let (incoming_tx, incoming_rx) = channel::<Message>(10);
+        let listeners = Arc::new(Mutex::new(HashMap::new()));
 
-        tokio::spawn(handle_messages(incoming, incoming_tx));
+        tokio::spawn(handle_messages(incoming, listeners.clone()));
 
         return Socket {
-            rx: Some(incoming_rx),
             outgoing,
+            listeners,
+            current_id: 0,
         };
     }
 
@@ -61,8 +66,16 @@ impl Socket {
         return Ok(());
     }
 
-    pub fn get_receiver(&mut self) -> Option<Rx> {
-        return std::mem::take(&mut self.rx);
+    pub async fn listen(&mut self, tx: Tx) -> u16 {
+        let id = self.current_id;
+        self.current_id += 1;
+        self.listeners.lock().await.insert(id, tx);
+
+        return id
+    }
+
+    pub async fn off(&mut self, id: u16) {
+        self.listeners.lock().await.remove_entry(&id);
     }
 }
 
