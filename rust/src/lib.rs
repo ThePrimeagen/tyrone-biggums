@@ -2,3 +2,5 @@
 
 pub mod lock;
 pub mod server;
+pub mod game;
+pub mod error;
