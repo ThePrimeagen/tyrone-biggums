@@ -20,7 +20,8 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
     public p2: Player;
 
     // If I were to make this faster, I would consider a linked list or ring buffer.
-    public bullets: Bullet[];
+    public p1Bullets: Bullet[];
+    public p2Bullets: Bullet[];
 
     private _done: boolean;
     private winner!: BaseSocket;
@@ -53,7 +54,8 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
         }
 
         this._done = false;
-        this.bullets = [];
+        this.p1Bullets = [];
+        this.p2Bullets = [];
     }
 
     private getPlayer(socket: BaseSocket): Player {
@@ -68,30 +70,35 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
         const player = this.getPlayer(socket);
         if (message.type === MessageType.Fire) {
             if (player.fire()) {
-                this.bullets.push(Bullet.createFromPlayer(player, this.config.bulletSpeed));
+                if (this.p1 === player) {
+                    this.p1Bullets.push(Bullet.createFromPlayer(player, this.config.bulletSpeed));
+                } else {
+                    this.p2Bullets.push(Bullet.createFromPlayer(player, this.config.bulletSpeed));
+                }
             }
         }
     }
 
     update(delta: number): void {
-        applyVelocityAll(this.bullets, delta);
+        applyVelocityAll(this.p1Bullets, delta);
+        applyVelocityAll(this.p2Bullets, delta);
     }
 
     collisions(): void {
         // 1. Remove all bullets
-        checkForCollisions(this.bullets).forEach(([b1, b2]) => {
-            this.removeBullet(b1 as Bullet);
-            this.removeBullet(b2 as Bullet);
+        checkForCollisions(this.p1Bullets, this.p2Bullets).forEach(([b1, b2]) => {
+            this.removeBullet(this.p1Bullets, b1 as Bullet);
+            this.removeBullet(this.p2Bullets, b2 as Bullet);
         });
 
         // 2. check for collision with players
-        const collidedWithPlayer1 = checkForCollisionsByGroup(this.p1, this.bullets);
+        const collidedWithPlayer1 = checkForCollisionsByGroup(this.p1, this.p2Bullets);
         if (collidedWithPlayer1) {
             this._done = true;
             this.winner = this.s2;
         }
 
-        const collidedWithPlayer2 = checkForCollisionsByGroup(this.p2, this.bullets);
+        const collidedWithPlayer2 = checkForCollisionsByGroup(this.p2, this.p1Bullets);
         if (collidedWithPlayer2) {
             this._done = true;
             this.winner = this.s1;
@@ -106,8 +113,8 @@ export default class GameWorldImpl extends EventEmitterBecausePeopleToldMeItWasD
         return this.winner === this.s1 ? this.s2 : this.s1;
     }
 
-    private removeBullet(b: Bullet): void {
-        this.bullets.splice(this.bullets.indexOf(b), 1);
+    private removeBullet(bulletList: Bullet[], b: Bullet): void {
+        bulletList.splice(bulletList.indexOf(b), 1);
     }
 }
 
