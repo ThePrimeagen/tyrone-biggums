@@ -46,6 +46,12 @@ export default class GameQueueImpl implements GameQueue {
 
         return messages;
     }
+
+    static release(queue?: GameQueueImpl) {
+        if (queue) {
+            arrPool.release(queue.queue);
+        }
+    }
 }
 
 export class GameQueueRxJSImpl implements GameQueue {

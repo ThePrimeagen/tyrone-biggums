@@ -106,7 +106,9 @@ class Game implements Startable {
     }
 
     private endGame(stats?: GameStat): void {
-        this.world.stop();
+        if (this.world) {
+            this.world.stop();
+        }
 
         if (this.endedWithError) {
             this.release();
@@ -127,7 +129,9 @@ class Game implements Startable {
         this.server.release(this.p1);
         // @ts-ignore -- I REALLY should stop doing this...
         this.server.release(this.p2);
+
         GameLoopTimer.release(this.loop);
+        GameQueue.release(this.queue);
     }
 }
 
