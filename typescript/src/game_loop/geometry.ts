@@ -80,7 +80,7 @@ export function checkForCollisions<T>(items: Collidable<T>[]): Collidable<T>[] {
         for (let j = i + 1; j < items.length; j++) {
             // @ts-ignore
             // TODO: I don't know how to make this work without an ignore.
-            if (items[i].geo.hasCollisionFast(items[j].geo)) {
+            if (items[i].geo.hasCollision(items[j].geo)) {
                 out.push(items[i], items[j]);
             }
         }
