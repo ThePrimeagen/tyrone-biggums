@@ -71,17 +71,17 @@ export class AABB implements Geometry<AABB>, Moveable {
 // TODO: this seems like great hack of the universe
 // I am a bit skeptic about this approach in general
 export const collidablePool = new Pool<[]>(100, () => []);
-export function checkForCollisions<T>(items: Collidable<T>[]): Collidable<T>[] {
+export function checkForCollisions<T>(groupA: Collidable<T>[], groupB: Collidable<T>[]): Collidable<T>[] {
     const out = collidablePool.fromCache() as Collidable<T>[];
 
     // TODO: We could implement a space partitioning algorithm to reduce search
     // space.
-    for (let i = 0; i < items.length; i++) {
-        for (let j = i + 1; j < items.length; j++) {
+    for (let i = 0; i < groupA.length; i++) {
+        for (let j = 0; j < groupB.length; j++) {
             // @ts-ignore
             // TODO: I don't know how to make this work without an ignore.
-            if (items[i].geo.hasCollisionFast(items[j].geo)) {
-                out.push(items[i], items[j]);
+            if (groupA[i].geo.hasCollisionFast(groupB[j].geo)) {
+                out.push(groupA[i], groupB[j]);
             }
         }
     }
