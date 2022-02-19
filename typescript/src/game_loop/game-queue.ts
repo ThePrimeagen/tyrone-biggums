@@ -1,6 +1,6 @@
 import { Message } from "../message";
 import { BaseSocket, CallbackSocket, RxSocket } from "../server/universal-types";
-import { ArrayPool } from "./pool";
+import { ArrayPool, Pool } from "./pool";
 
 type MessageEnvelope = {
     message: Message
@@ -15,22 +15,41 @@ const arrPool = new ArrayPool<MessageEnvelope>(2000);
 arrPool.seed(1000); // wee need to seed the cache to prevent giving back and
 // taking of the same array
 
-export default class GameQueueImpl implements GameQueue {
-    private queue: MessageEnvelope[];
+const queuePool = new Pool<GameQueueImpl>(700, () => new GameQueueImpl());
+const messagePool = new Pool<MessageEnvelope>(300, () => {return {} as MessageEnvelope;});
 
-    constructor(private p1: CallbackSocket, private p2: CallbackSocket) {
-        this.queue = arrPool.create();
-        this.listenToSocket(this.p1);
-        this.listenToSocket(this.p2);
+export default class GameQueueImpl implements GameQueue {
+    private queue!: MessageEnvelope[];
+    private p1!: CallbackSocket;
+    private p2!: CallbackSocket;
+    private boundOnMessage1: (message: Message) => void;
+    private boundOnMessage2: (message: Message) => void;
+
+    constructor() {
+        this.boundOnMessage1 = (message: Message) => {
+            const msg = messagePool.fromCache();
+            msg.message = message;
+            msg.from = this.p1;
+            this.queue.push(msg);
+        };
+        this.boundOnMessage2 = (message: Message) => {
+            const msg = messagePool.fromCache();
+            msg.message = message;
+            msg.from = this.p2;
+            this.queue.push(msg);
+        };
     }
 
-    private listenToSocket(from: CallbackSocket) {
-        from.onmessage = (message: Message) => {
-            this.queue.push({
-                message,
-                from,
-            });
-        };
+    releaseMessages(messages: MessageEnvelope[]) {
+        GameQueueImpl.releasePool(messages)
+    }
+
+    start(p1: CallbackSocket, p2: CallbackSocket): void {
+        p1.onmessage = this.boundOnMessage1;
+        p2.onmessage = this.boundOnMessage2;
+        this.p1 = p1;
+        this.p2 = p2;
+        this.queue = arrPool.create();
     }
 
     // technically if this is an issue we can make it return a dummy array.
@@ -40,17 +59,27 @@ export default class GameQueueImpl implements GameQueue {
         }
 
         const messages = this.queue;
-
-        arrPool.release(this.queue);
         this.queue = arrPool.create();
 
         return messages;
     }
 
+    private static releasePool(messages: MessageEnvelope[]): void {
+        for (let i = 0; i < messages.length; i++) {
+            messagePool.toCache(messages[i]);
+        }
+        arrPool.toCache(messages);
+    }
+
     static release(queue?: GameQueueImpl) {
         if (queue) {
-            arrPool.release(queue.queue);
+            GameQueueImpl.releasePool(queue.queue);
+            queuePool.toCache(queue);
         }
+    }
+
+    static create(): GameQueueImpl {
+        return queuePool.fromCache();
     }
 }
 

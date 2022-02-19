@@ -25,7 +25,8 @@ test("Ensure that the game ends when its suppose to", function() {
     };
 
     const loop = new GameLoopTimer(100);
-    const queue = new GameQueue(s1, s2);
+    const queue = GameQueue.create();
+    queue.start(s1, s2);
     const world = new GameWorld(s1, s2, config);// , cb: () => void): void {
 
     // @ts-ignore

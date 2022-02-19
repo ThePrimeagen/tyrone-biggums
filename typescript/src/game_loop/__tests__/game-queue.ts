@@ -5,7 +5,8 @@ import GameQueue, { GameQueueRxJSImpl } from "../game-queue";
 test("GameQueue", function() {
     const p1 = createSocket();
     const p2 = createSocket();
-    const queue = new GameQueue(p1, p2);
+    const queue = GameQueue.create();
+    queue.start(p1, p2);
 
     expect(p1.onmessage).toHaveBeenCalled();
     expect(p2.onmessage).toHaveBeenCalled();

@@ -16,13 +16,6 @@ export default function gameCreator(server: Server): void {
     };
 }
 
-function getTickRate(): number {
-    if (!process.env.TICK_RATE) {
-        return 60;
-    }
-    return +process.env.TICK_RATE || 60;
-}
-
 export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: (stats: GameStat) => void) {
     const stats = GameStat.create();
     loop.start((delta: number) => {
@@ -33,6 +26,7 @@ export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWo
             for (let i = 0; i < msgs.length; i++) {
                 world.processMessage(msgs[i].from, msgs[i].message);
             }
+            queue.releaseMessages(msgs);
         }
 
         // 2. update all positions
@@ -79,7 +73,8 @@ class Game implements Startable {
             return;
         }
 
-        this.queue = new GameQueue(this.p1, this.p2);
+        this.queue = GameQueue.create();
+        this.queue.start(this.p1, this.p2);
         this.world = new GameWorld(this.p1, this.p2);
 
         this.p1.push(createMessage(MessageType.Play));
