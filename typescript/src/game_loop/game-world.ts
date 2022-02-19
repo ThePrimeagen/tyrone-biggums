@@ -1,5 +1,6 @@
 import { Message, MessageType } from "../message";
 import { BaseSocket } from "../server/universal-types";
+import getConfig, { setConfig } from "./config";
 import createConfig, { GameConfig, PartialConfig } from "./config";
 import { checkForCollisions, checkForCollisionsByGroup, collidablePool } from "./geometry";
 import { Bullet, Player } from "./objects";
@@ -31,7 +32,11 @@ export default class GameWorldImpl {
     get done(): boolean { return this._done; }
 
     constructor(private s1: BaseSocket, private s2: BaseSocket, config?: PartialConfig) {
-        this.config = createConfig(config);
+        if (config) {
+            setConfig(config);
+        }
+
+        this.config = getConfig();
 
         if (++count % 2 == 0) {
             this.p1 = Player.create(-this.config.playerStartingX, 0, 1, this.config.winnerFireRate);

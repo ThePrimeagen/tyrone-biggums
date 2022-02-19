@@ -25,8 +25,8 @@ export type PartialConfig = {
     winnerFireRate?: number;
 };
 
-export default function createConfig(config?: PartialConfig): GameConfig {
-    return Object.assign({}, defaultConfig, config);
+export default function getConfig(): GameConfig {
+    return defaultConfig;
 }
 
 

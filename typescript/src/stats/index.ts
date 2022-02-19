@@ -1,10 +1,19 @@
-export class GameStat {
+import AttachablePool, { Attachable } from "../game_loop/pool";
+
+const gamePool = new AttachablePool<null, GameStat>(1000, () => new GameStat());
+
+export class GameStat implements Attachable<null> {
     static activeGames: number = 0;
 
     frameBuckets: number[]
     constructor() {
         this.frameBuckets = new Array(8).fill(0);
     }
+
+    attach() {
+        this.frameBuckets.fill(0);
+    }
+    detach() { }
 
     addDelta(delta: number) {
         if (delta > 40) {
@@ -25,5 +34,12 @@ export class GameStat {
             this.frameBuckets[0]++;
         }
     }
-}
 
+    static create(): GameStat {
+        return gamePool.pop();
+    }
+
+    static release(stats: GameStat): void {
+        gamePool.push(stats);
+    }
+}

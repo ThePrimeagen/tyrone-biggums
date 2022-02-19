@@ -1,5 +1,6 @@
 import { BehaviorSubject, interval, map, Observable, Subject, Subscription, tap } from "rxjs";
 import { explodePromise } from "../promise-helpers";
+import AttachablePool, { Attachable, Pool } from "./pool";
 
 type Callback = (delta: number) => void;
 
@@ -15,14 +16,20 @@ interface GLRxJSTimer {
     start(): Subject<number>;
 }
 
+const timerPool = new Pool<GameLoopTimerImpl>(600, () => new GameLoopTimerImpl(60));
 export default class GameLoopTimerImpl implements GameLoopTimer, StoppableTimer {
     private tickRate: number;
     private running: boolean;
     private timerId?: ReturnType<typeof setTimeout>;
+    private lastRunTime: number;
+    private cb!: Callback;
+    private boundRun: () => void;
 
     constructor(fps: number) {
         this.tickRate = 1000 / fps;
         this.running = false;
+        this.lastRunTime = 0;
+        this.boundRun = this.run.bind(this);
     }
 
     stop() {
@@ -35,35 +42,39 @@ export default class GameLoopTimerImpl implements GameLoopTimer, StoppableTimer 
 
     start(cb: Callback): void {
         this.running = true;
-        let lastTime: number = Date.now();
-        const run = () => {
+        this.lastRunTime = Date.now();
+        this.cb = cb;
 
-            if (!this.running) {
-                return;
-            }
-
-            const currentTime = Date.now();
-            const diff = currentTime - lastTime;
-
-            try {
-                cb(diff);
-            } catch (e) {
-                console.error(e);
-            }
-
-            const opDiff = Date.now() - currentTime;
-            lastTime = currentTime;
-
-            if (opDiff < this.tickRate) {
-                this.timerId = setTimeout(run, this.tickRate - opDiff);
-            } else {
-                setImmediate(run);
-            }
-        }
-
-        run();
+        this.run();
     }
 
+    private run() {
+        if (!this.running) {
+            return;
+        }
+
+        const currentTime = Date.now();
+        const diff = currentTime - this.lastRunTime;
+
+        this.cb(diff);
+
+        const opDiff = Date.now() - currentTime;
+        this.lastRunTime = currentTime;
+
+        if (opDiff < this.tickRate) {
+            this.timerId = setTimeout(this.boundRun, this.tickRate - opDiff);
+        } else {
+            setImmediate(this.boundRun);
+        }
+    }
+
+    static create() {
+        return timerPool.fromCache();
+    }
+
+    static release(timer: GameLoopTimerImpl) {
+        timerPool.toCache(timer);
+    }
 }
 
 export class GameLoopRxJS implements StoppableTimer, GLRxJSTimer {

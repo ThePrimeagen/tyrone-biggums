@@ -20,7 +20,7 @@ export type GameResults = [GameStat, BaseSocket, BaseSocket];
 export function runRxJSLoop([s1, s2]: [RxSocket, RxSocket]): Observable<GameResults> {
     return new Observable((observer: Subscriber<GameResults>) => {
         const subs: Subscription[] = [];
-        const stats = new GameStat();
+        const stats = GameStat.create();
         const queue = new GameQueueRxJSImpl(s1, s2);
         const world = new GameWorld(s1, s2);
         const loop = new GameLoopRxJS(getTickRate());

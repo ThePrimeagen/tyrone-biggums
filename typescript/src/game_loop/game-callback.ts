@@ -24,7 +24,7 @@ function getTickRate(): number {
 }
 
 export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: (stats: GameStat) => void) {
-    const stats = new GameStat();
+    const stats = GameStat.create();
     loop.start((delta: number) => {
         stats.addDelta(delta);
         // 1. process messages
@@ -54,7 +54,7 @@ class Game {
     private endedWithError: boolean;
 
     constructor(private p1: CallbackSocket & Attachable<WebSocket>, private p2: CallbackSocket & Attachable<WebSocket>, private server: Server) {
-        this.loop = new GameLoopTimer(getTickRate());
+        this.loop = GameLoopTimer.create();
         this.endedWithError = false;
 
         setupWithCallbacks(p1, p2, (error?: Error) => {
@@ -97,6 +97,7 @@ class Game {
 
         runGameLoop(this.loop, this.queue, this.world, (stats: GameStat) => {
             this.endGame(stats);
+            GameStat.release(stats);
         });
     }
 
@@ -122,6 +123,7 @@ class Game {
         this.server.release(this.p1);
         // @ts-ignore -- I REALLY should stop doing this...
         this.server.release(this.p2);
+        GameLoopTimer.release(this.loop);
     }
 }
 
