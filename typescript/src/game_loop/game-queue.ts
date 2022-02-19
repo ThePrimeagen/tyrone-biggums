@@ -11,8 +11,8 @@ export interface GameQueue {
     flush(): MessageEnvelope[] | undefined;
 }
 
-const arrPool = new ArrayPool<MessageEnvelope>(700);
-arrPool.seed(10); // wee need to seed the cache to prevent giving back and
+const arrPool = new ArrayPool<MessageEnvelope>(2000);
+arrPool.seed(1000); // wee need to seed the cache to prevent giving back and
 // taking of the same array
 
 export default class GameQueueImpl implements GameQueue {
@@ -41,8 +41,6 @@ export default class GameQueueImpl implements GameQueue {
 
         const messages = this.queue;
 
-        // NOTE:  I know this is dangerous but its ok because its resolved this
-        // frame.
         arrPool.release(this.queue);
         this.queue = arrPool.create();
 
