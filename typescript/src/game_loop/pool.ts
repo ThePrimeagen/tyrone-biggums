@@ -65,6 +65,17 @@ export class ArrayPool<T> extends Pool<T[]> {
     release(arr: T[]) {
         this.toCache(arr);
     }
+
+    seed(count: number): void {
+        let backIn = [];
+        for (let i = 0; i < count; i++) {
+            backIn.push(this.fromCache());
+        }
+
+        for (let i = 0; i < count; i++) {
+            this.toCache(backIn[i]);
+        }
+    }
 }
 
 export default class AttachablePool<E, T extends Attachable<E>> extends Pool<T> {

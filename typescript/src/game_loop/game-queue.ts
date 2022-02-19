@@ -12,6 +12,9 @@ export interface GameQueue {
 }
 
 const arrPool = new ArrayPool<MessageEnvelope>(700);
+arrPool.seed(10); // wee need to seed the cache to prevent giving back and
+// taking of the same array
+
 export default class GameQueueImpl implements GameQueue {
     private queue: MessageEnvelope[];
 
