@@ -46,6 +46,27 @@ export class Pool<T> {
     }
 }
 
+function createArray() {
+    return [];
+}
+
+export class ArrayPool<T> extends Pool<T[]> {
+    constructor(initialCapacity: number) {
+        super(initialCapacity, createArray);
+    }
+
+    create(): T[] {
+        const out = this.fromCache();
+        out.length = 0;
+
+        return out;
+    }
+
+    release(arr: T[]) {
+        this.toCache(arr);
+    }
+}
+
 export default class AttachablePool<E, T extends Attachable<E>> extends Pool<T> {
 
     constructor(initialCapacity: number, factory: () => T) {

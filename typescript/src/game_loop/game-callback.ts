@@ -4,7 +4,7 @@ import { CallbackSocket } from "../server/universal-types";
 import { GameStat } from "../stats";
 import GameLoopTimer from "./game-loop-timer";
 import GameQueue from "./game-queue";
-import { setupWithCallbacks } from "./game-setup";
+import { setupWithCallbacks, Startable } from "./game-setup";
 import GameWorld from "./game-world";
 import { Attachable } from "./pool";
 
@@ -30,7 +30,9 @@ export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWo
         // 1. process messages
         const msgs = queue.flush();
         if (msgs) {
-            msgs.forEach(m => world.processMessage(m.from, m.message));
+            for (let i = 0; i < msgs.length; i++) {
+                world.processMessage(msgs[i].from, msgs[i].message);
+            }
         }
 
         // 2. update all positions
@@ -47,7 +49,7 @@ export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWo
     });
 }
 
-class Game {
+class Game implements Startable {
     private loop: GameLoopTimer;
     private queue!: GameQueue;
     private world!: GameWorld;
@@ -57,13 +59,7 @@ class Game {
         this.loop = GameLoopTimer.create();
         this.endedWithError = false;
 
-        setupWithCallbacks(p1, p2, (error?: Error) => {
-            if (error) {
-                // TODO:?
-            } else {
-                this.startTheGame();
-            }
-        });
+        setupWithCallbacks(p1, p2, this);
     }
 
     private stop(other: CallbackSocket): void {
@@ -74,7 +70,15 @@ class Game {
         GameStat.activeGames--;
     }
 
-    private startTheGame(): void {
+    public start(error?: Error): void {
+        if (error) {
+            this.loop.stop();
+            this.endedWithError = true;
+            GameStat.activeGames--;
+            this.endGame();
+            return;
+        }
+
         this.queue = new GameQueue(this.p1, this.p2);
         this.world = new GameWorld(this.p1, this.p2);
 
@@ -101,7 +105,7 @@ class Game {
         });
     }
 
-    private endGame(stats: GameStat): void {
+    private endGame(stats?: GameStat): void {
         this.world.stop();
 
         if (this.endedWithError) {
@@ -112,7 +116,7 @@ class Game {
         const winner = this.world.getWinner();
         const loser = this.world.getLoser();
 
-        winner.push(createWinnerMessage(stats), () => winner.close());
+        winner.push(createWinnerMessage(stats as GameStat), () => winner.close());
         loser.push(createLoserMessage(), () => loser.close());
         this.release();
         GameStat.activeGames--;

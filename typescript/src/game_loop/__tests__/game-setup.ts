@@ -1,13 +1,17 @@
 import { MessageType } from "../../message";
 import { createSocket, createSocketRxJS } from "../../mocks/socket";
-import { setupWithCallbacks, setupWithRxJS } from "../game-setup";
+import { setupWithCallbacks, setupWithRxJS, Startable } from "../game-setup";
 
 test("GameSetup, ready up timeout", function() {
     jest.useFakeTimers();
     const p1 = createSocket();
     const p2 = createSocket();
     const cb = jest.fn();
-    setupWithCallbacks(p1, p2, cb, 29001);
+    const startable = {
+        start: cb
+    } as Startable;
+
+    setupWithCallbacks(p1, p2, startable, 29001);
     expect(cb).toHaveBeenCalledTimes(0);
     expect(p1.push).toHaveBeenCalledTimes(1);
     expect(p2.push).toHaveBeenCalledTimes(1);
@@ -26,7 +30,10 @@ test("GameSetup, ready up, bad msg", function() {
     const p1 = createSocket();
     const p2 = createSocket();
     const cb = jest.fn();
-    setupWithCallbacks(p1, p2, cb, 29001);
+    const startable = {
+        start: cb
+    } as Startable;
+    setupWithCallbacks(p1, p2, startable, 29001);
     expect(cb).toHaveBeenCalledTimes(0);
     expect(p1.push).toHaveBeenCalledTimes(1);
     expect(p2.push).toHaveBeenCalledTimes(1);

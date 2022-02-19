@@ -1,5 +1,6 @@
 import { Message } from "../message";
 import { BaseSocket, CallbackSocket, RxSocket } from "../server/universal-types";
+import { ArrayPool } from "./pool";
 
 type MessageEnvelope = {
     message: Message
@@ -10,10 +11,12 @@ export interface GameQueue {
     flush(): MessageEnvelope[] | undefined;
 }
 
+const arrPool = new ArrayPool<MessageEnvelope>(700);
 export default class GameQueueImpl implements GameQueue {
     private queue: MessageEnvelope[];
+
     constructor(private p1: CallbackSocket, private p2: CallbackSocket) {
-        this.queue = [];
+        this.queue = arrPool.create();
         this.listenToSocket(this.p1);
         this.listenToSocket(this.p2);
     }
@@ -34,7 +37,12 @@ export default class GameQueueImpl implements GameQueue {
         }
 
         const messages = this.queue;
-        this.queue = [];
+
+        // NOTE:  I know this is dangerous but its ok because its resolved this
+        // frame.
+        arrPool.release(this.queue);
+        this.queue = arrPool.create();
+
         return messages;
     }
 }

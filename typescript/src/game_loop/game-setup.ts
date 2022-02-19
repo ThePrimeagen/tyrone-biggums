@@ -21,7 +21,11 @@ function readyUp(socket: CallbackSocket, idx: number, done: [boolean, boolean], 
 }
 
 
-export function setupWithCallbacks(p1: CallbackSocket, p2: CallbackSocket, callback: Callback, timeout: number = 30000): void  {
+export interface Startable {
+    start(error?: Error): void;
+}
+
+export function setupWithCallbacks(p1: CallbackSocket, p2: CallbackSocket, starter: Startable, timeout: number = 30000): void  {
     const done: [boolean, boolean] = [false, false];
 
     let finished = false;
@@ -30,7 +34,7 @@ export function setupWithCallbacks(p1: CallbackSocket, p2: CallbackSocket, callb
             return;
         }
         finished = true;
-        callback(error);
+        starter.start(error);
     }
 
     readyUp(p1, 0, done, timeout, finishedCB);
