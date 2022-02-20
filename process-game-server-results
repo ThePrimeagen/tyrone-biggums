@@ -38,7 +38,16 @@ function getTimeRange(idx) {
     }
 }
 
+const allTickCounts = new Array(8).fill(0);
+let totalLowGameTime = 0;
+let totalHighGameTime = 0;
+let estimatedGamesPlayed = 0;
+
 rl.on('line', function(line){
+    if (!line.includes("[")) {
+        return;
+    }
+
     const tickCounts = line.split("[")[1].split("]")[0].split(",");
     /*
         * BUCKET TIMES from typescript/src/stats/index.ts
@@ -62,6 +71,9 @@ rl.on('line', function(line){
         }
     */
 
+
+    tickCounts.forEach((x, i) => allTickCounts[i] += +x);
+
     const estimatedTimeLow = tickCounts.
         map((x, i) => x * getTimeRange(i)[0]).
         reduce((acc, time) => acc + time, 0);
@@ -70,9 +82,13 @@ rl.on('line', function(line){
         map((x, i) => x * getTimeRange(i)[1]).
         reduce((acc, time) => acc + time, 0);
 
-    console.log(`GAME_TIME_LOW, ${estimatedTimeLow}`);
-    console.log(`GAME_TIME_HIGH, ${estimatedTimeHigh}`);
+    totalLowGameTime += estimatedTimeLow;
+    totalHighGameTime += estimatedTimeHigh;
+    estimatedGamesPlayed += 1;
 
-    tickCounts.forEach((count, i) => console.log(`TICK,${i},${count}`));
+    console.log(`GAME_TIME_LOW, ${totalLowGameTime}`);
+    console.log(`GAME_TIME_HIGH, ${totalHighGameTime}`);
+    console.log(`tickCounts, ${allTickCounts}`);
+    console.log(`totalGames, ${estimatedGamesPlayed}`);
 });
 
