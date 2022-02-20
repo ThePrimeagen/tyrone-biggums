@@ -13,13 +13,21 @@ function parseAndReportWinnerStats(winnerData: string) {
     console.log("Results", activeGames, JSON.stringify(buckets));
 }
 
-async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: Message) => void) {
+let countSend = 0;
+function sendMessage(socket: WebSocket) {
+    countSend++;
+    if (countSend % 10000 === 0) {
+        console.log("Sent 10000 Messages");
+    }
+    socket.send(fireMessage);
+}
+
+const fireMessage = JSON.stringify(createMessage(MessageType.Fire));
+async function playTheGame(socket: WebSocket, fireRate: number, cb: (msg: Message) => void = () => {}) {
     let playing = false;
     socket.on("message", async function(message) {
         const msg = JSON.parse(message.toString()) as Message;
-        if (cb) {
-            cb(msg);
-        }
+        cb(msg);
         switch (msg.type) {
             case MessageType.ReadyUp:
                 socket.send(JSON.stringify(createMessage(MessageType.ReadyUp)))
@@ -28,7 +36,7 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: M
             case MessageType.Play:
                 playing = true;
                 do {
-                    socket.send(JSON.stringify(createMessage(MessageType.Fire)));
+                    sendMessage(socket);
                     await wait(fireRate);
                 } while (playing);
 
@@ -38,12 +46,19 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb?: (message: M
                 if (msg.msg?.startsWith("winner")) {
                     parseAndReportWinnerStats(msg.msg);
                 }
+                playing = false;
+                socket.close();
+                break;
+
+            default:
+                // @ts-ignore
+                console.log("DEFAULT???", msg.type, MessageType.ReadyUp, msg.type === MessageType.ReadyUp);
         }
     });
 }
 
-export function connect(fireRate: number, addr: string, port: number, cb?: (message: Message) => void): WebSocket {
-    const url = `ws://0.0.0.0:${port}`;
+export function connect(fireRate: number, addr: string, port: number, cb: (msg: Message) => void = () => {}): WebSocket {
+    const url = `ws://${addr}:${port}`;
     const socket = new WebSocket(url);
 
     socket.on("open", () => {
@@ -53,14 +68,27 @@ export function connect(fireRate: number, addr: string, port: number, cb?: (mess
     return socket;
 }
 
-function repeatConnect(addr: string, port: number) {
-    connect(200,
+let _id = 0;
+let MAX = process.env.MAX || 2;
+function repeatConnect(addr: string, port: number, count: number = 0) {
+    if (count >= MAX) {
+        return;
+    }
+
+    const id = ++_id;
+    const socket = connect(200,
             addr || "events.theprimeagen.tv",
-            port || 42069, (msg) => {
-                if (msg.type === MessageType.GameOver) {
-                    repeatConnect(addr, port);
-                }
+            port || 42069, (msg: any) => {
+                // console.log("GOT MSG", msg);
             });
+
+    socket.on("close", () => {
+        repeatConnect(addr, port, count + 1);
+    });
+
+    socket.on("error", (e) => {
+        repeatConnect(addr, port, count + 1);
+    });
 }
 
 if (require.main === module) {
@@ -80,3 +108,4 @@ if (require.main === module) {
 
     run();
 }
+

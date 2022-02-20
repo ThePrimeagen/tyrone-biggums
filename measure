@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 
-pid="$(pidof $1)"
+echo "MEAURE $1 $2 $3"
 
+pid=$1
+counts=$2
+
+COUNTER=0
 echo "PID: $pid"
-echo "Type,Value" > $2
-while [ : ]; do
+echo "Type,Value" > $3
+while [ $COUNTER -lt $counts ]; do
         mem=$(cat /proc/$pid/status | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} VmRSS | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -o '[0-9]\+' | awk '{print $1/1024 " MB"}')
-    echo "CPU,$(top -n 1 -b -d 2 -p $pid | grep $pid | awk '{ print $9 }')" >> $2
-    echo "MEM,$mem" >> $2
+    echo "CPU,$(top -n 1 -b -d 2 -p $pid | grep $pid | awk '{ print $9 }')" >> $3
+    echo "MEM,$mem" >> $3
     sleep 0.5
+
+    COUNTER=$(($COUNTER + 1))
 done
+
+
 
