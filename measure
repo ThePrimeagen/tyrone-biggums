@@ -16,5 +16,3 @@ while [ $COUNTER -lt $counts ]; do
 
     COUNTER=$(($COUNTER + 1))
 done
-
-
