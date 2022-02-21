@@ -1,6 +1,7 @@
+use core::time;
 use std::{time::{SystemTime, UNIX_EPOCH, Duration}, sync::Arc, collections::HashMap, hash::{Hash, Hasher}};
 
-use futures::{StreamExt, SinkExt, stream::SplitSink, future::join_all};
+use futures::{StreamExt, SinkExt, stream::SplitSink, future::join_all, pin_mut};
 
 use rust::{server::message::{MessageType, Message}, error::BoomerError};
 
@@ -28,10 +29,6 @@ pub struct ServerOpts {
     pub path: String,
 
     /// The address to use.  Should be 0.0.0.0
-    #[structopt(long = "play-count")]
-    pub play_count: Option<usize>,
-
-    /// The address to use.  Should be 0.0.0.0
     #[structopt(short = "c", long = "connections")]
     pub connection_count: Option<usize>,
 }
@@ -42,7 +39,6 @@ pub struct ServerConfig {
     pub host: String,
     pub port: u16,
     pub path: String,
-    pub play_count: usize,
     pub connection_count: usize,
 }
 
@@ -53,8 +49,7 @@ impl ServerConfig {
             host: opts.host,
             port: opts.port,
             path: opts.path,
-            play_count: opts.play_count.expect("play_count should be set by some default value before creating the server config"),
-            connection_count: opts.connection_count.expect("play_count should be set by some default value before creating the server config"),
+            connection_count: opts.connection_count.expect("connection_count should be set by some default value before creating the server config"),
         }
     }
 }
@@ -128,14 +123,9 @@ fn get_connection_count() -> usize {
     return str::parse(&std::env::var("CONNECTION_COUNT").expect("There has to be a connection count set in either the cli args or through env vars.")).expect("connection count to be a number");
 }
 
-fn get_play_count() -> usize {
-    return str::parse(&std::env::var("PLAY_COUNT").expect("There has to be a play count set in either the cli args or through env vars.")).expect("play count to be a number");
-}
-
 async fn next_message(read: &mut SplitStreamRead) -> Result<Option<Message>, BoomerError> {
     // wait for the readyup
     let next = read.next().await;
-    println!("Got next! {:?}", next);
     if let Some(Ok(tungstenite::Message::Text(msg))) = next {
         let msg: Message = msg.try_into()?;
         return Ok(Some(msg));
@@ -150,11 +140,14 @@ async fn send_ready(writer: &mut HashableWriter) -> Result<(), BoomerError> {
     return Ok(());
 }
 
-async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerConfig>>) -> Result<(), BoomerError> {
-    while config.lock().await.play_count > 0 {
+async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerConfig>>, offset: usize) -> Result<(), BoomerError> {
+    while config.lock().await.count > 0 {
         {
-            config.lock().await.play_count -= 1;
+            config.lock().await.count -= 1;
         }
+        // helps prevent 500 connections at once then for games to be played in huge spirts...
+        // seems unrealistic.
+        tokio::time::sleep(Duration::from_millis(offset as u64)).await;
 
         let (mut write, mut read) = connect(url.clone(), id).await;
 
@@ -207,9 +200,6 @@ async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerCo
 
 fn get_config() -> Arc<Mutex<ServerConfig>> {
     let mut opts = ServerOpts::from_args();
-    if opts.play_count.is_none() {
-        opts.play_count = Some(get_play_count());
-    }
     if opts.connection_count.is_none() {
         opts.connection_count = Some(get_connection_count());
     }
@@ -257,19 +247,19 @@ async fn main() -> Result<(), BoomerError> {
     let mut awaits = vec![];
     let connection_count = opts.lock().await.connection_count;
     for i in 0..connection_count {
-        awaits.push(play(url.clone(), i, writers.clone(), opts.clone()));
-
-        tokio::time::sleep(Duration::from_millis(50)).await; // gives each connection a bit of
-        // separation to help make it run a bit more smoother.
+        awaits.push(play(url.clone(), i, writers.clone(), opts.clone(), i * 50));
     }
+    println!("created {} players", connection_count);
 
     // TODO: don't care... should I?
-    match futures::future::join(
+    pin_mut!(fire_loop_await);
+    match futures::future::select(
         join_all(awaits),
         fire_loop_await
     ).await {
         _ => {}
     }
+    println!("done.");
 
     return Ok(());
 }
