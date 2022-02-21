@@ -39,10 +39,10 @@ func NewSocket(w http.ResponseWriter, r *http.Request) (Socket, error) {
     }
 
     // from me to network
-    out := make(chan MessageEnvelope)
+    out := make(chan MessageEnvelope, 1)
 
     // from network to me
-    in := make(chan MessageEnvelope) // other type
+    in := make(chan MessageEnvelope, 1) // other type
 
     go func() {
         defer func() {

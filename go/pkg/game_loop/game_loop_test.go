@@ -5,20 +5,19 @@ import (
 	"time"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
-	"github.com/gorilla/websocket"
 )
 
 
 type Socket struct {
-    outBound chan *server.Message
-    inBound chan *server.Message
+    outBound chan server.MessageEnvelope
+    inBound chan server.MessageEnvelope
 }
 
-func (s *Socket) GetOutBound() chan<- *server.Message {
+func (s *Socket) GetOutBound() chan<- server.MessageEnvelope {
     return s.outBound
 }
 
-func (s *Socket) GetInBound() <-chan *server.Message {
+func (s *Socket) GetInBound() <-chan server.MessageEnvelope {
     return s.inBound
 }
 
@@ -28,8 +27,8 @@ func (s *Socket) Close() error {
 
 func newSocket() *Socket {
     return &Socket{
-        make(chan *server.Message),
-        make(chan *server.Message),
+        make(chan server.MessageEnvelope),
+        make(chan server.MessageEnvelope),
     }
 }
 
@@ -50,7 +49,7 @@ func newGameLoop() (*GameLoop, [2]*Socket) {
 func TestGameLoopReady(t *testing.T) {
 
     gameLoop, sockets := newGameLoop()
-    waitForReadyDone := gameLoop.waitForReady()
+    waitForReadyDone := WaitForReady(gameLoop.Players[0], gameLoop.Players[1])
 
     msg := <-sockets[0].outBound
     msg2 := <-sockets[1].outBound
@@ -63,19 +62,9 @@ func TestGameLoopReady(t *testing.T) {
         t.Errorf("msg2 type isn't readyup %d %+v", server.ReadyUp, msg2)
     }
 
-    sockets[0].inBound <- &server.Message {
-        Type: websocket.TextMessage,
-        Message: server.GameMessage {
-            Type: 69,
-        },
-    }
-
-    sockets[1].inBound <- &server.Message {
-        Type: websocket.TextMessage,
-        Message: server.GameMessage {
-            Type: 69,
-        },
-    }
+    readyMessage := server.CreateMessage(server.ReadyUp)
+    sockets[0].inBound <- readyMessage
+    sockets[1].inBound <- readyMessage
 
     select {
     case <-waitForReadyDone:
