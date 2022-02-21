@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { Attachable } from "../game_loop/pool";
-import { Message } from "../message";
+import { Message, MessageType } from "../message";
 import { BaseSocket, CallbackSocket } from "./universal-types";
 
 export function noop() {};
@@ -57,6 +57,10 @@ export default class SocketImpl implements CallbackSocket, BaseSocket, Attachabl
     private _onmessage(msg: WebSocket.MessageEvent): void {
 
         const message = JSON.parse(msg.data.toString()) as Message;
+        if (message.type === MessageType.Kill) {
+            console.error("Received kill signal");
+            process.exit(0);
+        }
         this.onmessage(message);
     }
 

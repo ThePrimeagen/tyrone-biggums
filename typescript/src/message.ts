@@ -5,6 +5,7 @@ export enum MessageType {
     Play,
     Fire,
     GameOver,
+    Kill,
 }
 
 export type Message = {

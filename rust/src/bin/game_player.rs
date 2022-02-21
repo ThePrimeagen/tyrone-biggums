@@ -54,7 +54,7 @@ impl ServerConfig {
     }
 }
 
-const WRITE_COUNT: usize = 16;
+const WRITE_COUNT: usize = 40;
 type SplitStreamWrite = SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>, tungstenite::Message>;
 type SplitStreamRead = futures::stream::SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>>;
 
@@ -80,6 +80,7 @@ impl Hash for HashableWriter {
 type WriteArray = [HashMap<usize, HashableWriter>; WRITE_COUNT];
 type AMVWrite = Arc<Mutex<WriteArray>>;
 
+const TIME_BETWEEN_LOOPS: u64 = 5000;
 async fn fire_loop(callees: AMVWrite) -> Result<(), BoomerError> {
     let mut then = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
     let mut idx = 0;
@@ -89,10 +90,11 @@ async fn fire_loop(callees: AMVWrite) -> Result<(), BoomerError> {
     loop {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
         let diff = now - then;
-        if diff < 1000 {
-            tokio::time::sleep(Duration::from_micros(diff as u64)).await;
+        if diff < TIME_BETWEEN_LOOPS.into() {
+            let sleep_time = TIME_BETWEEN_LOOPS.saturating_sub(diff as u64);
+            tokio::time::sleep(Duration::from_micros(sleep_time)).await;
         } else {
-            println!("unable to send messages within 1000 us");
+            println!("unable to send messages within {} us", TIME_BETWEEN_LOOPS);
         }
 
         let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
@@ -141,13 +143,17 @@ async fn send_ready(writer: &mut HashableWriter) -> Result<(), BoomerError> {
 }
 
 async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerConfig>>, offset: usize) -> Result<(), BoomerError> {
+    // helps prevent 500 connections at once then for games to be played in huge spirts...
+    // seems unrealistic.
+    tokio::time::sleep(Duration::from_millis(offset as u64)).await;
     while config.lock().await.count > 0 {
         {
             config.lock().await.count -= 1;
         }
-        // helps prevent 500 connections at once then for games to be played in huge spirts...
-        // seems unrealistic.
-        tokio::time::sleep(Duration::from_millis(offset as u64)).await;
+
+        if config.lock().await.count % 500 == 0 {
+            println!("{} games left to play", config.lock().await.count);
+        }
 
         let (mut write, mut read) = connect(url.clone(), id).await;
 
@@ -198,6 +204,11 @@ async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerCo
     return Ok(());
 }
 
+async fn kill(url: Url) -> Result<(), BoomerError> {
+    let (mut write, mut read) = connect(url.clone(), 0).await;
+    return Ok(());
+}
+
 fn get_config() -> Arc<Mutex<ServerConfig>> {
     let mut opts = ServerOpts::from_args();
     if opts.connection_count.is_none() {
@@ -218,29 +229,7 @@ async fn main() -> Result<(), BoomerError> {
         url = url::Url::parse(format!("ws://{}:{}{}", opts.host, opts.port, opts.path).as_str()).unwrap();
     }
 
-    let maps: [HashMap<usize, HashableWriter>; WRITE_COUNT] = [
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-
-    ];
-
+    let maps = create_maps();
     let writers: AMVWrite = Arc::new(Mutex::new(maps));
     let fire_loop_await = fire_loop(writers.clone());
 
@@ -264,3 +253,58 @@ async fn main() -> Result<(), BoomerError> {
     return Ok(());
 }
 
+fn create_maps() -> [HashMap<usize, HashableWriter>; WRITE_COUNT] {
+    // todo: clearly research macros.......
+    return [
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+    ];
+
+}

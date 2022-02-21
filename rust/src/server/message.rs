@@ -10,6 +10,7 @@ pub enum MessageType {
     Play = 1,
     Fire = 2,
     GameOver = 3,
+    Kill = 4,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
