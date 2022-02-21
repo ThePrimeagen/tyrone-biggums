@@ -44,35 +44,18 @@ let totalHighGameTime = 0;
 let estimatedGamesPlayed = 0;
 
 rl.on('line', function(line){
-    if (!line.includes("[")) {
+    if (!line.includes("winner")) {
         return;
     }
 
-    const tickCounts = line.split("[")[1].split("]")[0].split(",");
-    /*
-        * BUCKET TIMES from typescript/src/stats/index.ts
-        *
-        if (delta > 40) {
-            this.frameBuckets[7]++;
-        } else if (delta > 30) {
-            this.frameBuckets[6]++;
-        } else if (delta > 25) {
-            this.frameBuckets[5]++;
-        } else if (delta > 23) {
-            this.frameBuckets[4]++;
-        } else if (delta > 21) {
-            this.frameBuckets[3]++;
-        } else if (delta > 19) {
-            this.frameBuckets[2]++;
-        } else if (delta > 17) {
-            this.frameBuckets[1]++;
-        } else {
-            this.frameBuckets[0]++;
-        }
-    */
+    const activeGames = +line.split("(")[1].split(")")[0];
+    const tickCounts = line.split("___")[1].split(",").map(x => +x);
 
-
-    tickCounts.forEach((x, i) => allTickCounts[i] += +x);
+    // The game experience a weird lag spike that caused it to think that no
+    // one shooting??  Or it could be a memory pool mess up
+    if (tickCounts[0] < 800) {
+        tickCounts.forEach((x, i) => allTickCounts[i] += x);
+    }
 
     const estimatedTimeLow = tickCounts.
         map((x, i) => x * getTimeRange(i)[0]).
@@ -88,7 +71,7 @@ rl.on('line', function(line){
 
     console.log(`GAME_TIME_LOW, ${totalLowGameTime}`);
     console.log(`GAME_TIME_HIGH, ${totalHighGameTime}`);
-    console.log(`tickCounts, ${allTickCounts}`);
+    console.log(`tickCounts, ${JSON.stringify(allTickCounts, null, 1)}`);
     console.log(`totalGames, ${estimatedGamesPlayed}`);
 });
 
