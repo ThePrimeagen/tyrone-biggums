@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+const readline = require('readline');
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+});
+
+const rawCounts = [];
+let count = 0;
+let sum = 0;
+let idx = 0;
+
+const maxCount = +process.argv[2];
+if (isNaN(maxCount)) {
+    console.error("You have failed, provide max count per bucket");
+    process.exit(1);
+}
+
+rl.on('line', function(line){
+    if (!line.includes("MEM")) {
+        return;
+    }
+
+    const mem = +line.split(",")[1].split(" ")[0];
+
+    sum += mem;
+    rawCounts[idx] = Math.round(sum / (count + 1) * 100) / 100;
+
+    if (++count === maxCount) {
+        count = 0;
+        sum = 0;
+        idx++;
+    }
+
+    console.log();
+    console.log();
+    console.log();
+    for (let i = 0; i < rawCounts.length; i++) {
+        console.log(rawCounts[i]);
+    }
+    console.log(rawCounts.length);
+});
+
+

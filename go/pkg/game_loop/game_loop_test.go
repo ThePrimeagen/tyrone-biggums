@@ -1,44 +1,20 @@
-package gameloop
+package gameloop_test
 
 import (
 	"testing"
 	"time"
 
+	gameloop "github.com/ThePrimeagen/tyrone-biggums/pkg/game_loop"
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
-
-type Socket struct {
-    outBound chan server.MessageEnvelope
-    inBound chan server.MessageEnvelope
-}
-
-func (s *Socket) GetOutBound() chan<- server.MessageEnvelope {
-    return s.outBound
-}
-
-func (s *Socket) GetInBound() <-chan server.MessageEnvelope {
-    return s.inBound
-}
-
-func (s *Socket) Close() error {
-    return nil;
-}
-
-func newSocket() *Socket {
-    return &Socket{
-        make(chan server.MessageEnvelope),
-        make(chan server.MessageEnvelope),
-    }
-}
-
-func newGameLoop() (*Game, [2]*Socket) {
+func newGameLoop() (*gameloop.Game, [2]*Socket) {
     sockets := [2]*Socket{
         newSocket(),
         newSocket(),
     }
 
-    gameLoop := NewGame([2]server.Socket{
+    gameLoop := gameloop.NewGame([2]server.Socket{
         sockets[0],
         sockets[1],
     })
@@ -50,7 +26,7 @@ func TestGameLoopReady(t *testing.T) {
 
     gameLoop, sockets := newGameLoop()
 
-    waitForReadyDone := WaitForReady(gameLoop.Players[0], gameLoop.Players[1])
+    waitForReadyDone := gameloop.WaitForReady(gameLoop.Players[0], gameLoop.Players[1])
 
     msg := <-sockets[0].outBound
     msg2 := <-sockets[1].outBound
