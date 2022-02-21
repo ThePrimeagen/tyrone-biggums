@@ -2,7 +2,6 @@ package gameloop
 
 import (
 	"log"
-	"time"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
@@ -17,13 +16,22 @@ func NewGame(players [2]server.Socket) *Game {
     }
 }
 
+// TODO: Bad naming here.  RENAME
+// TODO: Make this into some sort of enum return.
 func (g *Game) Run() WhenComplete {
-    gameFinished := make(chan struct{});
+    gameFinished := make(chan WaitForReadyResults);
 
     go func() {
         defer close(gameFinished)
 
         log.Println("Waiting for players to ready")
+        res := <-WaitForReady(g.Players[0], g.Players[1])
+
+        // TODO: I don't like this.
+        if res.timedout || res.readyError {
+            gameFinished <- res
+            return
+        }
 
         log.Println("Players are ready!")
     }()

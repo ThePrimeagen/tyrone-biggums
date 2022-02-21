@@ -1,13 +1,19 @@
 package gameloop
 
 import (
+	"time"
+
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
-type WhenComplete = <-chan struct{};
+type WaitForReadyResults struct {
+    readyError, timedout bool
+}
 
-func sendAndWait(s1 server.Socket, s2 server.Socket) WhenComplete {
-    ready := make(chan struct{});
+type WhenComplete = <-chan WaitForReadyResults
+
+func sendAndWait(s1 server.Socket, s2 server.Socket) chan bool {
+    ready := make(chan bool);
 
     go func() {
         s1.GetOutBound() <- server.CreateMessage(server.ReadyUp)
@@ -16,13 +22,13 @@ func sendAndWait(s1 server.Socket, s2 server.Socket) WhenComplete {
         in1 := s1.GetInBound()
         in2 := s2.GetInBound()
         count := 0
+        success := true
 
         for {
-
             select {
             case msg, ok := <-in1:
                 if !ok {
-                    ready <- struct{}{} // much gross
+                    success = false
                     break
                 }
 
@@ -33,7 +39,7 @@ func sendAndWait(s1 server.Socket, s2 server.Socket) WhenComplete {
 
             case msg, ok := <-in2:
                 if !ok {
-                    ready <- struct{}{}
+                    success = false
                     break
                 }
 
@@ -47,32 +53,27 @@ func sendAndWait(s1 server.Socket, s2 server.Socket) WhenComplete {
                 break;
             }
         }
+
+        ready <- success
         close(ready)
     }()
 
     return ready;
 }
 
-func WaitForReady(s1 server.Socket, s2 server.Socket) WhenComplete {
-    timedout := false
-    select {
-    case _, ok := <-WaitForReady(g.Players[0], g.Players[1]):
-        // this means we received an error if the channel is still open...
-        if ok {
-            log.Println("there was an error waiting for ready...")
-            g.Players[0].Close()
-            g.Players[1].Close()
+func WaitForReady(s0 server.Socket, s1 server.Socket) WhenComplete {
+    ready := make(chan WaitForReadyResults);
+
+    go func() {
+        select {
+        case _, ok := <-sendAndWait(s0, s1):
+            ready <- WaitForReadyResults {ok, false}
+        case <-time.After(30 * time.Second):
+            ready <- WaitForReadyResults {false, true}
         }
-    case <-time.After(30 * time.Second):
-        timedout = true
-    }
+    }()
 
-    if timedout {
-        log.Println("We timedout waiting for readies... :(")
-        g.Players[0].Close()
-        g.Players[1].Close()
-    }
-
+    return ready
 }
 
 

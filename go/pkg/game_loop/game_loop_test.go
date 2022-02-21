@@ -49,6 +49,7 @@ func newGameLoop() (*Game, [2]*Socket) {
 func TestGameLoopReady(t *testing.T) {
 
     gameLoop, sockets := newGameLoop()
+
     waitForReadyDone := WaitForReady(gameLoop.Players[0], gameLoop.Players[1])
 
     msg := <-sockets[0].outBound

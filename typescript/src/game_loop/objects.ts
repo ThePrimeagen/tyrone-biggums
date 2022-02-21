@@ -41,7 +41,7 @@ export class Player implements Collidable<AABB>, Attachable<null> {
     }
 }
 
-const bulletPool = new AttachablePool<null, Bullet>(200, () => new Bullet([0, 0], [0, 0]));
+const bulletPool = new AttachablePool<null, Bullet>(4000, () => new Bullet([0, 0], [0, 0]));
 export class Bullet implements Collidable<AABB>, Moveable, Velocity {
     public geo: AABB;
 
