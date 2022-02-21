@@ -24,7 +24,7 @@ func main() {
     go func() {
         for socketPair := range server.Out {
             // todo: how to listen to this?? more go funcs?
-            gameloop.NewGameLoop(socketPair).Run()
+            gameloop.NewGame(socketPair).Run()
         }
     }()
 

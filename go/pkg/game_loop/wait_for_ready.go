@@ -6,7 +6,7 @@ import (
 
 type WhenComplete = <-chan struct{};
 
-func WaitForReady(s1 server.Socket, s2 server.Socket) WhenComplete {
+func sendAndWait(s1 server.Socket, s2 server.Socket) WhenComplete {
     ready := make(chan struct{});
 
     go func() {
@@ -51,6 +51,28 @@ func WaitForReady(s1 server.Socket, s2 server.Socket) WhenComplete {
     }()
 
     return ready;
+}
+
+func WaitForReady(s1 server.Socket, s2 server.Socket) WhenComplete {
+    timedout := false
+    select {
+    case _, ok := <-WaitForReady(g.Players[0], g.Players[1]):
+        // this means we received an error if the channel is still open...
+        if ok {
+            log.Println("there was an error waiting for ready...")
+            g.Players[0].Close()
+            g.Players[1].Close()
+        }
+    case <-time.After(30 * time.Second):
+        timedout = true
+    }
+
+    if timedout {
+        log.Println("We timedout waiting for readies... :(")
+        g.Players[0].Close()
+        g.Players[1].Close()
+    }
+
 }
 
 

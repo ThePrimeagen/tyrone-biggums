@@ -2,6 +2,7 @@ package gameloop
 
 import (
 	"log"
+	"time"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
@@ -20,18 +21,11 @@ func (g *Game) Run() WhenComplete {
     gameFinished := make(chan struct{});
 
     go func() {
-        log.Println("Waiting for players to ready")
-        _, ok := <-WaitForReady(g.Players[0], g.Players[1])
+        defer close(gameFinished)
 
-        if ok {
-            log.Println("there was an error waiting for ready...")
-            g.Players[0].Close()
-            g.Players[1].Close()
-        }
+        log.Println("Waiting for players to ready")
 
         log.Println("Players are ready!")
-
-        close(gameFinished)
     }()
 
     return gameFinished;

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+cargo run --release --bin game_player $1 --connections $2 --host events.theprimeagen.tv | tee ../video-2-data/c.$3.$2.res
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/c.$3.$2 ../video-2-data/c.$3.$2
+

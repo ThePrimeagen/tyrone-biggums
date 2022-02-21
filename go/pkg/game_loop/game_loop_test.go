@@ -32,13 +32,13 @@ func newSocket() *Socket {
     }
 }
 
-func newGameLoop() (*GameLoop, [2]*Socket) {
+func newGameLoop() (*Game, [2]*Socket) {
     sockets := [2]*Socket{
         newSocket(),
         newSocket(),
     }
 
-    gameLoop := NewGameLoop([2]server.Socket{
+    gameLoop := NewGame([2]server.Socket{
         sockets[0],
         sockets[1],
     })
