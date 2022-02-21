@@ -2,7 +2,7 @@
 
 use log::warn;
 use rust::{
-    server::server::Server, game::{game_setup::wait_for_ready, play_the_game},
+    server::server::Server, game::{play_the_game},
 };
 
 #[tokio::main]

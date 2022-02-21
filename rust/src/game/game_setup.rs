@@ -1,9 +1,9 @@
-use std::{sync::{atomic::{AtomicBool, Ordering}, Arc}, time::Duration};
+use std::{sync::{atomic::{Ordering}}, time::Duration};
 
-use futures::future::join;
-use tokio::{sync::mpsc::{channel, Receiver}, task::JoinHandle};
 
-use crate::{error::BoomerError, server::{socket::Socket, message::{Message, MessageType}}, kill::{Kill, Timeout}};
+use tokio::{sync::mpsc::{channel, Receiver}};
+
+use crate::{error::BoomerError, server::{socket::Socket, message::{Message, MessageType}}, kill::{Timeout}};
 
 async fn wait_for_ready_received(mut rx: Receiver<Message>) {
     while let Some(msg) = rx.recv().await {

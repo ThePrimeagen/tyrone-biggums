@@ -3,7 +3,7 @@ use std::{fmt::Display, collections::HashMap, sync::{Arc}};
 use futures::{stream::{SplitStream, SplitSink}, StreamExt, SinkExt};
 
 use log::error;
-use tokio::{sync::{mpsc::{Sender, channel, Receiver}, Mutex}, net::TcpStream};
+use tokio::{sync::{mpsc::{Sender}, Mutex}, net::TcpStream};
 use tokio_tungstenite::{WebSocketStream, tungstenite};
 
 
@@ -34,7 +34,7 @@ pub async fn handle_messages(mut incoming: MessageStream, listeners: Listener) {
 
             if let Ok(msg) = msg {
                 let listener = listeners.lock().await;
-                for (k, tx) in listener.iter() {
+                for (_k, tx) in listener.iter() {
                     tx.send(msg.clone()).await;
                 }
             } else {

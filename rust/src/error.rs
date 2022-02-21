@@ -16,7 +16,16 @@ pub enum BoomerError {
     JoinHandleError(#[from] JoinError),
 
     #[error("Tungenstenite error")]
-    Tungstenite(#[from] tokio_tungstenite::tungstenite::Error)
+    Tungstenite(#[from] tokio_tungstenite::tungstenite::Error),
+
+    #[error("Playing simulation failed at reading readyup")]
+    PlayerReadyUpError,
+
+    #[error("Playing simulation didn't get a fire command.")]
+    PlayerFireCommand,
+
+    #[error("Playing simulation didn't get a game over command.")]
+    PlayerGameOver,
 }
 
 

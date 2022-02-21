@@ -64,6 +64,15 @@ impl TryInto<String> for Message {
     }
 }
 
+impl TryInto<tokio_tungstenite::tungstenite::Message> for Message {
+    type Error = serde_json::Error;
+
+    fn try_into(self) -> Result<tokio_tungstenite::tungstenite::Message, Self::Error> {
+        let msg: String = self.try_into()?;
+        return Ok(tokio_tungstenite::tungstenite::Message::Text(msg));
+    }
+}
+
 impl Display for Message {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
