@@ -1,7 +1,6 @@
 package gameloop_test
 
 import (
-	"log"
 	"testing"
 
 	gameloop "github.com/ThePrimeagen/tyrone-biggums/pkg/game_loop"
