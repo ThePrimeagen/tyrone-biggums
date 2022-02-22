@@ -26,6 +26,9 @@ pub enum BoomerError {
 
     #[error("Playing simulation didn't get a game over command.")]
     PlayerGameOver,
+
+    #[error("Likely caused in a test, but it may not actually be caused in test")]
+    SomeCrazyAssTestError(#[from] tokio::sync::mpsc::error::SendError<crate::server::message::Message>)
 }
 
 

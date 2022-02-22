@@ -1,6 +1,7 @@
 use crate::{error::BoomerError, server::socket::Socket};
 
 pub mod game_setup;
+pub mod game_queue;
 
 pub async fn play_the_game((s1, s2): (Socket, Socket)) -> Result<(), BoomerError> {
 

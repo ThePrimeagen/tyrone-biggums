@@ -1,9 +1,7 @@
 use std::{sync::{atomic::{Ordering}}, time::Duration};
-
-
 use tokio::{sync::mpsc::{channel, Receiver}};
 
-use crate::{error::BoomerError, server::{socket::Socket, message::{Message, MessageType}}, kill::{Timeout}};
+use crate::{error::BoomerError, server::{socket::{Listenable, Socket}, message::{Message, MessageType}}, kill::{Timeout}};
 
 async fn wait_for_ready_received(mut rx: Receiver<Message>) {
     while let Some(msg) = rx.recv().await {

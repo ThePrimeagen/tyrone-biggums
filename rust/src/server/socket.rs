@@ -6,10 +6,16 @@ use log::error;
 use tokio::{sync::{mpsc::{Sender}, Mutex}, net::TcpStream};
 use tokio_tungstenite::{WebSocketStream, tungstenite};
 
-
 use crate::error::BoomerError;
 
 use super::message::{Message};
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait Listenable {
+    async fn listen(&mut self, tx: Tx) -> u16;
+    async fn off(&mut self, id: u16);
+}
 
 type Tx = Sender<Message>;
 type Listener = Arc<Mutex<HashMap<u16, Tx>>>;
@@ -66,21 +72,24 @@ impl Socket {
         return Ok(());
     }
 
-    pub async fn listen(&mut self, tx: Tx) -> u16 {
+    pub async fn close(&mut self) -> Result<(), BoomerError> {
+        self.outgoing.close().await?;
+        return Ok(());
+    }
+}
+
+#[async_trait]
+impl Listenable for Socket {
+    async fn listen(& mut self, tx: Tx) -> u16 {
         let id = self.current_id;
         self.current_id += 1;
         self.listeners.lock().await.insert(id, tx);
 
-        return id
+        return id;
     }
 
-    pub async fn off(&mut self, id: u16) {
+    async fn off(&mut self, id: u16) {
         self.listeners.lock().await.remove_entry(&id);
-    }
-
-    pub async fn close(&mut self) -> Result<(), BoomerError> {
-        self.outgoing.close().await?;
-        return Ok(());
     }
 }
 

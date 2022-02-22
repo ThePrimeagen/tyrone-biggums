@@ -3,7 +3,7 @@ use std::{fmt::Display};
 use serde::{Serialize, Deserialize};
 use serde_repr::{Serialize_repr, Deserialize_repr};
 
-#[derive(Debug, Clone, Serialize_repr, Deserialize_repr)]
+#[derive(Debug, Clone, Serialize_repr, Deserialize_repr, PartialEq)]
 #[repr(u8)]
 pub enum MessageType {
     ReadyUp = 0,
@@ -13,13 +13,13 @@ pub enum MessageType {
     Kill = 4,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GameMessage {
     pub r#type: MessageType,
     pub msg: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Message {
     Message(GameMessage),
     Close(),
