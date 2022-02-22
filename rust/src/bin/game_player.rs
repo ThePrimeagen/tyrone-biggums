@@ -14,7 +14,7 @@ use url::Url;
 #[derive(Debug, StructOpt, Clone)]
 pub struct ServerOpts {
     /// Activate debug mode
-    pub count: u16,
+    pub count: usize,
 
     /// The port to use for the events to be served on
     #[structopt(short = "h", long = "host", default_value = "0.0.0.0")]
@@ -35,7 +35,7 @@ pub struct ServerOpts {
 
 pub struct ServerConfig {
     /// Activate debug mode
-    pub count: u16,
+    pub count: usize,
     pub host: String,
     pub port: u16,
     pub path: String,

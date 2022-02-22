@@ -10,6 +10,8 @@ const rl = readline.createInterface({
 const rawCounts = [];
 let count = 0;
 let sum = 0;
+let totalSum = 0;
+let totalCount = 0;
 let idx = 0;
 
 const maxCount = +process.argv[2];
@@ -26,8 +28,10 @@ rl.on('line', function(line){
     const mem = +line.split(",")[1].split(" ")[0];
 
     sum += mem;
+    totalSum += mem;
     rawCounts[idx] = Math.round(sum / (count + 1) * 100) / 100;
 
+    totalCount++;
     if (++count === maxCount) {
         count = 0;
         sum = 0;
@@ -40,7 +44,7 @@ rl.on('line', function(line){
     for (let i = 0; i < rawCounts.length; i++) {
         console.log(rawCounts[i]);
     }
-    console.log(rawCounts.length);
+    console.log(rawCounts.length, totalSum / totalCount);
 });
 
 
