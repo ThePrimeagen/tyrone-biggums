@@ -11,7 +11,7 @@ func TestBulletCreate(t *testing.T) {
     dir := gameloop.Vector2D {1, 0}
     fireRate := uint(69)
     player := gameloop.NewPlayer(pos, dir, fireRate)
-    bullet := gameloop.CreateFromPlayer(player, 69)
+    bullet := gameloop.CreateBulletFromPlayer(player, 69)
 
     if bullet.Geo.X != player.Geo.X + player.Geo.Width + 1 {
         t.Errorf("expected the x of the bullet to be to the positive side of the player")
@@ -22,7 +22,7 @@ func TestBulletCreate(t *testing.T) {
     }
 
     player.Dir[0] = -1
-    bullet = gameloop.CreateFromPlayer(player, 59)
+    bullet = gameloop.CreateBulletFromPlayer(player, 59)
     if bullet.Geo.X != player.Geo.X - gameloop.BULLET_WIDTH - 1 {
         t.Errorf("expected the x of the bullet to be to the negative side of the player")
     }

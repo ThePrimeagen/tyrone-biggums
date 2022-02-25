@@ -37,7 +37,7 @@ func newBullet() Bullet {
     }
 }
 
-func CreateFromPlayer(player Player, speed float64) Bullet {
+func CreateBulletFromPlayer(player Player, speed float64) Bullet {
     bullet := newBullet()
 
     if player.Dir[0] == 1 {
@@ -56,3 +56,7 @@ func CreateFromPlayer(player Player, speed float64) Bullet {
     return bullet
 }
 
+func (b *Bullet) Update(xDelta, yDelta float64) {
+    b.Geo.X += xDelta
+    b.Geo.Y += yDelta
+}

@@ -8,7 +8,7 @@ import (
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
-func newGameLoop() (*gameloop.Game, [2]*Socket) {
+func newGame() (*gameloop.Game, [2]*Socket) {
     sockets := [2]*Socket{
         newSocket(),
         newSocket(),
@@ -24,7 +24,7 @@ func newGameLoop() (*gameloop.Game, [2]*Socket) {
 
 func TestGameLoopReady(t *testing.T) {
 
-    gameLoop, sockets := newGameLoop()
+    gameLoop, sockets := newGame()
 
     waitForReadyDone := gameloop.WaitForReady(gameLoop.Players[0], gameLoop.Players[1])
 

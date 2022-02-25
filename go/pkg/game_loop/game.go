@@ -8,11 +8,33 @@ import (
 
 type Game struct {
 	Players [2]server.Socket
+    bullets []Bullet
+    queue *GameQueue
 }
 
 func NewGame(players [2]server.Socket) *Game {
     return &Game{
         players,
+        make([]Bullet, 0),
+        nil,
+    }
+}
+
+func (g *Game) runGameLoop() {
+    for {
+        // 1.  Check the message queue.
+        // 2.  update all bullet positions
+        // 3.  check for collisions
+        // 4.  see if a player has been hit by bullet
+        // 4.a if player has, finish the loop, report result, call it a day
+        // 5.  sleep for up to 16.66ms
+
+        // 1.  check the message queue
+        messages := g.queue.Flush()
+        if messages != nil {
+        }
+
+        // 2. update all the bullets
     }
 }
 
@@ -33,7 +55,7 @@ func (g *Game) Run() WhenComplete {
             return
         }
 
-        log.Println("Players are ready!")
+        g.runGameLoop()
     }()
 
     return gameFinished;
