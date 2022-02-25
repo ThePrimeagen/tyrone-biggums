@@ -1,6 +1,11 @@
 ### Tags
 [Go vs Typescript](https://www.youtube.com/watch?v=h7UEwBaGoVo): Video 1 of the series is tag go-vs-ts-video-1
 
+### How to run perf
+* node --perf-basic-prof path/to/prog &
+  * copy the <PID>
+* sudo perf record -F 3000 -ag -p <PID>
+
 ### Current Project
 Video 2 and 3 are going to be likely Go vs Rust vs Typescript, but I want it to be
 more complex.  I want a server that has to perform a ton of operations and have
