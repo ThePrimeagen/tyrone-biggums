@@ -20,6 +20,9 @@ func NewGame(players [2]server.Socket) *Game {
     }
 }
 
+func doSomething(message *QueueMessage) {
+}
+
 func (g *Game) runGameLoop() {
     for {
         // 1.  Check the message queue.
@@ -31,7 +34,8 @@ func (g *Game) runGameLoop() {
 
         // 1.  check the message queue
         messages := g.queue.Flush()
-        if messages != nil {
+        for _, message := range messages {
+            doSomething(message)
         }
 
         // 2. update all the bullets
