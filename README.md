@@ -2,9 +2,32 @@
 [Go vs Typescript](https://www.youtube.com/watch?v=h7UEwBaGoVo): Video 1 of the series is tag go-vs-ts-video-1
 
 ### How to run perf
-* node --perf-basic-prof path/to/prog &
-  * copy the <PID>
-* sudo perf record -F 3000 -ag -p <PID>
+```bash
+node --perf-basic-prof path/to/prog &
+# copy the <PID>
+```
+
+Get the repo for generating the flame graphs.  This is where the
+`stackcollapse-perf.pl` and `flamegraph.pl` scripts are located.
+
+```bash
+git clone git@github.com:brendangregg/FlameGraph.git
+cd FrameGraph
+```
+
+```bash
+# Frequency:
+#   lower = less probe effect, longer sampling required
+#   For this project I used 3000
+sudo perf record -F <FREQUENCY>  -ag -p <PID>
+
+# For the `perf` tool, please google how to install.
+# sudo perf record -F 3000 -ag -p <PID> # from node
+# Must be executed within the same directory as `perf record`.
+sudo perf script | ./stackcollapse-perf.pl > out.fold
+
+./flamegraph.pl out.fold > <PICK_A_NAME_FOR_SVG>.svg
+```
 
 ### Current Project
 Video 2 and 3 are going to be likely Go vs Rust vs Typescript, but I want it to be
