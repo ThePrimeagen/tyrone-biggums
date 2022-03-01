@@ -2,6 +2,7 @@ import WebSocket from "ws";
 import Socket, { noop } from "./socket";
 
 import AttachablePool from "../game_loop/pool"
+import { Observable } from "rxjs";
 
 export interface Server {
     close(): void;
@@ -13,6 +14,9 @@ export interface Server {
 export default class ServerImpl implements Server {
     public ongame: (p1: Socket, p2: Socket) => void;
     public onlisten: (e?: Error) => void;
+
+    public ongame$!: Observable<[Socket, Socket]>;
+    public onlisten$!: Observable<void>;
 
     private other_socket?: Socket;
     private server?: WebSocket.WebSocketServer;
@@ -38,18 +42,30 @@ export default class ServerImpl implements Server {
     }
 
     private startServer(server: WebSocket.Server) {
-        server.on("connection", ws => {
-            const socket = this.pool.pop(ws);
+        this.ongame$ = new Observable((observer) => {
+            server.on("connection", ws => {
+                const socket = this.pool.pop(ws);
 
-            if (this.other_socket) {
-                this.ongame(this.other_socket, socket);
-                this.other_socket = undefined;
-            } else {
-                this.other_socket = socket;
-            }
+                if (this.other_socket) {
+                    // this.ongame(this.other_socket, socket);
+                    observer.next([socket, this.other_socket]);
+                    this.other_socket = undefined;
+                } else {
+                    this.other_socket = socket;
+                }
+            });
         });
 
-        server.on("listening", (e?: Error) => this.onlisten(e));
+        this.onlisten$ = new Observable((observer) => {
+            server.on("listening", (e?: Error) => {
+                if (e) {
+                    observer.error(e);
+                } else {
+                    observer.next();
+                }
+                observer.complete();
+            });
+        });
     }
 
     public close() {
