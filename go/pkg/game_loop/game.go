@@ -52,6 +52,19 @@ func (g *Game) updateBulletPositions(delta int64) {
 }
 
 func (g *Game) checkBulletCollisions() {
+    loop_me_daddy: for idx1 := 0; idx1 < len(g.bullets); {
+        bullet := g.bullets[idx1]
+        for idx2 := idx1 + 1; idx2 < len(g.bullets); idx2 += 1 {
+            bullet2 := g.bullets[idx2]
+            if bullet.Geo.HasCollision(&bullet2.Geo) {
+                g.bullets = append(g.bullets[:idx2], g.bullets[(idx2 + 1):]...)
+                g.bullets = append(g.bullets[:idx1], g.bullets[(idx1 + 1):]...)
+                break loop_me_daddy
+            }
+        }
+
+        idx1 += 1
+    }
 }
 
 func (g *Game) updateStateFromMessageQueue() {

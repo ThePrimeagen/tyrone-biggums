@@ -107,3 +107,31 @@ func TestBulletUpdate(t *testing.T) {
         t.Error("Expected bullets to be updated, but they were either updated wrong or not updated.")
 	}
 }
+
+func TestBulletCollision(t *testing.T) {
+
+	// TODO: This doesn't feel right... utils... test..?
+	game, sockets, _ := NewGameComponents()
+
+	gameloop.Game_startGame(game)
+
+	fire := server.CreateMessage(server.Fire)
+	sockets[0].inBound <- fire
+	sockets[1].inBound <- fire
+
+    // TODO: I AM THE BEST PROGRAMMER EVER BECAUSE I USE SLEEP IN TESTS
+	time.Sleep(time.Millisecond)
+
+	gameloop.Game_updateStateFromMessageQueue(game)
+
+	if len(gameloop.GetGameBullets(game)) != 2 {
+		t.Errorf("Expected to have 2 bullet but got %v", len(gameloop.GetGameBullets(game)))
+	}
+
+    gameloop.Game_updateBulletPositions(game, 2425_000) // <--- THAT IS FUCKING MICRO SECONDS
+    gameloop.Game_checkBulletCollisions(game)
+
+	if len(gameloop.GetGameBullets(game)) != 0 {
+		t.Errorf("Expected to have 0 bullet but got %v", len(gameloop.GetGameBullets(game)))
+	}
+}
