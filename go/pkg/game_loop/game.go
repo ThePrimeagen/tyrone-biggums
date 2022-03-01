@@ -7,25 +7,69 @@ import (
 )
 
 type Game struct {
-	Players [2]server.Socket
-    bullets []Bullet
-    queue *GameQueue
+	Players [2]*Player
+	sockets [2]server.Socket
+	bullets []Bullet
+	queue   *GameQueue
+	clock   IGameClock
 }
 
-func NewGame(players [2]server.Socket) *Game {
-    return &Game{
-        players,
-        make([]Bullet, 0),
-        nil,
-    }
+func NewGame(sockets [2]server.Socket) *Game {
+	return &Game{
+		// TODO: finish this thing right
+		[2]*Player{
+			NewPlayer(Vector2D {2500, 0}, Vector2D {-1, 0}, 180),
+			NewPlayer(Vector2D {-2500, 0}, Vector2D {1, 0}, 300), // THE LOSER
+		},
+		sockets,
+		make([]Bullet, 0),
+		nil,
+        &GameClock{},
+	}
 }
 
-func doSomething(message *QueueMessage) {
+func NewGameWithClock(sockets [2]server.Socket, clock IGameClock) *Game {
+	return &Game{
+		// TODO: finish this thing right
+		[2]*Player{
+			NewPlayerWithClock(Vector2D {2500, 0}, Vector2D {-1, 0}, 180, clock),
+			NewPlayerWithClock(Vector2D {-2500, 0}, Vector2D {1, 0}, 300, clock), // THE LOSER
+		},
+		sockets,
+		make([]Bullet, 0),
+		nil,
+        clock,
+	}
+}
+
+// NOTE: How to avoid making this public and still have the helpers / internals
+// from gameloop_test
+func (g *Game) updateStateFromMessageQueue() {
+	messages := g.queue.Flush()
+	for _, message := range messages {
+		if message.Message.Type == server.Fire {
+			player := g.Players[message.From-1]
+            fired := player.Fire()
+
+			if fired {
+				bullet := CreateBulletFromPlayer(player, 1.0)
+				g.bullets = append(g.bullets, bullet)
+			}
+		}
+	}
+}
+
+func (g *Game) startGame() {
+    g.queue = NewQueue()
+
+    // unique..
+    g.queue.Start(g.sockets[0], g.sockets[1])
 }
 
 func (g *Game) runGameLoop() {
+
     for {
-        // 1.  Check the message queue.
+        // TODO:
         // 2.  update all bullet positions
         // 3.  check for collisions
         // 4.  see if a player has been hit by bullet
@@ -33,10 +77,7 @@ func (g *Game) runGameLoop() {
         // 5.  sleep for up to 16.66ms
 
         // 1.  check the message queue
-        messages := g.queue.Flush()
-        for _, message := range messages {
-            doSomething(message)
-        }
+        g.updateStateFromMessageQueue()
 
         // 2. update all the bullets
     }
@@ -45,22 +86,23 @@ func (g *Game) runGameLoop() {
 // TODO: Bad naming here.  RENAME
 // TODO: Make this into some sort of enum return.
 func (g *Game) Run() WhenComplete {
-    gameFinished := make(chan WaitForReadyResults);
+	gameFinished := make(chan WaitForReadyResults)
 
-    go func() {
-        defer close(gameFinished)
+	go func() {
+		defer close(gameFinished)
 
-        log.Println("Waiting for players to ready")
-        res := <-WaitForReady(g.Players[0], g.Players[1])
+		log.Println("Waiting for players to ready")
+		res := <-WaitForReady(g.sockets[0], g.sockets[1])
 
-        // TODO: I don't like this.
-        if res.timedout || res.readyError {
-            gameFinished <- res
-            return
-        }
+		// TODO: I don't like this.
+		if res.timedout || res.readyError {
+			gameFinished <- res
+			return
+		}
 
-        g.runGameLoop()
-    }()
+        g.startGame()
+		g.runGameLoop()
+	}()
 
-    return gameFinished;
+	return gameFinished
 }

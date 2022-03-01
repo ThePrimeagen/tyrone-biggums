@@ -9,7 +9,7 @@ import (
 func TestBulletCreate(t *testing.T) {
     pos := gameloop.Vector2D {0, 0}
     dir := gameloop.Vector2D {1, 0}
-    fireRate := uint(69)
+    fireRate := int64(69)
     player := gameloop.NewPlayer(pos, dir, fireRate)
     bullet := gameloop.CreateBulletFromPlayer(player, 69)
 

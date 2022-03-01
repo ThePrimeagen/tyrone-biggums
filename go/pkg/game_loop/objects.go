@@ -1,9 +1,15 @@
 package gameloop
 
+import (
+	"time"
+)
+
 type Player struct {
     Geo AABB
     Dir Vector2D
-    FireRate uint
+    FireRate int64
+    lastFireTime int64
+    clock IGameClock
 }
 
 type Bullet struct {
@@ -17,8 +23,8 @@ const BULLET_WIDTH = 35
 const BULLET_HEIGHT = 3
 
 
-func NewPlayer(pos, dir Vector2D, fireRate uint) Player {
-    return Player {
+func NewPlayer(pos, dir Vector2D, fireRate int64) *Player {
+    return &Player {
         Geo: AABB {
             X: pos[0],
             Y: pos[1],
@@ -27,7 +33,35 @@ func NewPlayer(pos, dir Vector2D, fireRate uint) Player {
         },
         Dir: dir,
         FireRate: fireRate,
+        lastFireTime: 0,
+        clock: &GameClock{},
     }
+}
+
+func NewPlayerWithClock(pos, dir Vector2D, fireRate int64, clock IGameClock) *Player {
+    return &Player {
+        Geo: AABB {
+            X: pos[0],
+            Y: pos[1],
+            Width: PLAYER_WIDTH,
+            Height: PLAYER_HEIGHT,
+        },
+        Dir: dir,
+        FireRate: fireRate,
+        lastFireTime: 0,
+        clock: clock,
+    }
+}
+
+func (p *Player) Fire() bool {
+    now := time.Now().UnixMilli()
+
+    if p.FireRate > now - p.lastFireTime {
+        return false
+    }
+
+    p.lastFireTime = now
+    return true
 }
 
 func newBullet() Bullet {
@@ -37,7 +71,7 @@ func newBullet() Bullet {
     }
 }
 
-func CreateBulletFromPlayer(player Player, speed float64) Bullet {
+func CreateBulletFromPlayer(player *Player, speed float64) Bullet {
     bullet := newBullet()
 
     if player.Dir[0] == 1 {

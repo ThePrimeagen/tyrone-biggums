@@ -42,6 +42,7 @@ const allTickCounts = new Array(8).fill(0);
 let totalLowGameTime = 0;
 let totalHighGameTime = 0;
 let estimatedGamesPlayed = 0;
+let totalConcurrentGames = 0;
 
 rl.on('line', function(line){
     if (!line.includes("winner")) {
@@ -69,9 +70,12 @@ rl.on('line', function(line){
     totalHighGameTime += estimatedTimeHigh;
     estimatedGamesPlayed += 1;
 
+    totalConcurrentGames += activeGames;
+
     console.log(`GAME_TIME_LOW, ${totalLowGameTime}`);
     console.log(`GAME_TIME_HIGH, ${totalHighGameTime}`);
     console.log(`tickCounts, ${JSON.stringify(allTickCounts, null, 1)}`);
     console.log(`totalGames, ${estimatedGamesPlayed}`);
+    console.log(`totalConcurrentGames, ${totalConcurrentGames} :: ${totalConcurrentGames / estimatedGamesPlayed}`);
 });
 

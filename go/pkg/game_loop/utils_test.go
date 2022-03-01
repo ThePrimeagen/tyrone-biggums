@@ -1,6 +1,9 @@
 package gameloop_test
 
-import "github.com/ThePrimeagen/tyrone-biggums/pkg/server"
+import (
+    "github.com/ThePrimeagen/tyrone-biggums/pkg/server"
+	gameloop "github.com/ThePrimeagen/tyrone-biggums/pkg/game_loop"
+)
 
 type Socket struct {
     outBound chan server.MessageEnvelope
@@ -26,3 +29,18 @@ func newSocket() *Socket {
     }
 }
 
+func NewGameComponents() (*gameloop.Game, [2]*Socket, *gameloop.SyntheticGameClock) {
+    clock := gameloop.SyntheticGameClock{}
+
+    sockets := [2]*Socket{
+        newSocket(),
+        newSocket(),
+    }
+
+    gameLoop := gameloop.NewGameWithClock([2]server.Socket{
+        sockets[0],
+        sockets[1],
+    }, &clock)
+
+    return gameLoop, sockets, &clock
+}

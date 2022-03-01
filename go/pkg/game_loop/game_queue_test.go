@@ -49,14 +49,14 @@ func TestGameQueue(t *testing.T) {
     // timeout.
     s1.inBound <- server.CreateMessage(server.Fire)
     time.Sleep(time.Millisecond)
-    testMessage(t, &queue, []uint{1})
+    testMessage(t, queue, []uint{1})
 
     s2.inBound <- server.CreateMessage(server.Fire)
     time.Sleep(time.Millisecond)
-    testMessage(t, &queue, []uint{2})
+    testMessage(t, queue, []uint{2})
 
     s2.inBound <- server.CreateMessage(server.Fire)
     s1.inBound <- server.CreateMessage(server.Fire)
     time.Sleep(time.Millisecond)
-    testMessage(t, &queue, []uint{2, 1})
+    testMessage(t, queue, []uint{2, 1})
 }

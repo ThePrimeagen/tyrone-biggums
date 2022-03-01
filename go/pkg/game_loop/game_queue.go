@@ -17,8 +17,8 @@ type GameQueue struct {
 	mutex    sync.Mutex
 }
 
-func NewQueue() GameQueue {
-	return GameQueue{
+func NewQueue() *GameQueue {
+	return &GameQueue{
 		messages: make([]*QueueMessage, 0),
 		killChan: make(chan struct{}),
 		mutex:    sync.Mutex{},

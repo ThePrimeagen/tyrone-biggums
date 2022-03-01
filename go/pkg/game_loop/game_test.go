@@ -8,25 +8,11 @@ import (
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
-func newGame() (*gameloop.Game, [2]*Socket) {
-    sockets := [2]*Socket{
-        newSocket(),
-        newSocket(),
-    }
+func TestWaitForReady(t *testing.T) {
 
-    gameLoop := gameloop.NewGame([2]server.Socket{
-        sockets[0],
-        sockets[1],
-    })
+    _, sockets, _ := NewGameComponents()
 
-    return gameLoop, sockets
-}
-
-func TestGameLoopReady(t *testing.T) {
-
-    gameLoop, sockets := newGame()
-
-    waitForReadyDone := gameloop.WaitForReady(gameLoop.Players[0], gameLoop.Players[1])
+    waitForReadyDone := gameloop.WaitForReady(sockets[0], sockets[1])
 
     msg := <-sockets[0].outBound
     msg2 := <-sockets[1].outBound
