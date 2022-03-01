@@ -9,7 +9,7 @@ import (
 type Game struct {
 	Players [2]*Player
 	sockets [2]server.Socket
-	bullets []Bullet
+	bullets []*Bullet
 	queue   *GameQueue
 	clock   IGameClock
 }
@@ -22,7 +22,7 @@ func NewGame(sockets [2]server.Socket) *Game {
 			NewPlayer(Vector2D {-2500, 0}, Vector2D {1, 0}, 300), // THE LOSER
 		},
 		sockets,
-		make([]Bullet, 0),
+		make([]*Bullet, 0),
 		nil,
         &GameClock{},
 	}
@@ -36,14 +36,24 @@ func NewGameWithClock(sockets [2]server.Socket, clock IGameClock) *Game {
 			NewPlayerWithClock(Vector2D {-2500, 0}, Vector2D {1, 0}, 300, clock), // THE LOSER
 		},
 		sockets,
-		make([]Bullet, 0),
+		make([]*Bullet, 0),
 		nil,
         clock,
 	}
 }
 
-// NOTE: How to avoid making this public and still have the helpers / internals
-// from gameloop_test
+func (g *Game) updateBulletPositions(delta int64) {
+    deltaF := float64(delta) / 1000.0
+
+    for _, bullet := range g.bullets {
+        bullet.Geo.X += deltaF * bullet.Vel[0]
+        bullet.Geo.Y += deltaF * bullet.Vel[1]
+    }
+}
+
+func (g *Game) checkBulletCollisions() {
+}
+
 func (g *Game) updateStateFromMessageQueue() {
 	messages := g.queue.Flush()
 	for _, message := range messages {
@@ -53,7 +63,7 @@ func (g *Game) updateStateFromMessageQueue() {
 
 			if fired {
 				bullet := CreateBulletFromPlayer(player, 1.0)
-				g.bullets = append(g.bullets, bullet)
+				g.bullets = append(g.bullets, &bullet)
 			}
 		}
 	}
@@ -68,18 +78,26 @@ func (g *Game) startGame() {
 
 func (g *Game) runGameLoop() {
 
+    lastLoop := g.clock.Now().UnixMicro()
+
     for {
         // TODO:
-        // 2.  update all bullet positions
-        // 3.  check for collisions
-        // 4.  see if a player has been hit by bullet
-        // 4.a if player has, finish the loop, report result, call it a day
-        // 5.  sleep for up to 16.66ms
+        // 3b.  check for player bullet collisions..
+        // 4.   see if a player has been hit by bullet
+        // 4b.  if player has, finish the loop, report result, call it a day
+        // 5.   sleep for up to 16.66ms
+
+        now := g.clock.Now().UnixMicro()
+        diff := now - lastLoop
 
         // 1.  check the message queue
         g.updateStateFromMessageQueue()
 
         // 2. update all the bullets
+        g.updateBulletPositions(diff)
+
+        // 3.  check for collisions
+        g.checkBulletCollisions()
     }
 }
 
