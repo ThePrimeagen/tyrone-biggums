@@ -9,6 +9,8 @@ export interface Server {
     ongame: (p1: Socket, p2: Socket) => void;
     onlisten: (e?: Error) => void;
     release: (socket: Socket) => void;
+    ongame$: Observable<[Socket, Socket]>;
+    onlisten$: Observable<void>;
 }
 
 export default class ServerImpl implements Server {

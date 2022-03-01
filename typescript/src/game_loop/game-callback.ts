@@ -9,11 +9,19 @@ import GameWorld from "./game-world";
 import { Attachable } from "./pool";
 
 export default function gameCreator(server: Server): void {
+    server.ongame$.forEach(([p1, p2]) => {
+        // @ts-ignore -- Same ts ignore from down below.  Didn't care to
+        // fix this.
+        new Game(p1, p2, server);
+    });
+
+    /*
     server.ongame = (p1, p2) => {
 
         // @ts-ignore -- I REALLY SHOULD STOP...
         new Game(p1, p2, server);
     };
+    */
 }
 
 export function runGameLoop(loop: GameLoopTimer, queue: GameQueue, world: GameWorld, cb: (stats: GameStat) => void) {
