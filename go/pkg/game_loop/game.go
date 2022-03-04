@@ -2,8 +2,10 @@ package gameloop
 
 import (
 	"log"
+	"time"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
+	"github.com/ThePrimeagen/tyrone-biggums/pkg/stats"
 )
 
 type Game struct {
@@ -12,6 +14,7 @@ type Game struct {
 	bullets []*Bullet
 	queue   *GameQueue
 	clock   IGameClock
+	stats   *stats.GameStats
 }
 
 func NewGame(sockets [2]server.Socket) *Game {
@@ -25,6 +28,7 @@ func NewGame(sockets [2]server.Socket) *Game {
 		make([]*Bullet, 0),
 		nil,
         &GameClock{},
+        stats.NewGameStat(),
 	}
 }
 
@@ -39,6 +43,7 @@ func NewGameWithClock(sockets [2]server.Socket, clock IGameClock) *Game {
 		make([]*Bullet, 0),
 		nil,
         clock,
+        stats.NewGameStat(),
 	}
 }
 
@@ -108,17 +113,32 @@ func (g *Game) startGame() {
     g.queue.Start(g.sockets[0], g.sockets[1])
 }
 
+func (g *Game) getSocket(player *Player) server.Socket {
+    if player == g.Players[0] {
+        return g.sockets[0]
+    }
+    return g.sockets[1]
+}
+
+func (g *Game) getOtherPlayer(player *Player) *Player {
+    if player == g.Players[0] {
+        return g.Players[1]
+    }
+    return g.Players[0]
+}
+
 func (g *Game) runGameLoop() {
 
     lastLoop := g.clock.Now().UnixMicro()
+    var loser *Player;
+
+    stats.AddActiveGame()
+    defer stats.RemoveActiveGame()
 
     for {
-        // TODO:
-        // 4b.  if player has, finish the loop, report result, call it a day
-        // 5.   sleep for up to 16.66ms
-
-        now := g.clock.Now().UnixMicro()
-        diff := now - lastLoop
+        start := g.clock.Now().UnixMicro()
+        diff := start - lastLoop
+        g.stats.AddDelta(diff)
 
         // 1.  check the message queue
         g.updateStateFromMessageQueue()
@@ -130,11 +150,33 @@ func (g *Game) runGameLoop() {
         g.checkBulletCollisions()
 
         // 3b.  check for player bullet collisions..
-        player := g.checkForBulletPlayerCollisions()
-        if player != nil {
-            // 4.   see if a player has been hit by bullet
+        loser = g.checkForBulletPlayerCollisions()
+        if loser != nil {
+            // 4.  Stop the loop if game is over
+            break
         }
+
+        // 5.   sleep for up to 16.66ms
+        now := g.clock.Now().UnixMicro()
+        time.Sleep(time.Duration(16_666 - (now - start)) * time.Microsecond)
+
+        lastLoop = start
     }
+
+
+    // 4b.  Tell each player that they have won/lost.
+    // 4b.  Close down the sockets and call it a day
+    winnerMsg := server.CreateWinnerMessage(g.stats)
+    loserMsg := server.CreateLoserMessage()
+    winner := g.getOtherPlayer(loser)
+    winnerSock := g.getSocket(winner)
+    loserSock := g.getSocket(loser)
+
+    winnerSock.GetOutBound() <- winnerMsg
+    loserSock.GetOutBound() <- loserMsg
+
+    winnerSock.Close()
+    loserSock.Close()
 }
 
 // TODO: Bad naming here.  RENAME

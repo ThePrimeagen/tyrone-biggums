@@ -43,7 +43,7 @@ func CreateMessage(messageType int) MessageEnvelope {
     }
 }
 
-func CreateWinnerMessage(stats stats.GameStats) MessageEnvelope {
+func CreateWinnerMessage(stats *stats.GameStats) MessageEnvelope {
     return MessageEnvelope{
         Type: websocket.TextMessage,
         Message: GameMessage{
