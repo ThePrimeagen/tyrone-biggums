@@ -79,7 +79,7 @@ func TestBulletUpdate(t *testing.T) {
 	sockets[0].inBound <- fire
 	sockets[1].inBound <- fire
 
-    // TODO: I AM THE BEST PROGRAMMER EVER BECAUSE I USE SLEEP IN TESTS
+	// TODO: I AM THE BEST PROGRAMMER EVER BECAUSE I USE SLEEP IN TESTS
 	time.Sleep(time.Millisecond)
 
 	gameloop.Game_updateStateFromMessageQueue(game)
@@ -96,15 +96,15 @@ func TestBulletUpdate(t *testing.T) {
 	if bullets[0].Geo.X != x0 || bullets[0].Geo.Y != y0 ||
 		bullets[1].Geo.X != x1 || bullets[1].Geo.Y != y1 {
 
-        t.Error("Expected no bullet positioning updates")
+		t.Error("Expected no bullet positioning updates")
 	}
 
-    gameloop.Game_updateBulletPositions(game, 10_000) // <--- THAT IS FUCKING MICRO SECONDS
+	gameloop.Game_updateBulletPositions(game, 10_000) // <--- THAT IS FUCKING MICRO SECONDS
 
-	if bullets[0].Geo.X != x0 + 10 * bullets[0].Vel[0] || bullets[0].Geo.Y != y0 ||
-		bullets[1].Geo.X != x1 + 10 * bullets[1].Vel[0] || bullets[1].Geo.Y != y1 {
+	if bullets[0].Geo.X != x0+10*bullets[0].Vel[0] || bullets[0].Geo.Y != y0 ||
+		bullets[1].Geo.X != x1+10*bullets[1].Vel[0] || bullets[1].Geo.Y != y1 {
 
-        t.Error("Expected bullets to be updated, but they were either updated wrong or not updated.")
+		t.Error("Expected bullets to be updated, but they were either updated wrong or not updated.")
 	}
 }
 
@@ -119,7 +119,7 @@ func TestBulletCollision(t *testing.T) {
 	sockets[0].inBound <- fire
 	sockets[1].inBound <- fire
 
-    // TODO: I AM THE BEST PROGRAMMER EVER BECAUSE I USE SLEEP IN TESTS
+	// TODO: I AM THE BEST PROGRAMMER EVER BECAUSE I USE SLEEP IN TESTS
 	time.Sleep(time.Millisecond)
 
 	gameloop.Game_updateStateFromMessageQueue(game)
@@ -128,10 +128,49 @@ func TestBulletCollision(t *testing.T) {
 		t.Errorf("Expected to have 2 bullet but got %v", len(gameloop.GetGameBullets(game)))
 	}
 
-    gameloop.Game_updateBulletPositions(game, 2425_000) // <--- THAT IS FUCKING MICRO SECONDS
-    gameloop.Game_checkBulletCollisions(game)
+	gameloop.Game_updateBulletPositions(game, 2425_000) // <--- THAT IS FUCKING MICRO SECONDS
+	gameloop.Game_checkBulletCollisions(game)
 
 	if len(gameloop.GetGameBullets(game)) != 0 {
 		t.Errorf("Expected to have 0 bullet but got %v", len(gameloop.GetGameBullets(game)))
 	}
+}
+
+func TestBulletAndPlayerCollision(t *testing.T) {
+
+	// TODO: This doesn't feel right... utils... test..?
+	game, sockets, _ := NewGameComponents()
+
+	gameloop.Game_startGame(game)
+
+	fire := server.CreateMessage(server.Fire)
+	sockets[0].inBound <- fire
+
+    shooting_player := game.Players[0]
+
+	// TODO: I AM THE BEST PROGRAMMER EVER BECAUSE I USE SLEEP IN TESTS
+	time.Sleep(time.Millisecond)
+
+	gameloop.Game_updateStateFromMessageQueue(game)
+
+	bullets := gameloop.GetGameBullets(game)
+	player := gameloop.Game_checkForBulletPlayerCollisions(game)
+
+	if player != nil {
+		t.Errorf("Did not expect the player to be colliding with a bullet: Player: %+v Bullets: %+v", player, bullets)
+	}
+
+	gameloop.Game_updateBulletPositions(game, 4925_000)
+
+	player = gameloop.Game_checkForBulletPlayerCollisions(game)
+
+	if player == nil {
+		t.Errorf("Expected to have a collision, but results were nil: %+v %+v %+v",
+			game.Players[0], game.Players[1], bullets[0])
+	}
+
+    if player == shooting_player {
+		t.Errorf("Expected the player that shot not to be the one that was hit. %+v %+v %+v",
+			game.Players[0], game.Players[1], bullets[0])
+    }
 }

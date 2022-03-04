@@ -7,8 +7,8 @@ import (
 )
 
 type QueueMessage struct {
-    From uint
-    Message server.GameMessage
+	From    uint
+	Message server.GameMessage
 }
 
 type GameQueue struct {
@@ -34,16 +34,16 @@ func (q *GameQueue) Start(s0, s1 server.Socket) {
 			case msg := <-s0.GetInBound():
 				q.mutex.Lock()
 				q.messages = append(q.messages, &QueueMessage{
-                    1,
-                    msg.Message,
-                })
+					1,
+					msg.Message,
+				})
 				q.mutex.Unlock()
 			case msg := <-s1.GetInBound():
 				q.mutex.Lock()
 				q.messages = append(q.messages, &QueueMessage{
-                    2,
-                    msg.Message,
-                })
+					2,
+					msg.Message,
+				})
 				q.mutex.Unlock()
 			case <-q.killChan:
 				break label_for_you
@@ -57,24 +57,24 @@ func (q *GameQueue) Stop() {
 }
 
 func (q *GameQueue) emptyMessages() bool {
-    out := true
-    for _, msg := range q.messages {
-        out = out && msg == nil
-        if !out {
-            break
-        }
-    }
+	out := true
+	for _, msg := range q.messages {
+		out = out && msg == nil
+		if !out {
+			break
+		}
+	}
 
-    return out
+	return out
 }
 
 func (q *GameQueue) Flush() []*QueueMessage {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-    if q.emptyMessages() {
-        return nil
-    }
+	if q.emptyMessages() {
+		return nil
+	}
 
 	messages := q.messages
 	q.messages = make([]*QueueMessage, 0)

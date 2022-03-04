@@ -51,6 +51,25 @@ func (g *Game) updateBulletPositions(delta int64) {
     }
 }
 
+func (g *Game) checkForBulletPlayerCollisions() (*Player) { // Note: Java for the bois
+    // this is obvi not made fast.  Lets just get it done.
+    var outPlayer *Player
+
+    loopMeDaddy: for _, player := range g.Players {
+
+        for bIdx := 0; bIdx < len(g.bullets); bIdx += 1 {
+
+            bullet := g.bullets[bIdx]
+            if bullet.Geo.HasCollision(&player.Geo) {
+                outPlayer = player
+                break loopMeDaddy
+            }
+        }
+    }
+
+    return outPlayer
+}
+
 func (g *Game) checkBulletCollisions() {
     loop_me_daddy: for idx1 := 0; idx1 < len(g.bullets); {
         bullet := g.bullets[idx1]
@@ -95,8 +114,6 @@ func (g *Game) runGameLoop() {
 
     for {
         // TODO:
-        // 3b.  check for player bullet collisions..
-        // 4.   see if a player has been hit by bullet
         // 4b.  if player has, finish the loop, report result, call it a day
         // 5.   sleep for up to 16.66ms
 
@@ -111,6 +128,12 @@ func (g *Game) runGameLoop() {
 
         // 3.  check for collisions
         g.checkBulletCollisions()
+
+        // 3b.  check for player bullet collisions..
+        player := g.checkForBulletPlayerCollisions()
+        if player != nil {
+            // 4.   see if a player has been hit by bullet
+        }
     }
 }
 
