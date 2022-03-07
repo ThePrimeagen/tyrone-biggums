@@ -43,12 +43,12 @@ func CreateMessage(messageType int) MessageEnvelope {
     }
 }
 
-func CreateWinnerMessage(stats *stats.GameStats) MessageEnvelope {
+func CreateWinnerMessage(gameStats *stats.GameStats) MessageEnvelope {
     return MessageEnvelope{
         Type: websocket.TextMessage,
         Message: GameMessage{
             Type: GameOver,
-            Msg: fmt.Sprintf("winner(%v)___%v", "REPLACE ME", "DADDY"),
+            Msg: fmt.Sprintf("winner(%v)___%v", stats.ActiveGames, gameStats),
         },
     }
 }

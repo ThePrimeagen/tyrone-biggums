@@ -1,6 +1,10 @@
 package stats
 
-import "sync"
+import (
+	"fmt"
+	"strings"
+	"sync"
+)
 
 var ActiveGames uint
 var mutex sync.Mutex
@@ -25,6 +29,15 @@ func NewGameStat() *GameStats {
     return &GameStats {
         FrameBuckets: [8]int64{0, 0, 0, 0, 0, 0, 0, 0},
     }
+}
+
+func (g *GameStats) String() string {
+    out := make([]string, 8)
+    for idx, num := range g.FrameBuckets {
+        out[idx] = fmt.Sprintf("%d", num)
+    }
+
+    return strings.Join(out, ",")
 }
 
 func (g *GameStats) AddDelta(delta int64) {

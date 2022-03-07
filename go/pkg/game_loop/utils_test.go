@@ -1,13 +1,17 @@
 package gameloop_test
 
 import (
-    "github.com/ThePrimeagen/tyrone-biggums/pkg/server"
+	"sync"
+
 	gameloop "github.com/ThePrimeagen/tyrone-biggums/pkg/game_loop"
+	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
 type Socket struct {
     outBound chan server.MessageEnvelope
     inBound chan server.MessageEnvelope
+    closed bool
+    wg *sync.WaitGroup
 }
 
 func (s *Socket) GetOutBound() chan<- server.MessageEnvelope {
@@ -19,13 +23,24 @@ func (s *Socket) GetInBound() <-chan server.MessageEnvelope {
 }
 
 func (s *Socket) Close() error {
+    s.closed = true
     return nil;
+}
+
+func (s *Socket) IsClosed() bool {
+    return s.closed
+}
+
+func (s *Socket) WGOutbound() *sync.WaitGroup {
+    return s.wg
 }
 
 func newSocket() *Socket {
     return &Socket{
         make(chan server.MessageEnvelope),
         make(chan server.MessageEnvelope),
+        false,
+        &sync.WaitGroup{},
     }
 }
 
