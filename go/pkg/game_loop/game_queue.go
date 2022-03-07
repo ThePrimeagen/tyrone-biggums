@@ -1,6 +1,7 @@
 package gameloop
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
@@ -30,8 +31,10 @@ func (q *GameQueue) Start(s0, s1 server.Socket) {
 	go func() {
 	label_for_you:
 		for {
+            fmt.Println("Queue#awaiting for message from players");
 			select {
 			case msg := <-s0.GetInBound():
+                fmt.Printf("Queue#start message from player 1 %+v", msg);
 				q.mutex.Lock()
 				q.messages = append(q.messages, &QueueMessage{
 					1,
@@ -39,6 +42,7 @@ func (q *GameQueue) Start(s0, s1 server.Socket) {
 				})
 				q.mutex.Unlock()
 			case msg := <-s1.GetInBound():
+                fmt.Printf("Queue#start message from player 2 %+v", msg);
 				q.mutex.Lock()
 				q.messages = append(q.messages, &QueueMessage{
 					2,

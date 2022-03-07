@@ -1,6 +1,7 @@
 package gameloop
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
@@ -32,6 +33,7 @@ func sendAndWait(s1 server.Socket, s2 server.Socket) chan bool {
                     break
                 }
 
+                fmt.Printf("msg(1): %v %v\n", msg, msg.Message.Type == server.ReadyUp)
                 if msg.Message.Type == server.ReadyUp {
                     count += 1
                     in1 = nil
@@ -43,12 +45,14 @@ func sendAndWait(s1 server.Socket, s2 server.Socket) chan bool {
                     break
                 }
 
+                fmt.Printf("msg(2): %v %v\n", msg, msg.Message.Type == server.ReadyUp)
                 if msg.Message.Type == server.ReadyUp {
                     count += 1
                     in2 = nil
                 }
             }
 
+            fmt.Printf("count(%v): %v \n", count, success)
             if count == 2 {
                 break;
             }
@@ -66,8 +70,8 @@ func WaitForReady(s0 server.Socket, s1 server.Socket) WhenComplete {
 
     go func() {
         select {
-        case _, ok := <-sendAndWait(s0, s1):
-            ready <- WaitForReadyResults {ok, false}
+        case success := <-sendAndWait(s0, s1):
+            ready <- WaitForReadyResults {false, !success}
         case <-time.After(30 * time.Second):
             ready <- WaitForReadyResults {false, true}
         }

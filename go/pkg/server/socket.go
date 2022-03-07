@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -53,6 +54,7 @@ func NewSocket(w http.ResponseWriter, r *http.Request) (Socket, error) {
 
         for {
             mt, message, err := c.ReadMessage()
+            fmt.Printf("socket#message: %v\n", message)
             if err != nil {
                 log.Println("read:", err)
                 break

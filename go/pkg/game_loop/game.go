@@ -1,6 +1,7 @@
 package gameloop
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -94,6 +95,7 @@ func (g *Game) checkBulletCollisions() {
 func (g *Game) updateStateFromMessageQueue() {
 	messages := g.queue.Flush()
 	for _, message := range messages {
+        // fmt.Printf("message %v :::: %v\n", message, message.Message.Type == server.Fire)
 		if message.Message.Type == server.Fire {
 			player := g.Players[message.From-1]
             fired := player.Fire()
@@ -134,6 +136,11 @@ func (g *Game) runGameLoop() {
 
     stats.AddActiveGame()
     defer stats.RemoveActiveGame()
+
+    fmt.Printf("About to send out play event to the client")
+    g.sockets[0].GetOutBound() <- server.CreateMessage(server.Play)
+    g.sockets[1].GetOutBound() <- server.CreateMessage(server.Play)
+    fmt.Printf("Finished sending out the event tno the client (technically I haven't acrtually waited for the ackshual callback for sending outh thet data ,but it is passed it in code.  I get it.  Don't be such a dick.  We arll understand what is happening here.  DAMNIT CAM.")
 
     for {
         start := g.clock.Now().UnixMicro()
@@ -192,10 +199,12 @@ func (g *Game) Run() WhenComplete {
 
 		// TODO: I don't like this.
 		if res.timedout || res.readyError {
+            fmt.Printf("I AM SO DUMN, WHAT THE HELL %+v", res)
 			gameFinished <- res
 			return
 		}
 
+        fmt.Println("Starting the game and the loop")
         g.startGame()
 		g.runGameLoop()
 	}()

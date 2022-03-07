@@ -27,6 +27,7 @@ async function playTheGame(socket: WebSocket, fireRate: number, cb: (msg: Messag
     let playing = false;
     socket.on("message", async function(message) {
         const msg = JSON.parse(message.toString()) as Message;
+        console.log("MESSAGE FROM SOCKET", msg);
         cb(msg);
         switch (msg.type) {
             case MessageType.ReadyUp:
@@ -79,7 +80,7 @@ function repeatConnect(addr: string, port: number, count: number = 0) {
     const socket = connect(200,
             addr || "events.theprimeagen.tv",
             port || 42069, (msg: any) => {
-                // console.log("GOT MSG", msg);
+                console.log("GOT MSG", msg);
             });
 
     socket.on("close", () => {
