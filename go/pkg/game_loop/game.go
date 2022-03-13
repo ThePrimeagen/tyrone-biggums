@@ -1,6 +1,7 @@
 package gameloop
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
@@ -190,7 +191,9 @@ func (g *Game) Run() WhenComplete {
 	go func() {
 		defer close(gameFinished)
 
+        fmt.Println("waiting for player")
 		res := <-WaitForReady(g.sockets[0], g.sockets[1])
+        fmt.Println("done waiting for player")
 
 		// TODO: I don't like this.
 		if res.timedout || res.readyError {

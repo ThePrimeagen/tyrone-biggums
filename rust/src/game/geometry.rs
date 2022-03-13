@@ -1,9 +1,12 @@
-
 pub struct AABB {
     pub x: f64,
     pub y: f64,
     pub width: f64,
     pub height: f64,
+}
+
+pub trait Updatable {
+    fn update(&mut self, delta: u128);
 }
 
 impl AABB {
@@ -31,6 +34,7 @@ impl AABB {
 #[cfg(test)]
 mod test {
     use super::*;
+
 
     #[test]
     fn aabb_collision() {

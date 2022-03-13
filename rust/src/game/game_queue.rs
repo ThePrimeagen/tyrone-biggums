@@ -7,13 +7,15 @@ type Rx = tokio::sync::mpsc::Receiver<Message>;
 type MessageQueue = Arc<Mutex<Vec<MessageEnvelope>>>;
 
 #[derive(Debug, PartialEq)]
-struct MessageEnvelope {
-    from: usize,
-    msg: GameMessage
+pub struct MessageEnvelope {
+    pub from: usize,
+    pub msg: GameMessage
 }
 
-struct GameQueue {
+pub struct GameQueue {
     messages: MessageQueue,
+    id1: u16,
+    id2: u16,
 }
 
 async fn handle_socket_messages(mut rx1: Rx, mut rx2: Rx, queue: MessageQueue) {
@@ -57,14 +59,16 @@ impl GameQueue {
         let (tx2, rx2) = channel::<Message>(2);
         let messages = Arc::new(Mutex::new(Vec::new()));
 
-        s1.listen(tx1).await;
-        s2.listen(tx2).await;
+        let id1 = s1.listen(tx1).await;
+        let id2 = s2.listen(tx2).await;
 
         // TODO: How to get around this..?
         tokio::spawn(handle_socket_messages(rx1, rx2, messages.clone()));
 
         return GameQueue{
             messages,
+            id1,
+            id2,
         };
     }
 
@@ -77,6 +81,11 @@ impl GameQueue {
         std::mem::swap(&mut out, &mut self.messages);
 
         return Some(out);
+    }
+
+    pub async fn detach_from_listeners<T: Listenable>(&self, s1: &mut T, s2: &mut T) {
+        s1.off(self.id1).await;
+        s2.off(self.id2).await;
     }
 }
 
