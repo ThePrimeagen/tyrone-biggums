@@ -2,29 +2,37 @@ use super::geometry::{AABB, Updatable};
 
  //where is my aabb?
 pub struct Bullet {
-    aabb: AABB,
-    dir_x: f64,
-    dir_y: f64,
+    pub aabb: AABB,
+    pub vel_x: f64,
+    pub vel_y: f64,
 }
 
 pub const BULLET_SPEED: f64 = 1.0;
-const BULLET_WIDTH: f64 = 35.0;
-const BULLET_HEIGHT: f64 = 3.0;
+pub const BULLET_WIDTH: f64 = 35.0;
+pub const BULLET_HEIGHT: f64 = 3.0;
 
 impl Bullet {
-    pub fn new(x: f64, y: f64, dir_x: f64, dir_y: f64) -> Bullet {
+    pub fn from_aabb(aabb: AABB) -> Bullet {
+        return Bullet {
+            aabb,
+            vel_x: 0.0,
+            vel_y: 0.0,
+        }
+    }
+
+    pub fn new(x: f64, y: f64, vel_x: f64, vel_y: f64) -> Bullet {
         return Bullet {
             aabb: AABB::new(x, y, BULLET_WIDTH, BULLET_HEIGHT),
-            dir_x,
-            dir_y,
+            vel_x,
+            vel_y,
         }
     }
 }
 
 impl Updatable for Bullet {
     fn update(&mut self, delta: u128) {
-        self.aabb.x += (delta as f64) * self.dir_x;
-        self.aabb.y += (delta as f64) * self.dir_y;
+        self.aabb.x += (delta as f64) * self.vel_x;
+        self.aabb.y += (delta as f64) * self.vel_y;
     }
 }
 

@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub struct AABB {
     pub x: f64,
     pub y: f64,
@@ -28,6 +29,11 @@ impl AABB {
 
     pub fn has_collision_fast(&self, other: &AABB, width: f64) -> bool {
         return f64::abs(self.x - other.x) < width;
+    }
+
+    pub fn set_position(&mut self, x: f64, y: f64) {
+        self.x = x;
+        self.y = y;
     }
 }
 

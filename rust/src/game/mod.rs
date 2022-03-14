@@ -1,6 +1,6 @@
 use crate::{error::BoomerError, server::{socket::Socket, message::{MessageType, Message}}};
 
-use self::{player::Player, game_queue::{GameQueue, MessageEnvelope}, bullet::Bullet};
+use self::{player::{Player, create_bullet_for_player}, game_queue::{GameQueue, MessageEnvelope}, bullet::Bullet, geometry::AABB};
 
 pub mod bullet;
 pub mod game_setup;
@@ -19,10 +19,10 @@ async fn ready_players((mut s1, mut s2): (Socket, Socket)) -> Result<(Socket, So
 
 async fn run_game_loop(mut sockets: (Socket, Socket)) -> Result<(Socket, Socket), BoomerError> {
     // create the players.
-    let players: (Player, Player) = (
-        Player::new(180),
-        Player::new(350),
-    );
+    let players: [Player; 2] = [
+        Player::real_game_player(180, -1.0),
+        Player::real_game_player(350, 1.0),
+    ];
 
     // ready the players
     sockets = ready_players(sockets).await?;
@@ -36,9 +36,7 @@ async fn run_game_loop(mut sockets: (Socket, Socket)) -> Result<(Socket, Socket)
 
         if let Some(msgs) = msgs {
             for msg in msgs.lock().await.iter() {
-                if msg.from == 1 {
-                } else {
-                }
+                let bullet = create_bullet_for_player(&players[msg.from - 1]);
             }
         }
 
