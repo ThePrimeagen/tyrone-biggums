@@ -91,34 +91,8 @@ impl GameQueue {
 
 #[cfg(test)]
 mod test {
-    use crate::{error::BoomerError, server::message::MessageType};
+    use crate::{error::BoomerError, server::message::MessageType, game::test_utils::Socket};
     use super::*;
-
-    type Tx = tokio::sync::mpsc::Sender<Message>;
-
-    struct Socket {
-        listeners: Arc<Mutex<Vec<Tx>>>
-    }
-
-    impl Socket {
-        fn new() -> Socket {
-            return Socket {
-                listeners: Arc::new(Mutex::new(Vec::new())),
-            };
-        }
-    }
-
-    #[async_trait]
-    impl Listenable for Socket {
-        async fn listen(& mut self, tx: Tx) -> u16 {
-            self.listeners.lock().await.push(tx);
-            return 0u16;
-        }
-
-        async fn off(&mut self, _id: u16) {
-            self.listeners.lock().await.pop(); // don't care
-        }
-    }
 
     #[tokio::test]
     async fn test() -> Result<(), BoomerError> {

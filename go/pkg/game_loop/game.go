@@ -81,6 +81,7 @@ func (g *Game) checkBulletCollisions() {
         for idx2 := idx1 + 1; idx2 < len(g.bullets); idx2 += 1 {
             bullet2 := g.bullets[idx2]
             if bullet.Geo.HasCollision(&bullet2.Geo) {
+                // that is also very crappy code.  Why would I ever do this...
                 g.bullets = append(g.bullets[:idx2], g.bullets[(idx2 + 1):]...)
                 g.bullets = append(g.bullets[:idx1], g.bullets[(idx1 + 1):]...)
                 break loop_me_daddy

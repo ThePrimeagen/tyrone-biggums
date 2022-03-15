@@ -1,8 +1,12 @@
+use std::time::{UNIX_EPOCH, SystemTime, Duration};
+
 use crate::{error::BoomerError, server::{socket::Socket, message::{MessageType, Message}}};
 
-use self::{player::{Player, create_bullet_for_player}, game_queue::{GameQueue, MessageEnvelope}, bullet::Bullet, geometry::AABB};
+use self::{player::{Player, create_bullet_for_player}, game_queue::{GameQueue, MessageEnvelope}, bullet::Bullet, geometry::{AABB, Updatable}, game::Game};
 
+pub mod test_utils;
 pub mod bullet;
+pub mod game;
 pub mod game_setup;
 pub mod player;
 pub mod geometry;
@@ -18,36 +22,10 @@ async fn ready_players((mut s1, mut s2): (Socket, Socket)) -> Result<(Socket, So
 }
 
 async fn run_game_loop(mut sockets: (Socket, Socket)) -> Result<(Socket, Socket), BoomerError> {
-    // create the players.
-    let players: [Player; 2] = [
-        Player::real_game_player(180, -1.0),
-        Player::real_game_player(350, 1.0),
-    ];
-
-    // ready the players
     sockets = ready_players(sockets).await?;
 
-    let mut queue = GameQueue::new(&mut sockets.0, &mut sockets.1).await;
-    let currentBullets: Vec<Bullet> = Vec::new();
-
-    loop {
-        // 1.  check the message queue
-        let msgs = queue.flush().await;
-
-        if let Some(msgs) = msgs {
-            for msg in msgs.lock().await.iter() {
-                let bullet = create_bullet_for_player(&players[msg.from - 1]);
-            }
-        }
-
-        // 2. update all the bullets
-        // 3.  check for collisions
-        // 3b.  check for player bullet collisions..
-        // 4.  Stop the loop if game is over
-        // 5.   sleep for up to 16.66ms
-
-    }
-
+    let mut game = Game::new(&mut sockets).await;
+    game.run_loop().await?;
 
     return Ok(sockets);
 }
@@ -71,4 +49,3 @@ pub async fn play_the_game((s1, s2): (Socket, Socket)) -> Result<(), BoomerError
 
     return Ok(());
 }
-

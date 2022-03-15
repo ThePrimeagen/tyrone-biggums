@@ -28,7 +28,10 @@ pub enum BoomerError {
     PlayerGameOver,
 
     #[error("Likely caused in a test, but it may not actually be caused in test")]
-    SomeCrazyAssTestError(#[from] tokio::sync::mpsc::error::SendError<crate::server::message::Message>)
+    SomeCrazyAssTestError(#[from] tokio::sync::mpsc::error::SendError<crate::server::message::Message>),
+
+    #[error("An enum of None was attempted to be turned into a player array index.")]
+    PlayerNoneError()
 }
 
 
