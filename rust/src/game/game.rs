@@ -6,8 +6,8 @@ use super::{player::{Player, create_bullet_for_player}, bullet::Bullet, geometry
 
 use crate::server::socket::Listenable;
 
+#[derive(Debug, PartialEq)]
 enum PlayerIdx {
-    None,
     One,
     Two,
 }
@@ -18,7 +18,6 @@ impl TryInto<usize> for PlayerIdx {
         return match self {
             PlayerIdx::One => Ok(0),
             PlayerIdx::Two => Ok(1),
-            _ => Err(BoomerError::PlayerNoneError()),
         }
     }
 }
@@ -28,7 +27,7 @@ pub struct Game {
     pub game_ended: bool,
 
     players: [Player; 2],
-    loser: PlayerIdx,
+    loser: Option<PlayerIdx>,
     queue: GameQueue,
 }
 
@@ -47,7 +46,7 @@ impl Game {
             current_bullets: Vec::new(),
             game_ended: false,
             queue,
-            loser: PlayerIdx::None,
+            loser: None,
         }
     }
 
@@ -67,10 +66,11 @@ impl Game {
         for bullet in self.current_bullets.iter_mut() {
             bullet.update(diff);
         }
+
+        println!("bullets: {:?}", self.current_bullets);
     }
 
     fn check_for_collisions(&mut self) {
-        println!("{:?}", self.current_bullets);
         if self.current_bullets.len() == 0 {
             return;
         }
@@ -134,10 +134,10 @@ impl Game {
             // startup
             let player_hit = self.check_for_collisions_with_players();
 
-            if let Some(idx) = player_hit {
+            if player_hit.is_some() {
                 // 4.  Stop the loop if game is over
                 self.game_ended = true;
-                self.loser = idx;
+                self.loser = player_hit;
                 break;
             }
 
@@ -154,8 +154,6 @@ impl Game {
 
 #[cfg(test)]
 mod test {
-    use tokio::sync::mpsc::{channel, Receiver};
-
     use crate::{game::{test_utils::{Socket, TxList}, bullet::BULLET_WIDTH, player::{PLAYER_STARTING_X, PLAYER_WIDTH}}, server::message::Message};
 
     use super::*;
@@ -221,13 +219,43 @@ mod test {
         game.check_for_collisions();
         assert_eq!(game.current_bullets.len(), 2);
 
-        // TODO: FINISH THIS PART WITH THE BULLETS COLLIDING
         let diff = f64::abs(BULLET_STARTING_POS_1 - BULLET_STARTING_POS_0);
         let update_time = diff / 2.0 * 1000.0; // MICROSECONDS DUMMY
 
         game.update_bullets(update_time as u128);
         game.check_for_collisions();
         assert_eq!(game.current_bullets.len(), 0);
+
+        return Ok(());
+    }
+
+    #[tokio::test]
+    async fn test_for_player_collisions() -> Result<(), BoomerError> {
+        let mut sockets = (Socket::new(), Socket::new());
+        let listeners = (
+            sockets.0.listeners.clone(), sockets.1.listeners.clone()
+        );
+
+        let mut game = Game::new(&mut sockets).await;
+        fire(listeners.0).await?;
+        wait_for_message_queue_to_empty().await;
+
+        game.empty_message_queue().await;
+        assert_eq!(game.current_bullets.len(), 1);
+
+        let diff = f64::abs(-PLAYER_STARTING_X - BULLET_STARTING_POS_0);
+        let update_time = diff * 1000.0; // MICROSECONDS DUMMY
+
+        game.update_bullets(update_time as u128 - ((PLAYER_WIDTH + 1.0) * 1000.0) as u128);
+        game.check_for_collisions();
+        assert_eq!(game.current_bullets.len(), 1);
+
+        let player_idx = game.check_for_collisions_with_players();
+        assert_eq!(player_idx, None);
+
+        game.update_bullets(1000);
+        let player_idx = game.check_for_collisions_with_players();
+        assert_eq!(player_idx, Some(PlayerIdx::Two));
 
         return Ok(());
     }
