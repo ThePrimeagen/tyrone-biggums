@@ -7,6 +7,8 @@ use crate::server::socket::Listenable;
 use async_trait::async_trait;
 
 pub type Tx = tokio::sync::mpsc::Sender<Message>;
+pub type TxList = Arc<Mutex<Vec<Tx>>>;
+
 
 pub struct Socket {
     pub listeners: Arc<Mutex<Vec<Tx>>>

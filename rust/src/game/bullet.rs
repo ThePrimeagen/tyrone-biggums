@@ -1,6 +1,7 @@
 use super::geometry::{AABB, Updatable};
 
  //where is my aabb?
+#[derive(Debug)]
 pub struct Bullet {
     pub aabb: AABB,
     pub vel_x: f64,
@@ -31,8 +32,8 @@ impl Bullet {
 
 impl Updatable for Bullet {
     fn update(&mut self, delta: u128) {
-        self.aabb.x += (delta as f64) * self.vel_x;
-        self.aabb.y += (delta as f64) * self.vel_y;
+        self.aabb.x += (delta as f64 / 1000.0) * self.vel_x;
+        self.aabb.y += (delta as f64 / 1000.0) * self.vel_y;
     }
 }
 
@@ -44,13 +45,13 @@ mod test {
     fn update_bullets_position() {
         let mut bullet = Bullet::new(0.0, 1.0, -1.0, 0.0);
 
-        bullet.update(16);
+        bullet.update(16_000);
         assert_eq!(bullet.aabb.x, -16.0);
         assert_eq!(bullet.aabb.y, 1.0);
 
         let mut bullet = Bullet::new(1.0, -2.0, -1.0, 1.0);
 
-        bullet.update(16);
+        bullet.update(16_000);
         assert_eq!(bullet.aabb.x, -15.0);
         assert_eq!(bullet.aabb.y, 14.0);
     }

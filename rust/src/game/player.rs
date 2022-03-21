@@ -12,13 +12,14 @@ pub struct Player {
 
 pub const PLAYER_WIDTH: f64 = 100.0;
 pub const PLAYER_HEIGHT: f64 = 3.0;
+pub const PLAYER_STARTING_X: f64 = 2500.0;
 
 impl Player {
     pub fn real_game_player(fire_rate: u128, dir_x: f64) -> Player {
         let aabb = if dir_x == -1.0 {
-            AABB::new(2500.0, 0.0, PLAYER_WIDTH, PLAYER_HEIGHT)
+            AABB::new(PLAYER_STARTING_X, 0.0, PLAYER_WIDTH, PLAYER_HEIGHT)
         } else {
-            AABB::new(-2500.0, 0.0, PLAYER_WIDTH, PLAYER_HEIGHT)
+            AABB::new(-PLAYER_STARTING_X, 0.0, PLAYER_WIDTH, PLAYER_HEIGHT)
         };
 
         return Player {

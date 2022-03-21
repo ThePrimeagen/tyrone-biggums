@@ -24,6 +24,7 @@ async fn handle_socket_messages(mut rx1: Rx, mut rx2: Rx, queue: MessageQueue) {
             msg = rx1.recv() => {
                 match msg {
                     Some(Message::Message(msg)) => {
+                        println!("Got Message for socket 1");
                         queue.lock().await.push(MessageEnvelope {
                             from: 1,
                             msg: msg,
@@ -38,6 +39,7 @@ async fn handle_socket_messages(mut rx1: Rx, mut rx2: Rx, queue: MessageQueue) {
             msg = rx2.recv() => {
                 match msg {
                     Some(Message::Message(msg)) => {
+                        println!("Got Message for socket 2");
                         queue.lock().await.push(MessageEnvelope {
                             from: 2,
                             msg: msg,
@@ -73,12 +75,29 @@ impl GameQueue {
     }
 
     pub async fn flush(&mut self) -> Option<MessageQueue> {
+        println!("Flushing {}", self.messages.lock().await.len());
         if self.messages.lock().await.is_empty() {
             return None;
         }
 
-        let mut out = Arc::new(Mutex::new(Vec::new()));
-        std::mem::swap(&mut out, &mut self.messages);
+        let out = Arc::new(Mutex::new(Vec::new()));
+        {
+            let mut out = out.lock().await;
+            let mut messages = self.messages.lock().await;
+
+            loop {
+                match messages.pop() {
+                    Some(x) => {
+                        out.push(x);
+                    }
+                    _ => break,
+                }
+            }
+        }
+
+        for message in out.lock().await.iter() {
+            println!("Flushing this message {:?}", message);
+        }
 
         return Some(out);
     }
@@ -95,12 +114,38 @@ mod test {
     use super::*;
 
     #[tokio::test]
-    async fn test() -> Result<(), BoomerError> {
+    async fn test_flush() -> Result<(), BoomerError> {
         let mut s1 = Socket::new();
         let mut s2 = Socket::new();
         let mut queue = GameQueue::new(&mut s1, &mut s2).await;
 
         tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+
+        let result = queue.flush().await;
+        assert_eq!(result.is_none(), true);
+
+        s1.listeners
+            .lock()
+            .await
+            .get(0)
+            .expect("there should be the queue as a listener")
+            .send(Message::Message(GameMessage{
+                r#type: MessageType::GameOver, msg: None
+            })).await?;
+
+        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        let result = queue.flush().await;
+        if let Some(result) = result {
+            assert_eq!(result.lock().await.len(), 1);
+            assert_eq!(result.lock().await.get(0).unwrap(), &MessageEnvelope {
+                from: 1,
+                msg: GameMessage {
+                    r#type: MessageType::GameOver, msg: None
+                }
+            });
+        } else {
+            assert_eq!(false, true);
+        }
 
         let result = queue.flush().await;
         assert_eq!(result.is_none(), true);
