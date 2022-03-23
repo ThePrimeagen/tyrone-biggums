@@ -162,7 +162,7 @@ func (g *Game) runGameLoop() {
 
         // 5.   sleep for up to 16.66ms
         now := g.clock.Now().UnixMicro()
-        time.Sleep(time.Duration(16_666 - (now - start)) * time.Microsecond)
+        time.Sleep(time.Duration(16_000 - (now - start)) * time.Microsecond)
 
         lastLoop = start
     }
