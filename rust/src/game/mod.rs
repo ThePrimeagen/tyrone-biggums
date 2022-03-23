@@ -60,11 +60,21 @@ impl ActiveGames {
 
 pub async fn play_the_game((s1, s2): (Socket, Socket), active_games: Arc<Mutex<ActiveGames>>) -> Result<(), BoomerError> {
 
-    let sockets = game_setup::wait_for_ready(s1, s2).await?;
+    let sockets = match game_setup::wait_for_ready(s1, s2).await {
+        Ok(s) => s,
+        Err(_) => return Ok(())
+    };
 
     active_games.lock().await.add_active_game();
 
-    let (mut loser, mut winner, stats) = run_game_loop(sockets).await?;
+    let (mut loser, mut winner, stats) = match run_game_loop(sockets).await {
+        Ok(s) => s,
+        Err(e) => {
+            println!("Error while running game_loop {:?}", e);
+            active_games.lock().await.remove_active_game();
+            return Ok(());
+        },
+    };
 
     // Now we must play the game...
     //
@@ -84,16 +94,15 @@ pub async fn play_the_game((s1, s2): (Socket, Socket), active_games: Arc<Mutex<A
         winner.push(Message::with_message(MessageType::GameOver, output_str)),
     ).await;
 
-    r1?;
-    r2?;
-
-    let (r1, r2) = futures::future::join(
+    let (r3, r4) = futures::future::join(
         loser.close(),
         winner.close(),
     ).await;
 
     r1?;
     r2?;
+    r3?;
+    r4?;
 
     return Ok(());
 }
