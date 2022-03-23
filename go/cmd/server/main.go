@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -24,7 +23,6 @@ func main() {
 
     go func() {
         for socketPair := range server.Out {
-            fmt.Println("GOT A PAIR")
             // todo: how to listen to this?? more go funcs?
             gameloop.NewGame(socketPair).Run()
         }
