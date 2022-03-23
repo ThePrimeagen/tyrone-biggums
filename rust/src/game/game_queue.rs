@@ -30,7 +30,6 @@ async fn handle_socket_messages(mut rx1: Rx, mut rx2: Rx, queue: MessageQueue) {
                         })
                     },
                     _ => {
-                        println!("socket 1 appears to be closed.");
                         break;
                     }
                 }
@@ -44,7 +43,6 @@ async fn handle_socket_messages(mut rx1: Rx, mut rx2: Rx, queue: MessageQueue) {
                         })
                     },
                     _ => {
-                        println!("socket 2 appears to be closed.");
                         break;
                     }
                 }
