@@ -1,6 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use super::{bullet::{Bullet, BULLET_SPEED}, geometry::AABB};
+use super::{bullet::{Bullet, BULLET_SPEED, BULLET_WIDTH}, geometry::AABB};
 
 pub struct Player {
     last_fired: u128,
@@ -49,6 +49,7 @@ impl Player {
             .expect("come on").as_micros();
 
         if now - self.last_fired > self.fire_rate {
+            self.last_fired = now;
             return true;
         }
 
@@ -71,6 +72,8 @@ pub fn create_bullet_for_player(player: &Player) -> Bullet {
         bullet
     };
 
+    // EZ HACK <-- don't do that
+    bullet.aabb.width = BULLET_WIDTH;
     bullet.vel_x = player.dir_x * BULLET_SPEED;
     bullet.vel_y = player.dir_y * BULLET_SPEED;
 

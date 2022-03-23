@@ -35,8 +35,8 @@ impl Game {
     pub async fn new<T>(sockets: &mut (T, T)) -> Game where T: Listenable {
         // create the players.
         let players: [Player; 2] = [
-            Player::real_game_player(180, -1.0),
-            Player::real_game_player(350, 1.0),
+            Player::real_game_player(180_000, -1.0),
+            Player::real_game_player(350_000, 1.0),
         ];
 
         let queue = GameQueue::new(&mut sockets.0, &mut sockets.1).await;
@@ -55,9 +55,12 @@ impl Game {
 
         if let Some(msgs) = msgs {
             for msg in msgs.lock().await.iter() {
-                self.current_bullets.push(
-                    create_bullet_for_player(&self.players[msg.from - 1])
-                );
+                let player = &mut self.players[msg.from - 1];
+                if player.fire() {
+                    self.current_bullets.push(
+                        create_bullet_for_player(player)
+                    );
+                }
             }
         }
     }
@@ -99,10 +102,12 @@ impl Game {
         let mut out = None;
         for bullet in &self.current_bullets {
             if self.players[0].aabb.has_collision(&bullet.aabb) {
+                println!("Player[0] has collision {:?} BULLET {:?}", self.players[0].aabb, bullet.aabb);
                 out = Some(PlayerIdx::One);
                 break;
             }
             if self.players[1].aabb.has_collision(&bullet.aabb) {
+                println!("Player[1] has collision {:?} BULLET {:?}", self.players[1].aabb, bullet.aabb);
                 out = Some(PlayerIdx::Two);
                 break;
             }
@@ -116,6 +121,7 @@ impl Game {
         let mut last_loop = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
 
         loop {
+            println!("looping");
             let start = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
             let diff = start - last_loop;
             // stats.add_delta(diff)
@@ -135,6 +141,7 @@ impl Game {
             let player_hit = self.check_for_collisions_with_players();
 
             if player_hit.is_some() {
+                println!("GAME DONE!");
                 // 4.  Stop the loop if game is over
                 self.game_ended = true;
                 self.loser = player_hit;
@@ -154,6 +161,10 @@ impl Game {
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
+    use tokio::sync::Mutex;
+
     use crate::{game::{test_utils::{Socket, TxList}, bullet::BULLET_WIDTH, player::{PLAYER_STARTING_X, PLAYER_WIDTH}}, server::message::Message};
 
     use super::*;
@@ -256,6 +267,43 @@ mod test {
         game.update_bullets(1000);
         let player_idx = game.check_for_collisions_with_players();
         assert_eq!(player_idx, Some(PlayerIdx::Two));
+
+        return Ok(());
+    }
+
+    #[tokio::test]
+    async fn test_the_whole_game() -> Result<(), BoomerError> {
+        let mut sockets = (Socket::new(), Socket::new());
+        let mut game = Game::new(&mut sockets).await;
+        let listener1 = sockets.0.listeners.clone();
+        let listener2 = sockets.1.listeners.clone();
+        // TODO: Come back to this.
+        let kill: Arc<Mutex<Vec<usize>>> = Arc::new(Mutex::new(vec![]));
+
+        let inner_kill = kill.clone();
+        tokio::spawn(async move {
+            loop {
+                // HACKTEVISION
+                if inner_kill.lock().await.len() == 1 {
+                    break;
+                }
+                fire(listener1.clone()).await;
+                fire(listener2.clone()).await;
+                tokio::time::sleep(Duration::from_millis(200)).await;
+            }
+        });
+
+        match game.run_loop().await {
+            Err(e) => {
+                println!("Game failed for this reason {:?}", e);
+                unreachable!(e);
+            },
+            _ => {}
+        }
+        kill.lock().await.push(0);
+
+        assert_eq!(game.loser.is_some(), true);
+        assert_eq!(game.loser.unwrap(), PlayerIdx::Two);
 
         return Ok(());
     }
