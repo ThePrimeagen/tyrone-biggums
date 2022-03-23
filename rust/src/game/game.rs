@@ -2,12 +2,12 @@ use std::time::{SystemTime, UNIX_EPOCH, Duration};
 
 use crate::error::BoomerError;
 
-use super::{player::{Player, create_bullet_for_player}, bullet::Bullet, geometry::Updatable, game_queue::GameQueue};
+use super::{player::{Player, create_bullet_for_player}, bullet::Bullet, geometry::Updatable, game_queue::GameQueue, stats::GameStats};
 
 use crate::server::socket::Listenable;
 
 #[derive(Debug, PartialEq)]
-enum PlayerIdx {
+pub enum PlayerIdx {
     One,
     Two,
 }
@@ -25,9 +25,9 @@ impl TryInto<usize> for PlayerIdx {
 pub struct Game {
     pub current_bullets: Vec<Bullet>,
     pub game_ended: bool,
+    pub loser: Option<PlayerIdx>,
 
     players: [Player; 2],
-    loser: Option<PlayerIdx>,
     queue: GameQueue,
 }
 
@@ -69,8 +69,6 @@ impl Game {
         for bullet in self.current_bullets.iter_mut() {
             bullet.update(diff);
         }
-
-        println!("bullets: {:?}", self.current_bullets);
     }
 
     fn check_for_collisions(&mut self) {
@@ -102,12 +100,10 @@ impl Game {
         let mut out = None;
         for bullet in &self.current_bullets {
             if self.players[0].aabb.has_collision(&bullet.aabb) {
-                println!("Player[0] has collision {:?} BULLET {:?}", self.players[0].aabb, bullet.aabb);
                 out = Some(PlayerIdx::One);
                 break;
             }
             if self.players[1].aabb.has_collision(&bullet.aabb) {
-                println!("Player[1] has collision {:?} BULLET {:?}", self.players[1].aabb, bullet.aabb);
                 out = Some(PlayerIdx::Two);
                 break;
             }
@@ -116,15 +112,20 @@ impl Game {
         return out;
     }
 
-    pub async fn run_loop(&mut self) -> Result<(), BoomerError> {
+    pub async fn run_loop(&mut self) -> Result<GameStats, BoomerError> {
 
         let mut last_loop = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
+        let mut stats = GameStats::new();
+        let mut interval = tokio::time::interval(Duration::from_millis(16));
 
         loop {
-            println!("looping");
+            // 5.   sleep for up to 16.66ms
+            //
+            interval.tick().await; // first tick is 0ms
+
             let start = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
             let diff = start - last_loop;
-            // stats.add_delta(diff)
+            stats.add_delta(diff);
 
             // 1.  check the message queue
             self.empty_message_queue().await;
@@ -141,21 +142,16 @@ impl Game {
             let player_hit = self.check_for_collisions_with_players();
 
             if player_hit.is_some() {
-                println!("GAME DONE!");
                 // 4.  Stop the loop if game is over
                 self.game_ended = true;
                 self.loser = player_hit;
                 break;
             }
 
-            // 5.   sleep for up to 16.66ms
-            //
             last_loop = start;
-            let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("come on").as_micros();
-            tokio::time::sleep(Duration::from_micros(16_666u64 - (now - start) as u64)).await;
         }
 
-        return Ok(());
+        return Ok(stats);
     }
 }
 
@@ -278,12 +274,13 @@ mod test {
         let listener1 = sockets.0.listeners.clone();
         let listener2 = sockets.1.listeners.clone();
         // TODO: Come back to this.
+        // NOTE: Keeping it
         let kill: Arc<Mutex<Vec<usize>>> = Arc::new(Mutex::new(vec![]));
 
         let inner_kill = kill.clone();
         tokio::spawn(async move {
             loop {
-                // HACKTEVISION
+                // HACKTEVISION,
                 if inner_kill.lock().await.len() == 1 {
                     break;
                 }

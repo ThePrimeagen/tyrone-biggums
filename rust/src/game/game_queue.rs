@@ -24,7 +24,6 @@ async fn handle_socket_messages(mut rx1: Rx, mut rx2: Rx, queue: MessageQueue) {
             msg = rx1.recv() => {
                 match msg {
                     Some(Message::Message(msg)) => {
-                        println!("Got Message for socket 1");
                         queue.lock().await.push(MessageEnvelope {
                             from: 1,
                             msg: msg,
@@ -39,7 +38,6 @@ async fn handle_socket_messages(mut rx1: Rx, mut rx2: Rx, queue: MessageQueue) {
             msg = rx2.recv() => {
                 match msg {
                     Some(Message::Message(msg)) => {
-                        println!("Got Message for socket 2");
                         queue.lock().await.push(MessageEnvelope {
                             from: 2,
                             msg: msg,
@@ -75,7 +73,6 @@ impl GameQueue {
     }
 
     pub async fn flush(&mut self) -> Option<MessageQueue> {
-        println!("Flushing {}", self.messages.lock().await.len());
         if self.messages.lock().await.is_empty() {
             return None;
         }
@@ -93,10 +90,6 @@ impl GameQueue {
                     _ => break,
                 }
             }
-        }
-
-        for message in out.lock().await.iter() {
-            println!("Flushing this message {:?}", message);
         }
 
         return Some(out);
