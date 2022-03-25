@@ -111,14 +111,17 @@ async fn fire_loop(callees: AMVWrite) -> Result<(), BoomerError> {
     }
 }
 
-async fn connect(url: Url, id: usize) -> (HashableWriter, SplitStreamRead) {
-    let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
+async fn connect(url: Url, id: usize) -> Option<(HashableWriter, SplitStreamRead)> {
+    let (ws_stream, _) = match connect_async(url).await {
+        Ok((x, y)) => (x, y),
+        Err(_) => return None,
+    };
     let (write, read) = ws_stream.split();
 
-    return (
+    return Some((
         HashableWriter {writer: write, id},
         read,
-    )
+    ));
 }
 
 fn get_connection_count() -> usize {
@@ -147,6 +150,16 @@ async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerCo
     // seems unrealistic.
     tokio::time::sleep(Duration::from_millis(offset as u64)).await;
     while config.lock().await.count > 0 {
+
+        // if there is an error, no need to crash the whole test, just reconnect.
+        let connected = connect(url.clone(), id).await;
+        if connected.is_none() {
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            continue;
+        }
+
+        let (mut write, mut read) = connected.unwrap();
+
         {
             config.lock().await.count -= 1;
         }
@@ -155,7 +168,6 @@ async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerCo
             println!("{} games left to play", config.lock().await.count);
         }
 
-        let (mut write, mut read) = connect(url.clone(), id).await;
 
         // TODO: there has to be better way...
         if let Ok(Some(Message::Message(msg))) = next_message(&mut read).await {
