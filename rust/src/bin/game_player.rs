@@ -216,11 +216,6 @@ async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerCo
     return Ok(());
 }
 
-async fn kill(url: Url) -> Result<(), BoomerError> {
-    let (mut write, mut read) = connect(url.clone(), 0).await;
-    return Ok(());
-}
-
 fn get_config() -> Arc<Mutex<ServerConfig>> {
     let mut opts = ServerOpts::from_args();
     if opts.connection_count.is_none() {
