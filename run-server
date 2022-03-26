@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+docker kill $(docker ps -q)
+docker run -e SERVER_PORT=42069 -d --rm -it -p 42069:42069 $1-ws-test
+sleep 1
+pid=$([[ $1 == "rust" ]] && pgrep server || pgrep main)
+echo "I GOT PID $pid"
+time=$3
+
+if [ -z $time ]; then
+                $time=$((60*4))
+fi
+
+echo "./measure $node $($((60*4))) $2"
+./measure $node $time $2
+
+docker kill $(docker ps -q)
+
+
+
