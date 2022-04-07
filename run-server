@@ -11,8 +11,8 @@ if [ -z $time ]; then
                 $time=$((60*4))
 fi
 
-echo "./measure $node $($((60*4))) $2"
-./measure $node $time $2
+echo "./measure $pid $($((60*4))) $2"
+./measure $pid $time $2
 
 docker kill $(docker ps -q)
 
