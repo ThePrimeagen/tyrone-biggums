@@ -68,7 +68,7 @@ impl Socket {
 
     pub async fn push(&mut self, msg: Message) -> Result<(), BoomerError> {
         let msg: tungstenite::Message = tungstenite::Message::Text(msg.try_into()?);
-        self.outgoing.send(msg).await;
+        self.outgoing.send(msg).await?;
         return Ok(());
     }
 

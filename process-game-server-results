@@ -7,6 +7,27 @@ const rl = readline.createInterface({
     terminal: false
 });
 
+class RBuffer {
+    constructor(size) {
+        this.count = 0;
+        this.idx = 0;
+        this.data = new Array(size).fill(0);
+    }
+
+    push(dataPoint) {
+        this.count++;
+        this.data[this.idx++ % this.data.length] = dataPoint;
+    }
+
+    average() {
+        return this.total() / this.data.length;
+    }
+
+    total() {
+        return this.data.reduce((acc, x) => acc + x);
+    }
+}
+
 function getTimeRange(idx) {
     switch (idx) {
         // if (delta > 40) {
@@ -39,17 +60,44 @@ function getTimeRange(idx) {
 }
 
 const allTickCounts = new Array(8).fill(0);
+const reportInterval = +process.argv[3] || 100;
+const tickLowBuckets = new RBuffer(reportInterval);
+const tickHighBuckets = new RBuffer(reportInterval);
+const activeGameCount = new RBuffer(reportInterval);
+let tickCountTotal = 0;
 let totalLowGameTime = 0;
 let totalHighGameTime = 0;
 let estimatedGamesPlayed = 0;
-let totalConcurrentGames = 0;
+let connectFailed = 0;
 
-rl.on('line', function(line){
+let style = process.argv[2];
+if (style !== "active" && style !== "error" && style !== "sum" && style !== "tick") {
+    console.log("NO STYLE SELECTED");
+    style = "sum";
+}
+
+function round(x, y) {
+    return Math.round(x * Math.pow(10, y)) / Math.pow(10, y);
+}
+
+function error(line) {
+    if (line.includes("winner")) {
+        if (estimatedGamesPlayed++ % reportInterval === 0) {
+            console.log("connectFailed", connectFailed);
+        }
+        return;
+    }
+    if (!line.includes("failed to connect")) {
+        return;
+    }
+    connectFailed++;
+}
+
+function sum(line) {
     if (!line.includes("winner")) {
         return;
     }
 
-    const activeGames = +line.split("(")[1].split(")")[0];
     const tickCounts = line.split("___")[1].split(",").map(x => +x);
 
     // The game experience a weird lag spike that caused it to think that no
@@ -57,6 +105,15 @@ rl.on('line', function(line){
     if (tickCounts[0] < 800) {
         tickCounts.forEach((x, i) => allTickCounts[i] += x);
     }
+    console.log(`tickCounts, ${JSON.stringify(allTickCounts, null, 1)}`);
+}
+
+function tick(line) {
+    if (!line.includes("winner")) {
+        return;
+    }
+
+    const tickCounts = line.split("___")[1].split(",").map(x => +x);
 
     const estimatedTimeLow = tickCounts.
         map((x, i) => x * getTimeRange(i)[0]).
@@ -66,16 +123,43 @@ rl.on('line', function(line){
         map((x, i) => x * getTimeRange(i)[1]).
         reduce((acc, time) => acc + time, 0);
 
-    totalLowGameTime += estimatedTimeLow;
-    totalHighGameTime += estimatedTimeHigh;
-    estimatedGamesPlayed += 1;
+    tickLowBuckets.push(estimatedTimeLow);
+    tickHighBuckets.push(estimatedTimeHigh);
 
-    totalConcurrentGames += activeGames;
+    tickCountTotal += tickCounts.reduce((acc, x) => acc + x);
 
-    console.log(`GAME_TIME_LOW, ${totalLowGameTime}`);
-    console.log(`GAME_TIME_HIGH, ${totalHighGameTime}`);
-    console.log(`tickCounts, ${JSON.stringify(allTickCounts, null, 1)}`);
-    console.log(`totalGames, ${estimatedGamesPlayed}`);
-    console.log(`totalConcurrentGames, ${totalConcurrentGames} :: ${totalConcurrentGames / estimatedGamesPlayed}`);
+    if (tickLowBuckets.count % reportInterval === 0) {
+        console.log(Math.round(tickCountTotal * 16.6), tickLowBuckets.total(), estimatedTimeHigh.total());
+        tickCountTotal = 0;
+    }
+}
+
+function active(line) {
+    if (!line.includes("winner")) {
+        return;
+    }
+    const activeGames = +line.split("(")[1].split(")")[0];
+    const tickCounts = line.split("___")[1].split(",").map(x => +x);
+
+    activeGameCount.push(activeGames);
+    tickLowBuckets.push(tickCounts[0]);
+    tickHighBuckets.push(tickCounts.slice(1).reduce((acc, x) => acc + x));
+
+    if (estimatedGamesPlayed++ % reportInterval === 0) {
+        const low = tickLowBuckets.total();
+        const high = tickHighBuckets.total();
+        console.log(activeGameCount.average(), ",", round(low / (low + high), 2));
+    }
+}
+
+const consumeLine = {
+    sum,
+    tick,
+    error,
+    active,
+};
+
+rl.on('line', function(line) {
+    consumeLine[style](line);
 });
 

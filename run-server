@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 docker kill $(docker ps -q)
-docker run -e SERVER_PORT=42069 -d --rm -it -p 42069:42069 $1-ws-test
+docker run -e SERVER_PORT=42069 -d --rm -it -p 42069:42069 $1-game-test
 sleep 1
-pid=$([[ $1 == "rust" ]] && pgrep server || pgrep main)
+pid=$(pgrep server || pgrep main)
 echo "I GOT PID $pid"
 time=$3
 

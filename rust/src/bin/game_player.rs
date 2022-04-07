@@ -28,6 +28,10 @@ pub struct ServerOpts {
     #[structopt(long = "path", default_value = "/")]
     pub path: String,
 
+    /// time between added connections.  ms
+    #[structopt(long = "time", default_value = "50")]
+    pub time: usize,
+
     /// The address to use.  Should be 0.0.0.0
     #[structopt(short = "c", long = "connections")]
     pub connection_count: Option<usize>,
@@ -37,6 +41,7 @@ pub struct ServerConfig {
     /// Activate debug mode
     pub count: usize,
     pub host: String,
+    pub time: usize,
     pub port: u16,
     pub path: String,
     pub connection_count: usize,
@@ -49,6 +54,7 @@ impl ServerConfig {
             host: opts.host,
             port: opts.port,
             path: opts.path,
+            time: opts.time,
             connection_count: opts.connection_count.expect("connection_count should be set by some default value before creating the server config"),
         }
     }
@@ -103,7 +109,12 @@ async fn fire_loop(callees: AMVWrite) -> Result<(), BoomerError> {
 
         // todo: this may not be fast enough.  We may have to spawn several of these.
         for writer in callees.iter_mut() {
-            writer.1.writer.send(msg.clone()).await?;
+            match writer.1.writer.send(msg.clone()).await {
+                Err(e) => {
+                    println!("error during fire_loop: {:?}", e);
+                },
+                _ => {},
+            }
         }
 
         then = now;
@@ -151,18 +162,23 @@ async fn play(url: Url, id: usize, writers: AMVWrite, config: Arc<Mutex<ServerCo
     tokio::time::sleep(Duration::from_millis(offset as u64)).await;
     while config.lock().await.count > 0 {
 
+        {
+            let mut config = config.lock().await;
+            config.count = config.count.saturating_sub(1);
+        }
+
         // if there is an error, no need to crash the whole test, just reconnect.
         let connected = connect(url.clone(), id).await;
         if connected.is_none() {
+            {
+                config.lock().await.count += 1;
+            }
             tokio::time::sleep(Duration::from_millis(50)).await;
+            println!("failed to connect");
             continue;
         }
 
         let (mut write, mut read) = connected.unwrap();
-
-        {
-            config.lock().await.count -= 1;
-        }
 
         if config.lock().await.count % 500 == 0 {
             println!("{} games left to play", config.lock().await.count);
@@ -236,6 +252,7 @@ async fn main() -> Result<(), BoomerError> {
         url = url::Url::parse(format!("ws://{}:{}{}", opts.host, opts.port, opts.path).as_str()).unwrap();
     }
 
+    let time_between = opts.lock().await.time;
     let maps = create_maps();
     let writers: AMVWrite = Arc::new(Mutex::new(maps));
     let fire_loop_await = fire_loop(writers.clone());
@@ -243,7 +260,7 @@ async fn main() -> Result<(), BoomerError> {
     let mut awaits = vec![];
     let connection_count = opts.lock().await.connection_count;
     for i in 0..connection_count {
-        awaits.push(play(url.clone(), i, writers.clone(), opts.clone(), i * 50));
+        awaits.push(play(url.clone(), i, writers.clone(), opts.clone(), i * time_between));
     }
     println!("created {} players", connection_count);
 
