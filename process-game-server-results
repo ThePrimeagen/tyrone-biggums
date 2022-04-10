@@ -64,6 +64,7 @@ const reportInterval = +process.argv[3] || 100;
 const tickLowBuckets = new RBuffer(reportInterval);
 const tickHighBuckets = new RBuffer(reportInterval);
 const activeGameCount = new RBuffer(reportInterval);
+let totalGameCount = 0;
 let tickCountTotal = 0;
 let totalLowGameTime = 0;
 let totalHighGameTime = 0;
@@ -99,13 +100,14 @@ function sum(line) {
     }
 
     const tickCounts = line.split("___")[1].split(",").map(x => +x);
+    totalGameCount++;
 
     // The game experience a weird lag spike that caused it to think that no
     // one shooting??  Or it could be a memory pool mess up
     if (tickCounts[0] < 800) {
         tickCounts.forEach((x, i) => allTickCounts[i] += x);
     }
-    console.log(`tickCounts, ${JSON.stringify(allTickCounts, null, 1)}`);
+    console.log(`tickCounts, ${totalGameCount} - ${JSON.stringify(allTickCounts, null, 1)}`);
 }
 
 function tick(line) {

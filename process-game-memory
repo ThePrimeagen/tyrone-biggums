@@ -13,6 +13,7 @@ let sum = 0;
 let totalSum = 0;
 let totalCount = 0;
 let idx = 0;
+let totalGameCount = 0;
 
 const maxCount = +process.argv[2];
 if (isNaN(maxCount)) {
@@ -44,7 +45,7 @@ rl.on('line', function(line){
     for (let i = 0; i < rawCounts.length; i++) {
         console.log(rawCounts[i]);
     }
-    console.log(rawCounts.length, totalSum / totalCount);
+    console.log(totalCount, rawCounts.length, totalSum / totalCount);
 });
 
 
