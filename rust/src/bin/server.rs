@@ -17,13 +17,11 @@ async fn main() -> Result<(), std::io::Error> {
     warn!("starting server");
     let receiver = server.get_receiver();
 
-    tokio::spawn(async move {
-        let mut receiver = receiver.unwrap();
-        let active_games = Arc::new(Mutex::new(ActiveGames::new()));
-        while let Some(two_sockets) = receiver.recv().await {
-            tokio::spawn(play_the_game(two_sockets, active_games.clone()));
-        }
-    });
+    let mut receiver = receiver.unwrap();
+    let active_games = Arc::new(Mutex::new(ActiveGames::new()));
+    while let Some(two_sockets) = receiver.recv().await {
+        tokio::spawn(play_the_game(two_sockets, active_games.clone()));
+    }
 
     server.join_handle.await?;
 
