@@ -31,8 +31,7 @@ pub async fn handle_connection(raw_stream: TcpStream) -> Socket {
 }
 
 pub struct Server {
-    pub join_handle: JoinHandle<()>,
-    pub rx: Option<Rx>, // crappy, but we will let it slide
+    pub listener: TcpListener
 }
 
 impl Server {
@@ -42,30 +41,12 @@ impl Server {
         // Create the event loop and TCP listener we'll accept connections on.
         let try_socket = TcpListener::bind(&addr).await;
         let listener = try_socket.expect("Failed to bind");
-        let (tx, rx) = channel::<(Socket, Socket)>(10);
 
         info!("Listening on: {}", addr);
 
-        let join_handle = tokio::spawn(async move {
-            let mut other_socket: Option<Socket> = None;
-            while let Ok((stream, _)) = listener.accept().await {
-                let socket = handle_connection(stream).await;
-                if let Some(other_socket) = other_socket.take() {
-                    tx.send((other_socket, socket)).await;
-                } else {
-                    other_socket = Some(socket);
-                }
-            }
-        });
-
-        return Ok(Server {
-            join_handle,
-            rx: Some(rx),
-        });
-    }
-
-    pub fn get_receiver(&mut self) -> Option<Rx> {
-        return std::mem::take(&mut self.rx);
+        Ok(Server {
+            listener
+        })
     }
 }
 

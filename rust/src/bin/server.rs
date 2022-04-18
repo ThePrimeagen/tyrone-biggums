@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use log::warn;
 use rust::{
-    server::server::Server, game::{play_the_game, ActiveGames},
+    server::server::{Server, handle_connection}, game::{play_the_game, ActiveGames},
 };
 use tokio::sync::Mutex;
 
@@ -15,17 +15,19 @@ async fn main() -> Result<(), std::io::Error> {
 
     let mut server = Server::new().await?;
     warn!("starting server");
-    let receiver = server.get_receiver();
 
-    tokio::spawn(async move {
-        let mut receiver = receiver.unwrap();
-        let active_games = Arc::new(Mutex::new(ActiveGames::new()));
-        while let Some(two_sockets) = receiver.recv().await {
-            tokio::spawn(play_the_game(two_sockets, active_games.clone()));
+    let active_games = Arc::new(Mutex::new(ActiveGames::new()));
+    let mut other_socket: Option<Socket> = None;
+    let listener = &mut server.listener;
+
+    while let Ok((stream, _)) = listener.accept().await {
+        let socket = handle_connection(stream).await;
+        if let Some(other_socket) = other_socket.take() {
+            tokio::spawn(play_the_game((other_socket, socket), active_games.clone()));
+        } else {
+            other_socket = Some(socket);
         }
-    });
+    }
 
-    server.join_handle.await?;
-
-    return Ok(());
+    Ok(())
 }
