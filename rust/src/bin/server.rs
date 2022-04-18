@@ -17,8 +17,9 @@ async fn main() -> Result<(), std::io::Error> {
     warn!("starting server");
 
     let active_games = Arc::new(Mutex::new(ActiveGames::new()));
-
     let mut other_socket: Option<Socket> = None;
+    let listener = &mut server.listener;
+
     while let Ok((stream, _)) = listener.accept().await {
         let socket = handle_connection(stream).await;
         if let Some(other_socket) = other_socket.take() {
