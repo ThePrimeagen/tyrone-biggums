@@ -150,7 +150,7 @@ function active(line) {
     if (estimatedGamesPlayed++ % reportInterval === 0) {
         const low = tickLowBuckets.total();
         const high = tickHighBuckets.total();
-        console.log(activeGameCount.average(), ",", round(low / (low + high), 2));
+        console.log(activeGameCount.average());
     }
 }
 

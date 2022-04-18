@@ -4,7 +4,7 @@ conn=$(echo $CONN || $2)
 type=$(echo $TYPE || $3)
 
 set -x
-cargo run --release --bin game_player $count --connections $conn --host events.theprimeagen.tv | tee ../video-3/c.$type.$count.res
-scp root@events.theprimeagen.tv:/root/tyrone-biggums/c.$type.$count ../video-3/c.$type.$count
+cargo run --release --bin game_player $count --connections $conn --host events.theprimeagen.tv | tee ../video-3/c.$type.$conn.res
+scp root@events.theprimeagen.tv:/root/tyrone-biggums/c.$type.$conn ../video-3/c.$type.$conn
 set +x
 

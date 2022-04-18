@@ -4,12 +4,12 @@ WORKDIR /app
 COPY rust/Cargo.toml ./Cargo.toml
 COPY rust/Cargo.lock ./Cargo.lock
 COPY rust/src/lib.rs ./src/lib.rs
-COPY run-client run-client
 RUN rustup default nightly
 RUN cargo fetch
 COPY rust/src ./src
 RUN cargo build --release --bin server
 RUN cargo install --path .
+COPY run-client run-client
 
 FROM debian:latest
 EXPOSE 42069
