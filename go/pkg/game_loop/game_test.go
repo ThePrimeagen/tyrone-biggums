@@ -146,7 +146,7 @@ func TestBulletAndPlayerCollision(t *testing.T) {
 	fire := server.CreateMessage(server.Fire)
 	sockets[0].inBound <- fire
 
-    shooting_player := game.Players[0]
+	shooting_player := game.Players[0]
 
 	// TODO: I AM THE BEST PROGRAMMER EVER BECAUSE I USE SLEEP IN TESTS
 	time.Sleep(time.Millisecond)
@@ -169,8 +169,8 @@ func TestBulletAndPlayerCollision(t *testing.T) {
 			game.Players[0], game.Players[1], bullets[0])
 	}
 
-    if player == shooting_player {
+	if player == shooting_player {
 		t.Errorf("Expected the player that shot not to be the one that was hit. %+v %+v %+v",
 			game.Players[0], game.Players[1], bullets[0])
-    }
+	}
 }

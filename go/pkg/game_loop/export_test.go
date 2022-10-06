@@ -7,6 +7,5 @@ var Game_updateBulletPositions = (*Game).updateBulletPositions
 var Game_checkForBulletPlayerCollisions = (*Game).checkForBulletPlayerCollisions
 
 func GetGameBullets(game *Game) []*Bullet {
-    return game.bullets
+	return game.bullets
 }
-
