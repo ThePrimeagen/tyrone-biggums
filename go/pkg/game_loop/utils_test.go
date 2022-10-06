@@ -8,54 +8,54 @@ import (
 )
 
 type Socket struct {
-    outBound chan server.MessageEnvelope
-    inBound chan server.MessageEnvelope
-    closed bool
-    wg *sync.WaitGroup
+	outBound chan server.MessageEnvelope
+	inBound  chan server.MessageEnvelope
+	closed   bool
+	wg       *sync.WaitGroup
 }
 
 func (s *Socket) GetOutBound() chan<- server.MessageEnvelope {
-    return s.outBound
+	return s.outBound
 }
 
 func (s *Socket) GetInBound() <-chan server.MessageEnvelope {
-    return s.inBound
+	return s.inBound
 }
 
 func (s *Socket) Close() error {
-    s.closed = true
-    return nil;
+	s.closed = true
+	return nil
 }
 
 func (s *Socket) IsClosed() bool {
-    return s.closed
+	return s.closed
 }
 
 func (s *Socket) WGOutbound() *sync.WaitGroup {
-    return s.wg
+	return s.wg
 }
 
 func newSocket() *Socket {
-    return &Socket{
-        make(chan server.MessageEnvelope),
-        make(chan server.MessageEnvelope),
-        false,
-        &sync.WaitGroup{},
-    }
+	return &Socket{
+		make(chan server.MessageEnvelope),
+		make(chan server.MessageEnvelope),
+		false,
+		&sync.WaitGroup{},
+	}
 }
 
 func NewGameComponents() (*gameloop.Game, [2]*Socket, *gameloop.SyntheticGameClock) {
-    clock := gameloop.SyntheticGameClock{}
+	clock := gameloop.SyntheticGameClock{}
 
-    sockets := [2]*Socket{
-        newSocket(),
-        newSocket(),
-    }
+	sockets := [2]*Socket{
+		newSocket(),
+		newSocket(),
+	}
 
-    gameLoop := gameloop.NewGameWithClock([2]server.Socket{
-        sockets[0],
-        sockets[1],
-    }, &clock)
+	gameLoop := gameloop.NewGameWithClock([2]server.Socket{
+		sockets[0],
+		sockets[1],
+	}, &clock)
 
-    return gameLoop, sockets, &clock
+	return gameLoop, sockets, &clock
 }
