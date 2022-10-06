@@ -20,14 +20,14 @@ func NewGame(sockets [2]server.Socket) *Game {
 	return &Game{
 		// TODO: finish this thing right
 		[2]*Player{
-			NewPlayer(Vector2D {2500, 0}, Vector2D {-1, 0}, 180),
-			NewPlayer(Vector2D {-2500, 0}, Vector2D {1, 0}, 300), // THE LOSER
+			NewPlayer(Vector2D{2500, 0}, Vector2D{-1, 0}, 180),
+			NewPlayer(Vector2D{-2500, 0}, Vector2D{1, 0}, 300), // THE LOSER
 		},
 		sockets,
 		make([]*Bullet, 0),
 		nil,
-        &GameClock{},
-        stats.NewGameStat(),
+		&GameClock{},
+		stats.NewGameStat(),
 	}
 }
 
@@ -35,60 +35,62 @@ func NewGameWithClock(sockets [2]server.Socket, clock IGameClock) *Game {
 	return &Game{
 		// TODO: finish this thing right
 		[2]*Player{
-			NewPlayerWithClock(Vector2D {2500, 0}, Vector2D {-1, 0}, 180, clock),
-			NewPlayerWithClock(Vector2D {-2500, 0}, Vector2D {1, 0}, 300, clock), // THE LOSER
+			NewPlayerWithClock(Vector2D{2500, 0}, Vector2D{-1, 0}, 180, clock),
+			NewPlayerWithClock(Vector2D{-2500, 0}, Vector2D{1, 0}, 300, clock), // THE LOSER
 		},
 		sockets,
 		make([]*Bullet, 0),
 		nil,
-        clock,
-        stats.NewGameStat(),
+		clock,
+		stats.NewGameStat(),
 	}
 }
 
 func (g *Game) updateBulletPositions(delta int64) {
-    deltaF := float64(delta) / 1000.0
+	deltaF := float64(delta) / 1000.0
 
-    for _, bullet := range g.bullets {
-        bullet.Geo.X += deltaF * bullet.Vel[0]
-        bullet.Geo.Y += deltaF * bullet.Vel[1]
-    }
+	for _, bullet := range g.bullets {
+		bullet.Geo.X += deltaF * bullet.Vel[0]
+		bullet.Geo.Y += deltaF * bullet.Vel[1]
+	}
 }
 
-func (g *Game) checkForBulletPlayerCollisions() (*Player) { // Note: Java for the bois
-    // this is obvi not made fast.  Lets just get it done.
-    var outPlayer *Player
+func (g *Game) checkForBulletPlayerCollisions() *Player { // Note: Java for the bois
+	// this is obvi not made fast.  Lets just get it done.
+	var outPlayer *Player
 
-    loopMeDaddy: for _, player := range g.Players {
+loopMeDaddy:
+	for _, player := range g.Players {
 
-        for bIdx := 0; bIdx < len(g.bullets); bIdx += 1 {
+		for bIdx := 0; bIdx < len(g.bullets); bIdx += 1 {
 
-            bullet := g.bullets[bIdx]
-            if bullet.Geo.HasCollision(&player.Geo) {
-                outPlayer = player
-                break loopMeDaddy
-            }
-        }
-    }
+			bullet := g.bullets[bIdx]
+			if bullet.Geo.HasCollision(&player.Geo) {
+				outPlayer = player
+				break loopMeDaddy
+			}
+		}
+	}
 
-    return outPlayer
+	return outPlayer
 }
 
 func (g *Game) checkBulletCollisions() {
-    loop_me_daddy: for idx1 := 0; idx1 < len(g.bullets); {
-        bullet := g.bullets[idx1]
-        for idx2 := idx1 + 1; idx2 < len(g.bullets); idx2 += 1 {
-            bullet2 := g.bullets[idx2]
-            if bullet.Geo.HasCollision(&bullet2.Geo) {
-                // that is also very crappy code.  Why would I ever do this...
-                g.bullets = append(g.bullets[:idx2], g.bullets[(idx2 + 1):]...)
-                g.bullets = append(g.bullets[:idx1], g.bullets[(idx1 + 1):]...)
-                break loop_me_daddy
-            }
-        }
+loop_me_daddy:
+	for idx1 := 0; idx1 < len(g.bullets); {
+		bullet := g.bullets[idx1]
+		for idx2 := idx1 + 1; idx2 < len(g.bullets); idx2 += 1 {
+			bullet2 := g.bullets[idx2]
+			if bullet.Geo.HasCollision(&bullet2.Geo) {
+				// that is also very crappy code.  Why would I ever do this...
+				g.bullets = append(g.bullets[:idx2], g.bullets[(idx2+1):]...)
+				g.bullets = append(g.bullets[:idx1], g.bullets[(idx1+1):]...)
+				break loop_me_daddy
+			}
+		}
 
-        idx1 += 1
-    }
+		idx1 += 1
+	}
 }
 
 func (g *Game) updateStateFromMessageQueue() {
@@ -96,7 +98,7 @@ func (g *Game) updateStateFromMessageQueue() {
 	for _, message := range messages {
 		if message.Message.Type == server.Fire {
 			player := g.Players[message.From-1]
-            fired := player.Fire()
+			fired := player.Fire()
 
 			if fired {
 				bullet := CreateBulletFromPlayer(player, 1.0)
@@ -107,80 +109,79 @@ func (g *Game) updateStateFromMessageQueue() {
 }
 
 func (g *Game) startGame() {
-    g.queue = NewQueue()
+	g.queue = NewQueue(g.sockets[0], g.sockets[1])
 
-    // unique..
-    g.queue.Start(g.sockets[0], g.sockets[1])
+	// unique..
+	g.queue.Start()
 }
 
 func (g *Game) getSocket(player *Player) server.Socket {
-    if player == g.Players[0] {
-        return g.sockets[0]
-    }
-    return g.sockets[1]
+	if player == g.Players[0] {
+		return g.sockets[0]
+	}
+	return g.sockets[1]
 }
 
 func (g *Game) getOtherPlayer(player *Player) *Player {
-    if player == g.Players[0] {
-        return g.Players[1]
-    }
-    return g.Players[0]
+	if player == g.Players[0] {
+		return g.Players[1]
+	}
+	return g.Players[0]
 }
 
 func (g *Game) runGameLoop() {
 
-    lastLoop := g.clock.Now().UnixMicro()
-    var loser *Player;
+	lastLoop := g.clock.Now().UnixMicro()
+	var loser *Player
 
-    stats.AddActiveGame()
-    defer stats.RemoveActiveGame()
+	stats.AddActiveGame()
+	defer stats.RemoveActiveGame()
 
-    g.sockets[0].GetOutBound() <- server.CreateMessage(server.Play)
-    g.sockets[1].GetOutBound() <- server.CreateMessage(server.Play)
+	g.sockets[0].GetOutBound() <- server.CreateMessage(server.Play)
+	g.sockets[1].GetOutBound() <- server.CreateMessage(server.Play)
 
-    for {
-        start := g.clock.Now().UnixMicro()
-        diff := start - lastLoop
-        g.stats.AddDelta(diff)
+	for {
+		start := g.clock.Now().UnixMicro()
+		diff := start - lastLoop
+		g.stats.AddDelta(diff)
 
-        // 1.  check the message queue
-        g.updateStateFromMessageQueue()
+		// 1.  check the message queue
+		g.updateStateFromMessageQueue()
 
-        // 2. update all the bullets
-        g.updateBulletPositions(diff)
+		// 2. update all the bullets
+		g.updateBulletPositions(diff)
 
-        // 3.  check for collisions
-        g.checkBulletCollisions()
+		// 3.  check for collisions
+		g.checkBulletCollisions()
 
-        // 3b.  check for player bullet collisions..
-        loser = g.checkForBulletPlayerCollisions()
-        if loser != nil {
-            // 4.  Stop the loop if game is over
-            break
-        }
+		// 3b.  check for player bullet collisions..
+		loser = g.checkForBulletPlayerCollisions()
+		if loser != nil {
+			// 4.  Stop the loop if game is over
+			break
+		}
 
-        // 5.   sleep for up to 16.66ms
-        now := g.clock.Now().UnixMicro()
-        time.Sleep(time.Duration(16_000 - (now - start)) * time.Microsecond)
+		// 5.   sleep for up to 16.66ms
+		now := g.clock.Now().UnixMicro()
+		time.Sleep(time.Duration(16_000-(now-start)) * time.Microsecond)
 
-        lastLoop = start
-    }
+		lastLoop = start
+	}
 
+	// 4b.  Tell each player that they have won/lost.
+	// 4b.  Close down the sockets and call it a day
+	winnerMsg := server.CreateWinnerMessage(g.stats)
+	loserMsg := server.CreateLoserMessage()
+	winner := g.getOtherPlayer(loser)
 
-    // 4b.  Tell each player that they have won/lost.
-    // 4b.  Close down the sockets and call it a day
-    winnerMsg := server.CreateWinnerMessage(g.stats)
-    loserMsg := server.CreateLoserMessage()
-    winner := g.getOtherPlayer(loser)
+	winnerSock := g.getSocket(winner)
+	loserSock := g.getSocket(loser)
 
-    winnerSock := g.getSocket(winner)
-    loserSock := g.getSocket(loser)
+	winnerSock.GetOutBound() <- winnerMsg
+	loserSock.GetOutBound() <- loserMsg
 
-    winnerSock.GetOutBound() <- winnerMsg
-    loserSock.GetOutBound() <- loserMsg
-
-    winnerSock.Close()
-    loserSock.Close()
+	winnerSock.Close()
+	loserSock.Close()
 }
 
 // TODO: Bad naming here.  RENAME
@@ -199,7 +200,7 @@ func (g *Game) Run() WhenComplete {
 			return
 		}
 
-        g.startGame()
+		g.startGame()
 		g.runGameLoop()
 	}()
 
