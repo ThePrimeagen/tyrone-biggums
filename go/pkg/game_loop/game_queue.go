@@ -1,8 +1,7 @@
 package gameloop
 
 import (
-	"sync"
-
+	"github.com/ThePrimeagen/tyrone-biggums/pkg/memqueue"
 	"github.com/ThePrimeagen/tyrone-biggums/pkg/server"
 )
 
@@ -12,39 +11,38 @@ type QueueMessage struct {
 }
 
 type GameQueue struct {
-	messages []*QueueMessage
+	messages *memqueue.MemQueue[*QueueMessage]
+	s0       server.Socket
+	s1       server.Socket
 	killChan chan struct{}
-	mutex    sync.Mutex
 }
 
-func NewQueue() *GameQueue {
+func NewQueue(s0, s1 server.Socket) *GameQueue {
+	q := memqueue.NewMemQueue[*QueueMessage]()
 	return &GameQueue{
-		messages: make([]*QueueMessage, 0),
+		messages: q,
 		killChan: make(chan struct{}),
-		mutex:    sync.Mutex{},
+		s0:       s0,
+		s1:       s1,
 	}
 }
 
 // TODO: Learn about context
-func (q *GameQueue) Start(s0, s1 server.Socket) {
+func (q *GameQueue) Start() {
 	go func() {
 	label_for_you:
 		for {
 			select {
-			case msg := <-s0.GetInBound():
-				q.mutex.Lock()
-				q.messages = append(q.messages, &QueueMessage{
+			case msg := <-q.s0.GetInBound():
+				q.messages.Enqueue(&QueueMessage{
 					1,
 					msg.Message,
 				})
-				q.mutex.Unlock()
-			case msg := <-s1.GetInBound():
-				q.mutex.Lock()
-				q.messages = append(q.messages, &QueueMessage{
+			case msg := <-q.s1.GetInBound():
+				q.messages.Enqueue(&QueueMessage{
 					2,
 					msg.Message,
 				})
-				q.mutex.Unlock()
 			case <-q.killChan:
 				break label_for_you
 			}
@@ -56,28 +54,24 @@ func (q *GameQueue) Stop() {
 	q.killChan <- struct{}{}
 }
 
-func (q *GameQueue) emptyMessages() bool {
-	out := true
-	for _, msg := range q.messages {
-		out = out && msg == nil
-		if !out {
+func (q *GameQueue) Flush() []*QueueMessage {
+
+	q.Stop()
+	tempQ := q.messages
+	q.messages = memqueue.NewMemQueue[*QueueMessage]()
+	q.Start()
+
+	messages := []*QueueMessage{}
+	for {
+		msg, ok := tempQ.Dequeue()
+		if !ok {
 			break
 		}
+		messages = append(messages, msg)
 	}
-
-	return out
-}
-
-func (q *GameQueue) Flush() []*QueueMessage {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-
-	if q.emptyMessages() {
+	if len(messages) == 0 {
 		return nil
 	}
-
-	messages := q.messages
-	q.messages = make([]*QueueMessage, 0)
 
 	return messages
 }
